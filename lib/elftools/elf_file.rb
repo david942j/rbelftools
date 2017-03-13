@@ -1,3 +1,4 @@
+require 'elftools/constants'
 require 'elftools/exceptions'
 require 'elftools/section'
 require 'elftools/segment'
@@ -6,7 +7,6 @@ require 'elftools/structures'
 module ELFTools
   # The main class for using elftools.
   class ELFFile
-    MAGIC_HEADER = "\x7fELF".freeze
     attr_reader :stream # @return [File] The +File+ object.
     attr_reader :elf_class # @return [Integer] 32 or 64.
     attr_reader :endian # @return [Symbol] +:little+ or +:big+.
@@ -125,7 +125,7 @@ module ELFTools
     def identify
       stream.pos = 0
       magic = stream.read(4)
-      raise ELFError, "Invalid magic number #{magic.inspect}" unless magic == MAGIC_HEADER
+      raise ELFError, "Invalid magic number #{magic.inspect}" unless magic == Constants::ELFMAG
       ei_class = stream.read(1).ord
       @elf_class = {
         1 => 32,
@@ -158,7 +158,7 @@ module ELFTools
       shdr = ELF_Shdr.new(endian: endian)
       shdr.elf_class = elf_class
       shdr.read(stream)
-      Section.new(shdr, stream, method(:get_section_name))
+      Section.create(shdr, stream, method(:get_section_name))
     end
 
     def create_segment(n)

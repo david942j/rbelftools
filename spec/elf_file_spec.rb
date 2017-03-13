@@ -1,3 +1,4 @@
+# encoding: ascii-8bit
 require 'elftools/elf_file'
 describe ELFTools::ELFFile do
   before(:all) do
@@ -32,6 +33,12 @@ describe ELFTools::ELFFile do
       )
 
       expect(@elf.section_by_name('.shstrtab')).to be @elf.strtab_section
+    end
+
+    it 'data' do
+      expect(@elf.section_by_name('.note.gnu.build-id').data)
+        .to eq "\x04\x00\x00\x00\x14\x00\x00\x00\x03\x00\x00\x00"\
+               "GNU\x00s\xABb\xCB{\xC9\x95\x9C\xE0S\xC2\xB7\x112!Xp\x8C\xDC\a"
     end
   end
 
