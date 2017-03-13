@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.version     = ::ELFTools::VERSION
   s.date        = Date.today.to_s
   s.summary     = 'ELFTools - Pure ruby library for parsing ELF files'
-  s.description = ''
+  s.description = 'A light weight ELF parser.'
   s.authors     = ['david942j']
   s.email       = ['david942j@gmail.com']
   s.files       = Dir['lib/**/*.rb'] + %w(README.md)
