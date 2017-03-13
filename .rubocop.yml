@@ -1,3 +1,7 @@
+AllCops:
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+
 Metrics/AbcSize:
   Enabled: false
 
@@ -17,3 +21,6 @@ Metrics/LineLength:
   Enabled: true
   Max: 120
 
+Style/ClassAndModuleCamelCase:
+  Exclude:
+    - lib/elftools/structures.rb

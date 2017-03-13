@@ -1,2 +1,2 @@
-require 'elftools/elffile'
+require 'elftools/elf_file'
 require 'elftools/version'
