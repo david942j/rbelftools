@@ -15,4 +15,29 @@ describe ELFTools::ELFFile do
     expect(@elf.header.e_ident.ei_version).to eq 1
     expect(@elf.header.e_ident.ei_padding).to eq "\x00" * 7
   end
+
+  describe 'sections' do
+    it 'basic' do
+      expect(@elf.num_sections).to eq 31
+    end
+
+    it 'names' do
+      expect(@elf.sections.map(&:name)).to eq [''] + %w(
+        .interp .note.ABI-tag .note.gnu.build-id .gnu.hash
+        .dynsym .dynstr .gnu.version .gnu.version_r
+        .rela.dyn .rela.plt .init .plt .plt.got .text
+        .fini .rodata .eh_frame_hdr .eh_frame .init_array
+        .fini_array .jcr .dynamic .got .got.plt .data .bss
+        .comment .shstrtab .symtab .strtab
+      )
+
+      expect(@elf.section_by_name('.shstrtab')).to be @elf.strtab_section
+    end
+  end
+
+  describe 'segments' do
+    it 'basic' do
+      expect(@elf.num_segments).to eq 9
+    end
+  end
 end

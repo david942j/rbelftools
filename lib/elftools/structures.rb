@@ -1,11 +1,16 @@
 require 'bindata'
 module ELFTools
-  # ELF header structure.
-  class ELF_Ehdr < BinData::Record
+  # The base structure to define common methods.
+  class ELFStruct < BinData::Record
     CHOICE_SIZE_T = {
-      selection: -> { e_ident.ei_class }, choices: { 1 => :uint32, 2 => :uint64 }
+      selection: -> { elf_class }, choices: { 32 => :uint32, 64 => :uint64 }
     }.freeze
 
+    attr_accessor :elf_class # @return [Integer] 32 or 64.
+  end
+
+  # ELF header structure.
+  class ELF_Ehdr < ELFStruct
     endian :big_and_little
     struct :e_ident do
       string :magic, read_length: 4
@@ -24,11 +29,26 @@ module ELFTools
     choice :e_phoff, **CHOICE_SIZE_T
     choice :e_shoff, **CHOICE_SIZE_T
     uint32 :e_flags
-    uint16 :e_ehsize
-    uint16 :e_phentsize
-    uint16 :e_phnum
-    uint16 :e_shentsize
-    uint16 :e_shnum
-    uint16 :e_shstrndx
+    uint16 :e_ehsize # size of this header
+    uint16 :e_phentsize # size of each segment
+    uint16 :e_phnum # number of segments
+    uint16 :e_shentsize # size of each section
+    uint16 :e_shnum # number of sections
+    uint16 :e_shstrndx # index of string table section
+  end
+
+  # Section header structure.
+  class ELF_Shdr < ELFStruct
+    endian :big_and_little
+    uint32 :sh_name
+    uint32 :sh_type
+    choice :sh_flags, **CHOICE_SIZE_T
+    choice :sh_addr, **CHOICE_SIZE_T
+    choice :sh_offset, **CHOICE_SIZE_T
+    choice :sh_size, **CHOICE_SIZE_T
+    uint32 :sh_link
+    uint32 :sh_info
+    choice :sh_addralign, **CHOICE_SIZE_T
+    choice :sh_entsize, **CHOICE_SIZE_T
   end
 end
