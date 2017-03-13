@@ -1,5 +1,6 @@
 require 'elftools/exceptions'
 require 'elftools/section'
+require 'elftools/segment'
 require 'elftools/structures'
 
 module ELFTools
@@ -34,6 +35,8 @@ module ELFTools
       @header.read(stream)
     end
 
+    #========= method about sections
+
     # Number of sections in this file.
     # @return [Integer] The desired number.
     def num_sections
@@ -57,7 +60,7 @@ module ELFTools
     # since not all sections need to be created.
     # @param [Proc] block
     #   Just like +Array#each+, you can give a block.
-    # @return [void, Array<ELFTools:Section>]
+    # @return [void, Array<ELFTools::Section>]
     #   If no block is given, the whole sections will
     #   be returned.
     #   Otherwise, since sections are lazy loaded,
@@ -84,8 +87,7 @@ module ELFTools
     def section_at(n)
       return if n >= num_sections
       @sections ||= Array.new(num_sections)
-      return @sections[n] if @sections[n]
-      @sections[n] = create_section(n)
+      @sections[n] ||= create_section(n)
     end
 
     # Get the StringTable section.
@@ -94,10 +96,28 @@ module ELFTools
       section_at(header.e_shstrndx)
     end
 
+    #========= method about segments
+
     # Number of segments in this file.
     # @return [Integer] The desited number.
     def num_segments
       header.e_phnum
+    end
+
+    def segments
+      Array.new(num_segments) { |i| segment_at(i) }
+    end
+
+    # Acquire the +n+-th segment, 0-based.
+    #
+    # Segments are lazy loaded.
+    # @return [ELFTools:Segment, NilClass]
+    #   The target segment.
+    #   If +n >= num_segments+, +nil+ is returned.
+    def segment_at(n)
+      return if n >= num_segments
+      @segments ||= Array.new(num_segments)
+      @segments[n] ||= create_segment(n)
     end
 
     private
@@ -139,6 +159,12 @@ module ELFTools
       shdr.elf_class = elf_class
       shdr.read(stream)
       Section.new(shdr, stream, method(:get_section_name))
+    end
+
+    def create_segment(n)
+      stream.pos = header.e_phoff + n * header.e_phentsize
+      phdr = ELF_Phdr[elf_class].new(endian: endian).read(stream)
+      Segment.new(phdr, stream)
     end
   end
 end

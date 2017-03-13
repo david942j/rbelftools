@@ -39,5 +39,10 @@ describe ELFTools::ELFFile do
     it 'basic' do
       expect(@elf.num_segments).to eq 9
     end
+
+    it 'data' do
+      expect(@elf.segment_at(1).data).to eq "/lib64/ld-linux-x86-64.so.2\x00"
+      expect(@elf.segments[1]).to be @elf.segment_at(1)
+    end
   end
 end

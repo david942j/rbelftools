@@ -51,4 +51,34 @@ module ELFTools
     choice :sh_addralign, **CHOICE_SIZE_T
     choice :sh_entsize, **CHOICE_SIZE_T
   end
+
+  # Segment header structure for 32bit.
+  class ELF32_Phdr < ELFStruct
+    endian :big_and_little
+    uint32 :p_type
+    uint32 :p_offset
+    uint32 :p_vaddr
+    uint32 :p_paddr
+    uint32 :p_filesz
+    uint32 :p_memsz
+    uint32 :p_flags
+    uint32 :p_align
+  end
+
+  # Segment header structure for 64bit.
+  class ELF64_Phdr < ELFStruct
+    endian :big_and_little
+    uint32 :p_type
+    uint32 :p_flags
+    uint64 :p_offset
+    uint64 :p_vaddr
+    uint64 :p_paddr
+    uint64 :p_filesz
+    uint64 :p_memsz
+    uint64 :p_align
+  end
+  ELF_Phdr = {
+    32 => ELF32_Phdr,
+    64 => ELF64_Phdr
+  }.freeze
 end
