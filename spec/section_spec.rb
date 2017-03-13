@@ -12,15 +12,27 @@ describe ELFTools::Section do
   end
   describe 'type of sections' do
     it 'normal' do
-      section = ELFTools::Section.create(@header_maker.call(type: 0xdeadbeef), nil, nil)
+      section = ELFTools::Section.create(@header_maker.call(type: 0xdeadbeef), nil)
       expect(section).to be_a ELFTools::Section
       expect(section.null?).to be false
     end
 
     it 'null' do
-      null = ELFTools::Section.create(@header_maker.call, nil, nil)
+      null = ELFTools::Section.create(@header_maker.call, nil)
       expect(null).to be_a ELFTools::NullSection
       expect(null.null?).to be true
+    end
+
+    it 'strtab' do
+      strtab = ELFTools::Section.create(@header_maker.call(type: 3), nil)
+      expect(strtab).to be_a ELFTools::StrTabSection
+      expect(strtab.respond_to?(:name_at)).to be true
+    end
+
+    it 'symtab' do
+      symtab = ELFTools::Section.create(@header_maker.call(type: 2), nil)
+      expect(symtab).to be_a ELFTools::SymTabSection
+      expect(symtab.respond_to?(:symbols)).to be true
     end
   end
 end

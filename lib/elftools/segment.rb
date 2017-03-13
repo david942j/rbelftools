@@ -14,6 +14,8 @@ module ELFTools
       @stream = stream
     end
 
+    # The content in this segment.
+    # @return [String] The content.
     def data
       stream.pos = header.p_offset
       stream.read(header.p_filesz)

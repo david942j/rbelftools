@@ -81,4 +81,30 @@ module ELFTools
     32 => ELF32_Phdr,
     64 => ELF64_Phdr
   }.freeze
+
+  # Symbol structure for 32bit.
+  class ELF32_sym < ELFStruct
+    endian :big_and_little
+    uint32 :st_name
+    uint32 :st_value
+    uint32 :st_size
+    uint8 :st_info
+    uint8 :st_other
+    uint16 :st_shndx
+  end
+
+  # Symbol structure for 64bit.
+  class ELF64_sym < ELFStruct
+    endian :big_and_little
+    uint32 :st_name  # Symbol name, index in string tbl
+    uint8 :st_info   # Type and binding attributes
+    uint8 :st_other  # No defined meaning, 0
+    uint16 :st_shndx # Associated section index
+    uint64 :st_value # Value of the symbol
+    uint64 :st_size  # Associated symbol size
+  end
+  ELF_sym = {
+    32 => ELF32_sym,
+    64 => ELF64_sym
+  }.freeze
 end

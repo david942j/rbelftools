@@ -33,12 +33,39 @@ describe ELFTools::ELFFile do
       )
 
       expect(@elf.section_by_name('.shstrtab')).to be @elf.strtab_section
+      expect(@elf.section_by_name('no such section')).to be nil
     end
 
     it 'data' do
       expect(@elf.section_by_name('.note.gnu.build-id').data)
         .to eq "\x04\x00\x00\x00\x14\x00\x00\x00\x03\x00\x00\x00"\
                "GNU\x00s\xABb\xCB{\xC9\x95\x9C\xE0S\xC2\xB7\x112!Xp\x8C\xDC\a"
+    end
+
+    it 'symbols' do
+      # symbols from .dynsym
+      section = @elf.section_by_name('.dynsym')
+      expect(section.symbols.map(&:name)).to eq [''] + %w(
+        puts __stack_chk_fail printf __libc_start_main
+        fgets __gmon_start__ scanf stdin
+      )
+
+      # symbols from .symtab
+      section = @elf.section_by_name('.symtab')
+      # Too many symbols, only test non-empty names
+      expect(section.symbols.map(&:name).reject(&:empty?)).to eq %w(
+        crtstuff.c __JCR_LIST__ deregister_tm_clones register_tm_clones
+        __do_global_dtors_aux completed.7588 __do_global_dtors_aux_fini_array_entry
+        frame_dummy __frame_dummy_init_array_entry source.cpp _ZZ4funcvE4test
+        crtstuff.c __FRAME_END__ __JCR_END__ __init_array_end _DYNAMIC
+        __init_array_start __GNU_EH_FRAME_HDR _GLOBAL_OFFSET_TABLE_ __libc_csu_fini
+        _ITM_deregisterTMCloneTable data_start puts@@GLIBC_2.2.5 stdin@@GLIBC_2.2.5
+        _edata _fini __stack_chk_fail@@GLIBC_2.4 printf@@GLIBC_2.2.5
+        __libc_start_main@@GLIBC_2.2.5 fgets@@GLIBC_2.2.5 __data_start
+        _Z4funcv __gmon_start__ __dso_handle _IO_stdin_used __libc_csu_init
+        _end _start s __bss_start main scanf@@GLIBC_2.2.5 _Jv_RegisterClasses
+        __TMC_END__ _ITM_registerTMCloneTable _init
+      )
     end
   end
 

@@ -17,7 +17,7 @@ module ELFTools
     #   The +File+ object to be fetch information from.
     # @example
     #   ELFFile.new(File.open('/bin/cat'))
-    #   #=> <ELFFile: >
+    #   #=> #<ELFTools::ELFFile:0x005647b1182ed8>
     def initialize(stream)
       @stream = stream
       identify # fetch the most basic information
@@ -39,6 +39,9 @@ module ELFTools
 
     # Number of sections in this file.
     # @return [Integer] The desired number.
+    # @example
+    #   elf.num_sections
+    #   #=> 29
     def num_sections
       header.e_shnum
     end
@@ -46,10 +49,21 @@ module ELFTools
     # Acquire the section named as +name+.
     # @param [String] name The desired section name.
     # @return [ELFTools::Section, NilClass] The target section.
+    # @example
+    #   elf.section_by_name('.note.gnu.build-id')
+    #   #=> #<ELFTools::Section:0x005647b1282428>
+    #   elf.section_by_name('')
+    #   #=> #<ELFTools::NullSection:0x005647b11da110>
+    #   elf.section_by_name('no such section')
+    #   #=> nil
     def section_by_name(name)
+      @section_name_map ||= {}
+      return @section_name_map[name] if @section_name_map[name]
       each_sections do |section|
+        @section_name_map[section.name] = section
         return section if section.name == name
       end
+      nil
     end
 
     # Iterate all sections.
@@ -140,25 +154,14 @@ module ELFTools
       raise ELFError, format('Invalid EI_DATA "\x%02x"', ei_data) if endian.nil?
     end
 
-    def get_section_name(shdr)
-      stream.pos = strtab_section.header.sh_offset + shdr.sh_name
-      # read until "\x00"
-      ret = ''
-      loop do
-        c = stream.read(1)
-        return nil if c.nil? # reach EOF
-        break if c == "\x00"
-        ret += c
-      end
-      ret
-    end
-
     def create_section(n)
       stream.pos = header.e_shoff + n * header.e_shentsize
       shdr = ELF_Shdr.new(endian: endian)
       shdr.elf_class = elf_class
       shdr.read(stream)
-      Section.create(shdr, stream, method(:get_section_name))
+      Section.create(shdr, stream,
+                     strtab: method(:strtab_section),
+                     section_at: method(:section_at))
     end
 
     def create_segment(n)
