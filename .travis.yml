@@ -1,7 +1,9 @@
 language: ruby
+sudo: required
 os:
   - linux
   - osx
+dist: trusty
 rvm:
   - 2.1
   - 2.2

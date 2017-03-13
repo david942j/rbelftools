@@ -1,8 +1,8 @@
 require 'elftools/elf_file'
 describe ELFTools::ELFFile do
   before(:all) do
-    # TODO: use custom compiled binary instead of '/bin/cat'
-    @elf = ELFTools::ELFFile.new(File.open('/bin/cat'))
+    filepath = File.join(__dir__, 'files', 'amd64')
+    @elf = ELFTools::ELFFile.new(File.open(filepath))
   end
 
   it 'basic' do
