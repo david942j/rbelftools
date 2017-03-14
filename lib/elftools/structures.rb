@@ -58,7 +58,7 @@ module ELFTools
     choice :sh_entsize, **CHOICE_SIZE_T
   end
 
-  # Segment header structure for 32bit.
+  # Program header structure for 32bit.
   class ELF32_Phdr < ELFStruct
     endian :big_and_little
     uint32 :p_type
@@ -71,7 +71,7 @@ module ELFTools
     uint32 :p_align
   end
 
-  # Segment header structure for 64bit.
+  # Program header structure for 64bit.
   class ELF64_Phdr < ELFStruct
     endian :big_and_little
     uint32 :p_type

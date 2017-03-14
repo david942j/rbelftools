@@ -86,6 +86,10 @@ symbols.map(&:name).reject(&:empty?).first(5).join(' ')
 
    **rbelftools** are designed to be a library for furthur usage.
    It will _not_ add any trivial features (e.g. show full/partial/no relro).
+5. Section and segment parser
+
+   Providing common sections and segments parser. For example, .symtab, .shstrtab
+   sections.
 
 # Development
 ```bash

@@ -1,8 +1,8 @@
 require 'elftools/constants'
 require 'elftools/exceptions'
 require 'elftools/lazy_array'
-require 'elftools/section'
-require 'elftools/segment'
+require 'elftools/sections/section'
+require 'elftools/segments/segments'
 require 'elftools/structures'
 
 module ELFTools
@@ -171,7 +171,7 @@ module ELFTools
     def create_segment(n)
       stream.pos = header.e_phoff + n * header.e_phentsize
       phdr = ELF_Phdr[elf_class].new(endian: endian).read(stream)
-      Segment.new(phdr, stream)
+      Segment.create(phdr, stream)
     end
   end
 end

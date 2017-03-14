@@ -1,5 +1,5 @@
 # encoding: ascii-8bit
-require 'elftools/section'
+require 'elftools/sections/sections'
 require 'elftools/structures'
 describe ELFTools::Section do
   before(:all) do
