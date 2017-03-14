@@ -1,4 +1,5 @@
 require 'elftools/structures'
+require 'elftools/util'
 
 module ELFTools
   # Since both note sections and note segments
@@ -37,12 +38,12 @@ module ELFTools
       notes = []
       while cur < start + total_size
         stream.pos = cur
-        cur += SIZE_OF_NHDR
         @notes_offset_map[cur] ||= create_note(endian, stream, cur)
         note = @notes_offset_map[cur]
-        name_size = (note.header.n_namesz >> 2) << 2
-        desc_size = (note.header.n_descsz >> 2) << 2
-        cur += name_size + desc_size
+        # name and desc size needs to be 4-bytes align
+        name_size = Util.align(note.header.n_namesz, 2)
+        desc_size = Util.align(note.header.n_descsz, 2)
+        cur += SIZE_OF_NHDR + name_size + desc_size
         notes << note
         yield note if block_given?
       end
@@ -60,6 +61,7 @@ module ELFTools
     class Note
       attr_reader :header # @return [ELFTools::ELF_Nhdr] Note header.
       attr_reader :stream # @return [File] Streaming object.
+      attr_reader :offset # @return [Integer] Address of this note start, includes note header.
 
       # Instantiate a {ELFTools::Note::Note} object.
       # @param [ELF_Nhdr] header The note header.
@@ -76,7 +78,7 @@ module ELFTools
       # @return [String] The name.
       def name
         return @name if @name
-        stream.pos = @offset
+        stream.pos = @offset + SIZE_OF_NHDR
         # XXX: Should we remove the last null byte?
         @name = stream.read(header.n_namesz)
       end
@@ -85,7 +87,7 @@ module ELFTools
       # @return [String] The description.
       def desc
         return @desc if @desc
-        stream.pos = @offset + ((header.n_namesz >> 2) << 2)
+        stream.pos = @offset + SIZE_OF_NHDR + Util.align(header.n_namesz, 2)
         @desc ||= stream.read(header.n_descsz)
       end
 
