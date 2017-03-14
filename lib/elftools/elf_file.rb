@@ -73,7 +73,7 @@ module ELFTools
     # only create whenever accessing it.
     # This method is useful for {#section_by_name}
     # since not all sections need to be created.
-    # @param [Proc] block
+    # @param [Block] block
     #   Just like +Array#each+, you can give a block.
     # @return [void, Array<ELFTools::Section>]
     #   If no block is given, the whole sections will

@@ -66,6 +66,9 @@ describe ELFTools::ELFFile do
         _end _start s __bss_start main scanf@@GLIBC_2.2.5 _Jv_RegisterClasses
         __TMC_END__ _ITM_registerTMCloneTable _init
       )
+
+      # can use 'be' here becauase they should always refer to same object
+      expect(section.symbol_by_name('_init')).to be section.symbols.last
     end
   end
 

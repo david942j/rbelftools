@@ -9,7 +9,7 @@
 
 ELF parser in pure ruby implementation. This work is inspired by [pyelftools](https://github.com/eliben/pyelftools) by [Eli Bendersky](https://github.com/eliben).
 
-The truly motivation to create this repository is want to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since a ELF parser is a big work, it should not be implemented directly in pwntools.
+The motivation to create this repository is want to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since ELF parser is a big work, it should not be implemented directly in pwntools.
 
 # Install
 
@@ -54,31 +54,36 @@ elf.seciont_by_name('.note.gnu.build-id').data
 ## Symbols
 ```ruby
 symtab_section = elf.section_by_name('.symtab')
-puts symtab_section.num_symbols
+symtab_section.num_symbols
 #=> 75
-symbols = symtab.symbols # Array of ELFTools::Symbol
-symbols.map(&:name).reject(&:empty?).first(5).join(' ')
-#=> "crtstuff.c __JCR_LIST__ deregister_tm_clones register_tm_clones __do_global_dtors_aux"
 
-symbols.find { |sym| sym.name == 'puts@@GLIBC_2.2.5' }
+symtab_section.symbol_by_name('puts@@GLIBC_2.2.5')
 #=>
 # #<ELFTools::Symbol:0x00560b14af67a0
 #  @header={:st_name=>348, :st_info=>18, :st_other=>0, :st_shndx=>0, :st_value=>0, :st_size=>0},
 #  @name="puts@@GLIBC_2.2.5",
+
+symbols = symtab_section.symbols # Array of ELFTools::Symbol
+symbols.map(&:name).reject(&:empty?).first(5).join(' ')
+#=> "crtstuff.c __JCR_LIST__ deregister_tm_clones register_tm_clones __do_global_dtors_aux"
 ```
 
 # Why rbelftools
 
 1. Fully documented
+
    Always important for an Open-Source project.
 2. Fully tested
+
    Of course.
 3. Lazy loading on everything
+
    To use **rbelftools**, only need to pass the stream object of ELF file.
    **rbelftools** will read the stream object **as least times as possible** when parsing
    this file. Most information will not be fetched until you access it, which makes
    **rbelftools** efficient.
 4. To be a library
+
    **rbelftools** are designed to be a library for furthur usage.
    It will _not_ add any trivial features (e.g. show full/partial/no relro).
 

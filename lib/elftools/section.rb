@@ -102,6 +102,8 @@ module ELFTools
     #   This lambda should be {ELFTools::ELFFile#section_at}.
     def initialize(header, stream, section_at: nil, **_kwagrs)
       @section_at = section_at
+      # For faster #symbol_by_name
+      @symbol_name_map = {}
       super
     end
 
@@ -126,10 +128,40 @@ module ELFTools
       @symbols[n]
     end
 
-    # Symbols specific in this section.
-    # @return [Array<ELFTools::Symbol] Array of symbols.
-    def symbols
-      Array.new(num_symbols) { |n| symbol_at(n) }
+    # Iterate all symbols.
+    #
+    # All symbols are lazy loading, the symbol
+    # only create whenever accessing it.
+    # This method is useful for {#symbol_by_name}
+    # since not all symbols need to be created.
+    # @param [Block] block
+    #   Just like +Array#each+, you can give a block.
+    # @return [void, Array<ELFTools::symbol>]
+    #   If no block is given, the whole symbols will
+    #   be returned.
+    #   Otherwise, since symbols are lazy loaded,
+    #   the return value is not important.
+    def each_symbols
+      if block_given?
+        num_symbols.times { |i| yield symbol_at(i) }
+      else
+        Array.new(num_symbols, &method(:symbol_at))
+      end
+    end
+
+    alias symbols each_symbols
+
+    # Get symbol by it's name.
+    # @param [String] name
+    #   The name of symbol.
+    # @return [ELFTools::Symbol] Desired symbol.
+    def symbol_by_name(name)
+      return @symbol_name_map[name] if @symbol_name_map[name]
+      each_symbols do |symbol|
+        @symbol_name_map[symbol.name] = symbol
+        return symbol if symbol.name == name
+      end
+      nil
     end
 
     # Return the symbol string section.
