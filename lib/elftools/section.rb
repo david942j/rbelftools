@@ -117,15 +117,17 @@ module ELFTools
     # Acquire the +n+-th symbol, 0-based.
     #
     # Symbols are lazy loaded.
+    # @param [Integer] n The index.
     # @return [ELFTools:Symbol, NilClass]
     #   The target symbol.
-    #   If +n >= num_symbols+, +nil+ is returned.
+    #   If +n+ is out of bound, +nil+ is returned.
     def symbol_at(n)
-      return if n >= num_symbols
-      @symbols ||= Array.new(num_symbols)
-      @symbols[n] ||= create_symbol(n)
+      @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
+      @symbols[n]
     end
 
+    # Symbols specific in this section.
+    # @return [Array<ELFTools::Symbol] Array of symbols.
     def symbols
       Array.new(num_symbols) { |n| symbol_at(n) }
     end
@@ -141,8 +143,7 @@ module ELFTools
 
     def create_symbol(n)
       stream.pos = header.sh_offset + n * header.sh_entsize
-      # TODO: fetch endian from header
-      sym = ELF_sym[header.elf_class].new(endian: :little)
+      sym = ELF_sym[header.elf_class].new(endian: header.class.self_endian)
       sym.read(stream)
       Symbol.new(sym, stream, symstr: method(:symstr))
     end

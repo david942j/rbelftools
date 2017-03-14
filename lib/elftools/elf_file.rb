@@ -1,5 +1,6 @@
 require 'elftools/constants'
 require 'elftools/exceptions'
+require 'elftools/lazy_array'
 require 'elftools/section'
 require 'elftools/segment'
 require 'elftools/structures'
@@ -95,13 +96,13 @@ module ELFTools
     # Acquire the +n+-th section, 0-based.
     #
     # Sections are lazy loaded.
+    # @param [Integer] n The index.
     # @return [ELFTools::Section, NilClass]
     #   The target section.
-    #   If +n >= num_sections+, +nil+ is returned.
+    #   If +n+ is out of bound, +nil+ is returned.
     def section_at(n)
-      return if n >= num_sections
-      @sections ||= Array.new(num_sections)
-      @sections[n] ||= create_section(n)
+      @sections ||= LazyArray.new(num_sections, &method(:create_section))
+      @sections[n]
     end
 
     # Get the StringTable section.
@@ -118,20 +119,23 @@ module ELFTools
       header.e_phnum
     end
 
+    # All segments.
+    # @return [Array<ELFTools::Segment>] Array of segments.
     def segments
+      # XXX: is here need lazy loading?
       Array.new(num_segments) { |i| segment_at(i) }
     end
 
     # Acquire the +n+-th segment, 0-based.
     #
     # Segments are lazy loaded.
+    # @param [Integer] n The index.
     # @return [ELFTools:Segment, NilClass]
     #   The target segment.
-    #   If +n >= num_segments+, +nil+ is returned.
+    #   If +n+ is out of bound, +nil+ is returned.
     def segment_at(n)
-      return if n >= num_segments
-      @segments ||= Array.new(num_segments)
-      @segments[n] ||= create_segment(n)
+      @segments ||= LazyArray.new(num_segments, &method(:create_segment))
+      @segments[n]
     end
 
     private

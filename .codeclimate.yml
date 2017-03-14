@@ -7,6 +7,8 @@ engines:
     config:
       languages:
       - ruby
+    exclude_paths:
+      - lib/elftools/structures.rb
   fixme:
     enabled: false
   rubocop:
