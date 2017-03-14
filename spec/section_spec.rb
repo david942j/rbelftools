@@ -34,5 +34,11 @@ describe ELFTools::Section do
       expect(symtab).to be_a ELFTools::SymTabSection
       expect(symtab.respond_to?(:symbols)).to be true
     end
+
+    it 'note' do
+      note = ELFTools::Section.create(@header_maker.call(type: 7), nil)
+      expect(note).to be_a ELFTools::NoteSection
+      expect(note.respond_to?(:notes)).to be true
+    end
   end
 end

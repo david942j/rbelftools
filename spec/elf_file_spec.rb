@@ -70,6 +70,16 @@ describe ELFTools::ELFFile do
       # can use 'be' here becauase they should always refer to same object
       expect(section.symbol_by_name('_init')).to be section.symbols.last
     end
+
+    it 'notes' do
+      secs = @elf.sections.select { |sec| sec.instance_of?(ELFTools::NoteSection) }
+      # There're two note sections
+      expect(secs.size).to be 2
+      bid_sec = secs.last
+      expect(bid_sec.notes[0].name).to eq "GNU\x00"
+      # The build id
+      expect(bid_sec.notes[0].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
+    end
   end
 
   describe 'segments' do
@@ -80,6 +90,18 @@ describe ELFTools::ELFFile do
     it 'data' do
       expect(@elf.segment_at(1).data).to eq "/lib64/ld-linux-x86-64.so.2\x00"
       expect(@elf.segments[1]).to be @elf.segment_at(1)
+    end
+
+    it 'interp' do
+      expect(@elf.segment_at(1)).to be_a ELFTools::InterpSegment
+      expect(@elf.segment_at(1).interp_name).to eq '/lib64/ld-linux-x86-64.so.2'
+    end
+
+    it 'notes' do
+      seg = @elf.segments.find { |s| s.instance_of?(ELFTools::NoteSegment) }
+      expect(seg.notes[1].name).to eq "GNU\x00"
+      # The build id
+      expect(seg.notes[1].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
     end
   end
 end

@@ -11,6 +11,7 @@ module ELFTools
       def create(header, stream, *args)
         klass = case header.p_type
                 when Constants::PT_INTERP then InterpSegment
+                when Constants::PT_NOTE then NoteSegment
                 else Segment
                 end
         klass.new(header, stream, *args)

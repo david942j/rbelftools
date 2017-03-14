@@ -113,4 +113,12 @@ module ELFTools
     32 => ELF32_sym,
     64 => ELF64_sym
   }.freeze
+
+  # Note header
+  class ELF_Nhdr < ELFStruct
+    endian :big_and_little
+    uint32 :n_namesz # Name size
+    uint32 :n_descsz # Content size
+    uint32 :n_type   # Content type
+  end
 end

@@ -12,8 +12,9 @@ module ELFTools
       def create(header, stream, *args)
         klass = case header.sh_type
                 when Constants::SHT_NULL then NullSection
-                when Constants::SHT_SYMTAB, Constants::SHT_DYNSYM then SymTabSection
                 when Constants::SHT_STRTAB then StrTabSection
+                when Constants::SHT_NOTE then NoteSection
+                when Constants::SHT_SYMTAB, Constants::SHT_DYNSYM then SymTabSection
                 else Section
                 end
         klass.new(header, stream, *args)

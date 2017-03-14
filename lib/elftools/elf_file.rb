@@ -1,7 +1,7 @@
 require 'elftools/constants'
 require 'elftools/exceptions'
 require 'elftools/lazy_array'
-require 'elftools/sections/section'
+require 'elftools/sections/sections'
 require 'elftools/segments/segments'
 require 'elftools/structures'
 
