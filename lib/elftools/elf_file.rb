@@ -24,7 +24,7 @@ module ELFTools
       identify # fetch the most basic information
     end
 
-    # Return thr file header.
+    # Return the file header.
     #
     # Lazy loading.
     # @retrn [ELFTools::ELF_Ehdr] The header.
@@ -117,9 +117,8 @@ module ELFTools
     #
     # All segments are lazy loading, the segment
     # only create whenever accessing it.
-    # This method is useful for {#segment_by_name}
-    # and {#segment_by_type} since not all segments
-    # need to be created.
+    # This method is useful for {#segment_by_type}
+    # since not all segments need to be created.
     # @param [Block] block
     #   Just like +Array#each+, you can give a block.
     # @return [Array<ELFTools::Segments::Segment>]

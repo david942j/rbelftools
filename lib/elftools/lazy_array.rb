@@ -1,7 +1,7 @@
 module ELFTools
   # A helper class for {ELFTools} easy to implement
   # 'lazy loading' objects.
-  # Mainly useful for loading sections, segments, and
+  # Mainly used when loading sections, segments, and
   # symbols.
   class LazyArray
     # Instantiate a {LazyArray} object.
@@ -9,7 +9,7 @@ module ELFTools
     #   The size of array.
     # @param [Block] block
     #   At first time accessing +i+-th element,
-    #   Block will be called as +block.call(i)+.
+    #   block will be called as +block.call(i)+.
     # @example
     #   arr = LazyArray.new(10) { |i| p i; i * i }
     #   p arr[2]

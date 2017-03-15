@@ -18,23 +18,23 @@ module ELFTools
     # Iterate all notes in a note section or segment.
     #
     # Structure of notes are:
-    # +---------------+
-    # | Note 1 header |
-    # +---------------+
-    # |  Note 1 name  |
-    # +---------------+
-    # |  Note 1 desc  |
-    # +---------------+
-    # | Note 2 header |
-    # +---------------+
-    # |      ...      |
-    # +---------------+
+    #   +---------------+
+    #   | Note 1 header |
+    #   +---------------+
+    #   |  Note 1 name  |
+    #   +---------------+
+    #   |  Note 1 desc  |
+    #   +---------------+
+    #   | Note 2 header |
+    #   +---------------+
+    #   |      ...      |
+    #   +---------------+
     #
     # Notice: This method assume following methods exist:
-    #   * +stream+
-    #   * +note_start+
-    #   * +note_total_size+
-    # @return [Array<ELFTools::Note::Note]
+    #   stream
+    #   note_start
+    #   note_total_size
+    # @return [Array<ELFTools::Note::Note>]
     #   The array of notes will be returned.
     def each_notes
       @notes_offset_map ||= {}

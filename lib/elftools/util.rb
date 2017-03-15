@@ -21,13 +21,13 @@ module ELFTools
 
       # Fetch the correct value from module +mod+.
       #
-      # See {ELFTools::ELFFile::segment_by_type} for how to
-      # use this meothd.
+      # See {ELFTools::ELFFile#segment_by_type} for how to
+      # use this method.
       # @param [Module] mod The module defined constant numbers.
       # @param [Integer, Symbol, String] val
       #   Desired value.
       # @return [Integer]
-      #   For current usage, this method should always return a value
+      #   Rurrently this method should always return a value
       #   from {ELFTools::Constants}.
       def to_constant(mod, val, msg: 'constant')
         # if val is an integer, check if exists in mod
