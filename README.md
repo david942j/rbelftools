@@ -72,7 +72,7 @@ symbols.map(&:name).reject(&:empty?).first(5).join(' ')
 ```ruby
 elf.segment_by_type(:note)
 #=>
-# #<ELFTools::NoteSegment:0x00555beaafe218
+# #<ELFTools::Segments::NoteSegment:0x00555beaafe218
 # @header=
 #  {:p_type=>4,
 #   :p_flags=>4,

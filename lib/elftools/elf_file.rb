@@ -122,7 +122,7 @@ module ELFTools
     # need to be created.
     # @param [Block] block
     #   Just like +Array#each+, you can give a block.
-    # @return [Array<ELFTools::Segment>]
+    # @return [Array<ELFTools::Segments::Segment>]
     #   Whole segments will be returned.
     def each_segments
       Array.new(num_segments) do |i|
@@ -142,30 +142,30 @@ module ELFTools
     # to found all segments with specific type you can use {#segments_by_type}.
     # @param [Integer, Symbol, String] type
     #   See examples for clear usage.
-    # @return [ELFTools::Segment] The target segment.
+    # @return [ELFTools::Segments::Segment] The target segment.
     # @example
     #   # type as an integer
     #   elf.segment_by_type(ELFTools::Constants::PT_NOTE)
-    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     #
     #   elf.segment_by_type(4) # PT_NOTE
-    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     #
     #   # type as a symbol
     #   elf.segment_by_type(:PT_NOTE)
-    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     #
     #   # you can do this
     #   elf.segment_by_type(:note) # will be transformed into `PT_NOTE`
-    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     #
     #   # type as a string
     #   elf.segment_by_type('PT_NOTE')
-    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     #
     #   # this is ok
     #   elf.segment_by_type('note') # will be tranformed into `PT_NOTE`
-    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     # @example
     #   elf.segment_by_type(1337)
     #   # ArgumentError: No PT type is "1337"
@@ -188,7 +188,7 @@ module ELFTools
     # use {#segment_by_type} instead.
     # @param [Integer, Symbol, String] type
     #   The type needed, same format as {#segment_by_type}.
-    # @return [Array<ELFTools::Segment>] The target segments.
+    # @return [Array<ELFTools::Segments::Segment>] The target segments.
     def segments_by_type(type)
       type = Util.to_constant(Constants::PT, type, msg: 'PT type')
       segments.select { |segment| segment.header.p_type == type }
@@ -198,7 +198,7 @@ module ELFTools
     #
     # Segments are lazy loaded.
     # @param [Integer] n The index.
-    # @return [ELFTools:Segment, NilClass]
+    # @return [ELFTools::Segments::Segment, NilClass]
     #   The target segment.
     #   If +n+ is out of bound, +nil+ is returned.
     def segment_at(n)
@@ -232,14 +232,14 @@ module ELFTools
       shdr.elf_class = elf_class
       shdr.read(stream)
       Sections::Section.create(shdr, stream,
-                     strtab: method(:strtab_section),
-                     section_at: method(:section_at))
+                               strtab: method(:strtab_section),
+                               section_at: method(:section_at))
     end
 
     def create_segment(n)
       stream.pos = header.e_phoff + n * header.e_phentsize
       phdr = ELF_Phdr[elf_class].new(endian: endian).read(stream)
-      Segment.create(phdr, stream)
+      Segments::Segment.create(phdr, stream)
     end
   end
 end
