@@ -8,7 +8,10 @@ Gem::Specification.new do |s|
   s.version     = ::ELFTools::VERSION
   s.date        = Date.today.to_s
   s.summary     = 'ELFTools - Pure ruby library for parsing ELF files'
-  s.description = 'A light weight ELF parser.'
+  s.description = <<-EOS
+  A light weight ELF parser. elftools is designed to be a low-level ELF parser.
+  Inspired by https://github.com/eliben/pyelftools.
+  EOS
   s.authors     = ['david942j']
   s.email       = ['david942j@gmail.com']
   s.files       = Dir['lib/**/*.rb'] + %w(README.md)

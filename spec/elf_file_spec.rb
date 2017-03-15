@@ -77,7 +77,7 @@ describe ELFTools::ELFFile do
       # There're two note sections
       expect(secs.size).to be 2
       bid_sec = secs.last
-      expect(bid_sec.notes[0].name).to eq "GNU\x00"
+      expect(bid_sec.notes[0].name).to eq 'GNU'
       # The build id
       expect(bid_sec.notes[0].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
     end
@@ -105,7 +105,7 @@ describe ELFTools::ELFFile do
 
     it 'notes' do
       seg = @elf.segment_by_type(ELFTools::Constants::PT_NOTE)
-      expect(seg.notes[1].name).to eq "GNU\x00"
+      expect(seg.notes[1].name).to eq 'GNU'
       # The build id
       expect(seg.notes[1].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
     end
@@ -118,8 +118,8 @@ describe ELFTools::ELFFile do
       expect(@elf.segment_by_type('NoTe')).to be_a ELFTools::Segments::NoteSegment
       expect(@elf.segment_by_type('PT_NOTE')).to be_a ELFTools::Segments::NoteSegment
       expect(@elf.segment_by_type(:PT_NOTE)).to be_a ELFTools::Segments::NoteSegment
-      expect { @elf.segment_by_type(1337) }.to raise_error(ArgumentError, 'No PT type is "1337"')
-      expect { @elf.segment_by_type(:oao) }.to raise_error(ArgumentError, 'No PT type named "PT_OAO"')
+      expect { @elf.segment_by_type(1337) }.to raise_error(ArgumentError, 'No constants in Constants::PT is 1337')
+      expect { @elf.segment_by_type(:xx) }.to raise_error(ArgumentError, 'No constants in Constants::PT named "PT_XX"')
     end
   end
 end

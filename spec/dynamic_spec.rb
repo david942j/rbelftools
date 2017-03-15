@@ -22,8 +22,8 @@ describe ELFTools::Dynamic do
       expect(@segment.tag_by_type('DT_SYMTAB').header.d_tag).to eq 6
       expect(@segment.tag_by_type('SymTab').header.d_tag).to eq 6
 
-      expect { @segment.tag_by_type(1337) }.to raise_error(ArgumentError, 'No DT type is "1337"')
-      expect { @segment.tag_by_type(:oao) }.to raise_error(ArgumentError, 'No DT type named "DT_OAO"')
+      expect { @segment.tag_by_type(1337) }.to raise_error(ArgumentError, 'No constants in Constants::DT is 1337')
+      expect { @segment.tag_by_type(:xx) }.to raise_error(ArgumentError, 'No constants in Constants::DT named "DT_XX"')
     end
 
     it 'tags size' do

@@ -6,10 +6,10 @@ module ELFTools
     # ELF interpreter.
     class InterpSegment < Segment
       # Get the path of interpreter.
-      # @return [String] The interpreter name.
+      # @return [String] Path to the interpreter.
       # @example
-      #   interp_name
-      #   #=> /lib64/ld-linux-x86-64.so.2
+      #   interp_segment.interp_name
+      #   #=> '/lib64/ld-linux-x86-64.so.2'
       def interp_name
         data[0..-2] # remove last null byte
       end

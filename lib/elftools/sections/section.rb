@@ -34,6 +34,8 @@ module ELFTools
         stream.read(header.sh_size)
       end
 
+      # Is this a null section?
+      # @return [Boolean] No it's not.
       def null?
         false
       end

@@ -11,9 +11,14 @@ ELF parser in pure ruby implementation. This work is inspired by [pyelftools](ht
 
 The motivation to create this repository is want to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since ELF parser is a big work, it should not be implemented directly in pwntools.
 
+**rbelftools**'s target is to create a nice ELF parser library in ruby. More features are work in progress.
+
 # Install
 
-Coming soon(?)
+Available on RubyGems.org!
+```bash
+gem install elftools
+```
 
 # Example Usage
 
@@ -27,7 +32,7 @@ elf.machine
 #=> 'Advanced Micro Devices X86-64'
 
 elf.build_id
-#=> 73ab62cb7bc9959ce053c2b711322158708cdc07
+#=> '73ab62cb7bc9959ce053c2b711322158708cdc07'
 ```
 
 ## Sections
@@ -97,7 +102,7 @@ elf.segment_by_type(:interp).interp_name
 
 1. Fully documented
 
-   Always important for an Open-Source project.
+   Always important for an Open-Source project. Online document is [here](http://www.rubydoc.info/github/david942j/rbelftools/master/frames)
 2. Fully tested
 
    Of course.
@@ -105,11 +110,11 @@ elf.segment_by_type(:interp).interp_name
 
    To use **rbelftools**, only need to pass the stream object of ELF file.
    **rbelftools** will read the stream object **as least times as possible** when parsing
-   this file. Most information will not be fetched until you access it, which makes
+   the file. Most information will not be fetched until you need it, which makes
    **rbelftools** efficient.
 4. To be a library
 
-   **rbelftools** are designed to be a library for furthur usage.
+   **rbelftools** is designed to be a library for furthur usage.
    It will _not_ add any too trivial features.
    For example, to check if NX disabled, you can use
    `elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`

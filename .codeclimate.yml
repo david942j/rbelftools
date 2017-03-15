@@ -6,7 +6,8 @@ engines:
     enabled: true
     config:
       languages:
-      - ruby
+        ruby:
+          mass_threshold: 21
     exclude_paths:
       - lib/elftools/structures.rb
   fixme:

@@ -12,13 +12,13 @@ module ELFTools
     attr_reader :elf_class # @return [Integer] 32 or 64.
     attr_reader :endian # @return [Symbol] +:little+ or +:big+.
 
-    # Instantiate a {ELFFile} object.
+    # Instantiate an {ELFFile} object.
     #
     # @param [File] stream
     #   The +File+ object to be fetch information from.
     # @example
     #   ELFFile.new(File.open('/bin/cat'))
-    #   #=> #<ELFTools::ELFFile:0x005647b1182ed8>
+    #   #=> #<ELFTools::ELFFile:0x00564b106c32a0 @elf_class=64, @endian=:little, @stream=#<File:/bin/cat>>
     def initialize(stream)
       @stream = stream
       identify # fetch the most basic information
@@ -36,7 +36,7 @@ module ELFTools
       @header.read(stream)
     end
 
-    # Return the BuildID of current file.
+    # Return the BuildID of ELF.
     # @return [String, NilClass]
     #   BuildID in hex form will be returned.
     #   +nil+ is returned if the .note.gnu.build-id section
@@ -55,7 +55,7 @@ module ELFTools
     # Get Machine architecture.
     #
     # Mappings of architecture can be found
-    # in {ELFTools::Constants::EM#mapping}.
+    # in {ELFTools::Constants::EM.mapping}.
     # @return [String]
     #   Name of architecture.
     # @example
@@ -99,7 +99,7 @@ module ELFTools
     # Iterate all sections.
     #
     # All sections are lazy loading, the section
-    # only create whenever accessing it.
+    # only be created whenever accessing it.
     # This method is useful for {#section_by_name}
     # since not all sections need to be created.
     # @param [Block] block
@@ -128,8 +128,11 @@ module ELFTools
       @sections[n]
     end
 
-    # Get the StringTable section.
-    # @return [ELFTools::Sections::Section] The desired section.
+    # Get the string table section.
+    #
+    # This section is acquired by using the +e_shstrndx+
+    # in ELF header.
+    # @return [ELFTools::Sections::StrTabSection] The desired section.
     def strtab_section
       section_at(header.e_shstrndx)
     end
@@ -145,7 +148,7 @@ module ELFTools
     # Iterate all segments.
     #
     # All segments are lazy loading, the segment
-    # only create whenever accessing it.
+    # only be created whenever accessing it.
     # This method is useful for {#segment_by_type}
     # since not all segments need to be created.
     # @param [Block] block
@@ -196,17 +199,17 @@ module ELFTools
     #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     # @example
     #   elf.segment_by_type(1337)
-    #   # ArgumentError: No PT type is "1337"
+    #   # ArgumentError: No constants in Constants::PT is 1337
     #
     #   elf.segment_by_type('oao')
-    #   # ArgumentError: No PT type named "PT_OAO"
+    #   # ArgumentError: No constants in Constants::PT named "PT_OAO"
     # @example
     #   elf.segment_by_type(0)
     #   #=> nil # no such segment exists
     def segment_by_type(type)
-      type = Util.to_constant(Constants::PT, type, msg: 'PT type')
-      each_segments do |segment|
-        return segment if segment.header.p_type == type
+      type = Util.to_constant(Constants::PT, type)
+      each_segments do |seg|
+        return seg if seg.header.p_type == type
       end
       nil
     end
@@ -218,7 +221,7 @@ module ELFTools
     #   The type needed, same format as {#segment_by_type}.
     # @return [Array<ELFTools::Segments::Segment>] The target segments.
     def segments_by_type(type)
-      type = Util.to_constant(Constants::PT, type, msg: 'PT type')
+      type = Util.to_constant(Constants::PT, type)
       segments.select { |segment| segment.header.p_type == type }
     end
 

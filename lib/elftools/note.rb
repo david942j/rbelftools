@@ -94,8 +94,7 @@ module ELFTools
       def name
         return @name if @name
         stream.pos = @offset + SIZE_OF_NHDR
-        # XXX: Should we remove the last null byte?
-        @name = stream.read(header.n_namesz)
+        @name = stream.read(header.n_namesz)[0..-2]
       end
 
       # Description of this note.

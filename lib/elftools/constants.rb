@@ -135,8 +135,7 @@ module ELFTools
       EM_FRV            = 0x5441 # Fujitsu FR-V
       EM_AVR32          = 0x18ad # Atmel AVR32
 
-      #  This is an interim value that we will use until the committee comes
-      #  up with a final number.
+      # This is an interim value that we will use until the committee comes up with a final number.
       EM_ALPHA          = 0x9026
 
       # Bogus old m32r magic number, used by old tools.

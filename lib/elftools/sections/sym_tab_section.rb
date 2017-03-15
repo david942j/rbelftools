@@ -47,7 +47,7 @@ module ELFTools
       # Iterate all symbols.
       #
       # All symbols are lazy loading, the symbol
-      # only create whenever accessing it.
+      # only be created whenever accessing it.
       # This method is useful for {#symbol_by_name}
       # since not all symbols need to be created.
       # @param [Block] block
@@ -103,7 +103,7 @@ module ELFTools
       # @param [ELFTools::ELF32_sym, ELFTools::ELF64_sym] header
       #   The symbol header.
       # @param [File] stream The streaming object.
-      # @param [ELFTools::Sections::SymStrSection, Proc] symstr
+      # @param [ELFTools::Sections::StrTabSection, Proc] symstr
       #   The symbol string section.
       #   If +Proc+ is given, it will be called at the first time
       #   access {Symbol#name}.

@@ -52,7 +52,7 @@ module ELFTools
     #   dynamic.tag_by_type('DT_PLTGOT')
     #   #=> #<ELFTools::Dynamic::Tag:0x0055d3d2d91b28 @header={:d_tag=>3, :d_val=>6295552}>
     def tag_by_type(type)
-      type = Util.to_constant(Constants::DT, type, msg: 'DT type')
+      type = Util.to_constant(Constants::DT, type)
       each_tags do |tag|
         return tag if tag.header.d_tag == type
       end

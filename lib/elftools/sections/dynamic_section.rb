@@ -10,6 +10,8 @@ module ELFTools
     class DynamicSection < Section
       include ELFTools::Dynamic
 
+      # Get the start address of tags.
+      # @return [Integer] Start address of tags.
       def tag_start
         header.sh_offset
       end
