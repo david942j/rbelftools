@@ -37,5 +37,23 @@ module ELFTools
       stream.pos = header.p_offset
       stream.read(header.p_filesz)
     end
+
+    # Is this segment readable?
+    # @return [Boolean] Ture or false.
+    def readable?
+      (header.p_flags & 4) == 4
+    end
+
+    # Is this segment writable?
+    # @return [Boolean] Ture or false.
+    def writable?
+      (header.p_flags & 2) == 2
+    end
+
+    # Is this segment executable?
+    # @return [Boolean] Ture or false.
+    def executable?
+      (header.p_flags & 1) == 1
+    end
   end
 end

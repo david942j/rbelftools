@@ -85,11 +85,15 @@ describe ELFTools::ELFFile do
   describe 'segments' do
     it 'basic' do
       expect(@elf.num_segments).to eq 9
+      expect(@elf.segments[1]).to be @elf.segment_at(1)
+      expect(@elf.segment_by_type(:note).readable?).to be true
+      expect(@elf.segment_by_type(:phdr).executable?).to be true
+      expect(@elf.segment_by_type(:gnu_stack).executable?).to be false
+      expect(@elf.segment_by_type(:gnu_stack).writable?).to be true
     end
 
     it 'data' do
       expect(@elf.segment_at(1).data).to eq "/lib64/ld-linux-x86-64.so.2\x00"
-      expect(@elf.segments[1]).to be @elf.segment_at(1)
     end
 
     it 'interp' do
@@ -98,10 +102,22 @@ describe ELFTools::ELFFile do
     end
 
     it 'notes' do
-      seg = @elf.segments.find { |s| s.instance_of?(ELFTools::NoteSegment) }
+      seg = @elf.segment_by_type(ELFTools::Constants::PT_NOTE)
       expect(seg.notes[1].name).to eq "GNU\x00"
       # The build id
       expect(seg.notes[1].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
+    end
+
+    it 'segment_by_type' do
+      expect(@elf.segment_by_type(ELFTools::Constants::PT_NOTE)).to be_a ELFTools::NoteSegment
+      expect(@elf.segment_by_type(4)).to be_a ELFTools::NoteSegment
+      expect(@elf.segment_by_type(:note)).to be_a ELFTools::NoteSegment
+      expect(@elf.segment_by_type('note')).to be_a ELFTools::NoteSegment
+      expect(@elf.segment_by_type('NoTe')).to be_a ELFTools::NoteSegment
+      expect(@elf.segment_by_type('PT_NOTE')).to be_a ELFTools::NoteSegment
+      expect(@elf.segment_by_type(:PT_NOTE)).to be_a ELFTools::NoteSegment
+      expect { @elf.segment_by_type(1337) }.to raise_error(ArgumentError, 'No PT type is "1337"')
+      expect { @elf.segment_by_type(:oao) }.to raise_error(ArgumentError, 'No PT type named "PT_OAO"')
     end
   end
 end

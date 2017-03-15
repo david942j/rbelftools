@@ -68,6 +68,25 @@ symbols.map(&:name).reject(&:empty?).first(5).join(' ')
 #=> "crtstuff.c __JCR_LIST__ deregister_tm_clones register_tm_clones __do_global_dtors_aux"
 ```
 
+## Segments
+```ruby
+elf.segment_by_type(:note)
+#=>
+# #<ELFTools::NoteSegment:0x00555beaafe218
+# @header=
+#  {:p_type=>4,
+#   :p_flags=>4,
+#   :p_offset=>624,
+#   :p_vaddr=>624,
+#   :p_paddr=>624,
+#   :p_filesz=>68,
+#   :p_memsz=>68,
+#   :p_align=>4}>
+
+elf.segment_by_type(:interp).interp_name
+#=> "/lib64/ld-linux-x86-64.so.2"
+```
+
 # Why rbelftools
 
 1. Fully documented
@@ -85,7 +104,9 @@ symbols.map(&:name).reject(&:empty?).first(5).join(' ')
 4. To be a library
 
    **rbelftools** are designed to be a library for furthur usage.
-   It will _not_ add any trivial features (e.g. show full/partial/no relro).
+   It will _not_ add any too trivial features.
+   For example, to check if NX disabled, you can use
+   `elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`
 5. Section and segment parser
 
    Providing common sections and segments parser. For example, .symtab, .shstrtab
@@ -98,10 +119,10 @@ cd rbelftools
 bundle
 rake
 ```
-Any comments, suggestions, and pull requests are welcome!
+Any comments or suggestions are welcome!
 
-# Platform
-**rbelftools** can be used on Linux and OSX.
+# Cross Platform
+**rbelftools** can be used on Linux and OSX. Should also work on Windows but not tested.
 
 # License
 MIT License

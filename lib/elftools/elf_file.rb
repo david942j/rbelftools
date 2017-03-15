@@ -75,18 +75,12 @@ module ELFTools
     # since not all sections need to be created.
     # @param [Block] block
     #   Just like +Array#each+, you can give a block.
-    # @return [void, Array<ELFTools::Section>]
-    #   If no block is given, the whole sections will
-    #   be returned.
-    #   Otherwise, since sections are lazy loaded,
-    #   the return value is not important.
+    # @return [ Array<ELFTools::Section>]
+    #   The whole sections will be returned.
     def each_sections
-      if block_given?
-        num_sections.times do |i|
-          yield section_at(i)
-        end
-      else
-        Array.new(num_sections) { |i| section_at(i) }
+      Array.new(num_sections) do |i|
+        sec = section_at(i)
+        block_given? ? yield(sec) : sec
       end
     end
 
@@ -119,11 +113,73 @@ module ELFTools
       header.e_phnum
     end
 
-    # All segments.
-    # @return [Array<ELFTools::Segment>] Array of segments.
-    def segments
-      # XXX: is here need lazy loading?
-      Array.new(num_segments) { |i| segment_at(i) }
+    # Iterate all segments.
+    #
+    # All segments are lazy loading, the segment
+    # only create whenever accessing it.
+    # This method is useful for {#segment_by_name}
+    # and {#segment_by_type} since not all segments
+    # need to be created.
+    # @param [Block] block
+    #   Just like +Array#each+, you can give a block.
+    # @return [Array<ELFTools::Segment>]
+    #   Whole segments will be returned.
+    def each_segments
+      Array.new(num_segments) do |i|
+        seg = segment_at(i)
+        block_given? ? yield(seg) : seg
+      end
+    end
+
+    # Simply use {#segments} without giving block to get all segments.
+    alias segments each_segments
+
+    # Get the first segment with +p_type=type+.
+    # The available types are listed in {ELFTools::Constants},
+    # starts with +PT_+.
+    #
+    # Notice: this method will return the first segment found,
+    # to found all segments with specific type you can use {#segments_by_type}.
+    # @param [Integer, Symbol, String] type
+    #   See examples for clear usage.
+    # @example
+    #   # type as an integer
+    #   elf.segment_by_type(ELFTools::Constants::PT_NOTE)
+    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #
+    #   elf.segment_by_type(4) # PT_NOTE
+    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #
+    #   # type as a symbol
+    #   elf.segment_by_type(:PT_NOTE)
+    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #
+    #   # you can do this
+    #   elf.segment_by_type(:note) # will be transformed into `PT_NOTE`
+    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #
+    #   # type as a string
+    #   elf.segment_by_type('PT_NOTE')
+    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    #
+    #   # this is ok
+    #   elf.segment_by_type('note') # will be tranformed into `PT_NOTE`
+    #   #=>  #<ELFTools::NoteSegment:0x005629dda1e4f8>
+    # @example
+    #   elf.segment_by_type(1337)
+    #   # ArgumentError: No PT type is "1337"
+    #
+    #   elf.segment_by_type('oao')
+    #   # ArgumentError: No PT type named "PT_OAO"
+    # @example
+    #   elf.segment_by_type(0)
+    #   #=> nil # no such segment exists
+    def segment_by_type(type)
+      type = Util.to_constant(Constants::PT, type, msg: 'PT type')
+      each_segments do |segment|
+        return segment if segment.header.p_type == type
+      end
+      nil
     end
 
     # Acquire the +n+-th segment, 0-based.

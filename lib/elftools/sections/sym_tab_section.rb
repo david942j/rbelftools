@@ -51,16 +51,12 @@ module ELFTools
     # since not all symbols need to be created.
     # @param [Block] block
     #   Just like +Array#each+, you can give a block.
-    # @return [void, Array<ELFTools::symbol>]
-    #   If no block is given, the whole symbols will
-    #   be returned.
-    #   Otherwise, since symbols are lazy loaded,
-    #   the return value is not important.
+    # @return [Array<ELFTools::symbol>]
+    #   The whole symbols will be returned.
     def each_symbols
-      if block_given?
-        num_symbols.times { |i| yield symbol_at(i) }
-      else
-        Array.new(num_symbols, &method(:symbol_at))
+      Array.new(num_symbols) do |i|
+        sym = symbol_at(i)
+        block_given? ? yield(sym) : sym
       end
     end
 
