@@ -9,12 +9,11 @@ describe 'Full test for striped binary' do
   it 'elf_file' do
     expect(@elf.endian).to be :little
     expect(@elf.elf_class).to be 64
+    expect(@elf.build_id).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
   end
 
   it 'sections' do
     expect(@elf.sections.size).to be 29
-    build_id = @elf.section_by_name('.note.gnu.build-id').notes[0].desc.unpack('H*')[0]
-    expect(build_id).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
     expect(@elf.section_by_name('.dynsym').symbols.size).to eq 9
     expect(@elf.section_by_name('.symtab')).to be nil # striped!
   end

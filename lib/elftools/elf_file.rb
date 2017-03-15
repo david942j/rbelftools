@@ -36,6 +36,22 @@ module ELFTools
       @header.read(stream)
     end
 
+    # Return the BuildID of current file.
+    # @return [String, NilClass]
+    #   BuildID in hex form will be returned.
+    #   +nil+ is returned if the .note.gnu.build-id section
+    #   is not found.
+    # @example
+    #   elf.build_id
+    #   #=> '73ab62cb7bc9959ce053c2b711322158708cdc07'
+    def build_id
+      section = section_by_name('.note.gnu.build-id')
+      return nil if section.nil?
+      note = section.notes.first
+      return nil if note.nil?
+      note.desc.unpack('H*').first
+    end
+
     #========= method about sections
 
     # Number of sections in this file.
