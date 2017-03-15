@@ -237,8 +237,9 @@ module ELFTools
 
     def create_segment(n)
       stream.pos = header.e_phoff + n * header.e_phentsize
-      phdr = ELF_Phdr[elf_class].new(endian: endian).read(stream)
-      Segments::Segment.create(phdr, stream)
+      phdr = ELF_Phdr[elf_class].new(endian: endian)
+      phdr.elf_class = elf_class
+      Segments::Segment.create(phdr.read(stream), stream)
     end
   end
 end

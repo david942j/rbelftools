@@ -2,6 +2,7 @@
 
 require 'elftools/segments/segment'
 
+require 'elftools/segments/dynamic_segment'
 require 'elftools/segments/interp_segment'
 require 'elftools/segments/note_segment'
 
@@ -17,6 +18,7 @@ module ELFTools
       #   Return object dependes on +header.p_type+.
       def create(header, stream, *args)
         klass = case header.p_type
+                when Constants::PT_DYNAMIC then DynamicSegment
                 when Constants::PT_INTERP then InterpSegment
                 when Constants::PT_NOTE then NoteSegment
                 else Segment

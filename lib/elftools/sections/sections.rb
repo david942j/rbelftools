@@ -2,6 +2,7 @@
 
 require 'elftools/sections/section'
 
+require 'elftools/sections/dynamic_section'
 require 'elftools/sections/note_section'
 require 'elftools/sections/null_section'
 require 'elftools/sections/str_tab_section'
@@ -19,9 +20,10 @@ module ELFTools
       #   Return object dependes on +header.sh_type+.
       def create(header, stream, *args)
         klass = case header.sh_type
+                when Constants::SHT_DYNAMIC then DynamicSection
                 when Constants::SHT_NULL then NullSection
-                when Constants::SHT_STRTAB then StrTabSection
                 when Constants::SHT_NOTE then NoteSection
+                when Constants::SHT_STRTAB then StrTabSection
                 when Constants::SHT_SYMTAB, Constants::SHT_DYNSYM then SymTabSection
                 else Section
                 end

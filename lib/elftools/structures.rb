@@ -3,7 +3,7 @@ module ELFTools
   # The base structure to define common methods.
   class ELFStruct < BinData::Record
     CHOICE_SIZE_T = {
-      selection: -> { elf_class }, choices: { 32 => :uint32, 64 => :uint64 }
+      selection: :elf_class, choices: { 32 => :uint32, 64 => :uint64 }
     }.freeze
 
     attr_accessor :elf_class # @return [Integer] 32 or 64.
@@ -114,11 +114,20 @@ module ELFTools
     64 => ELF64_sym
   }.freeze
 
-  # Note header
+  # Note header.
   class ELF_Nhdr < ELFStruct
     endian :big_and_little
     uint32 :n_namesz # Name size
     uint32 :n_descsz # Content size
     uint32 :n_type   # Content type
+  end
+
+  # Dynamic tag header.
+  class ELF_Dyn < ELFStruct
+    endian :big_and_little
+    choice :d_tag, selection: :elf_class, choices: { 32 => :int32, 64 => :int64 }
+    # This is an union type named +d_un+ in original source,
+    # simplify it to be +d_val+ here.
+    choice :d_val, **CHOICE_SIZE_T
   end
 end
