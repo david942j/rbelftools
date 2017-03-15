@@ -2,7 +2,7 @@
 require 'elftools/elf_file'
 describe ELFTools::ELFFile do
   before(:all) do
-    filepath = File.join(__dir__, 'files', 'amd64')
+    filepath = File.join(__dir__, 'files', 'amd64.elf')
     @elf = ELFTools::ELFFile.new(File.open(filepath))
   end
 
@@ -86,7 +86,6 @@ describe ELFTools::ELFFile do
     it 'basic' do
       expect(@elf.num_segments).to eq 9
       expect(@elf.segments[1]).to be @elf.segment_at(1)
-      expect(@elf.segment_by_type(:note).readable?).to be true
       expect(@elf.segment_by_type(:phdr).executable?).to be true
       expect(@elf.segment_by_type(:gnu_stack).executable?).to be false
       expect(@elf.segment_by_type(:gnu_stack).writable?).to be true

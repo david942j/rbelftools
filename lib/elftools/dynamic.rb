@@ -99,6 +99,8 @@ module ELFTools
         @header = header
         @stream = stream
       end
+      # TODO: Get the name of tags, e.g. SONAME
+      # TODO: Handle (non)-PIE ELF correctly.
     end
   end
 end

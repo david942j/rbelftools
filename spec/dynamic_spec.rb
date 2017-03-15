@@ -2,7 +2,7 @@ require 'elftools/elf_file'
 
 describe ELFTools::Dynamic do
   before(:all) do
-    filepath = File.join(__dir__, 'files', 'amd64')
+    filepath = File.join(__dir__, 'files', 'amd64.elf')
     @elf = ELFTools::ELFFile.new(File.open(filepath))
   end
 
