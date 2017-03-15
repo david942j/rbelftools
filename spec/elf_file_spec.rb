@@ -9,6 +9,7 @@ describe ELFTools::ELFFile do
   it 'basic' do
     expect(@elf.elf_class).to be 64
     expect(@elf.endian).to be :little
+    expect(@elf.machine).to eq 'Advanced Micro Devices X86-64'
   end
 
   it 'file header' do

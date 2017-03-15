@@ -52,6 +52,19 @@ module ELFTools
       note.desc.unpack('H*').first
     end
 
+    # Get Machine architecture.
+    #
+    # Mappings of architecture can be found
+    # in {ELFTools::Constants::EM#mapping}.
+    # @return [String]
+    #   Name of architecture.
+    # @example
+    #   elf.machine
+    #   #=> 'Advanced Micro Devices X86-64'
+    def machine
+      ELFTools::Constants::EM.mapping(header.e_machine)
+    end
+
     #========= method about sections
 
     # Number of sections in this file.
