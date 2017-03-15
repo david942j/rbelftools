@@ -142,6 +142,7 @@ module ELFTools
     # to found all segments with specific type you can use {#segments_by_type}.
     # @param [Integer, Symbol, String] type
     #   See examples for clear usage.
+    # @return [ELFTools::Segment] The target segment.
     # @example
     #   # type as an integer
     #   elf.segment_by_type(ELFTools::Constants::PT_NOTE)
@@ -180,6 +181,17 @@ module ELFTools
         return segment if segment.header.p_type == type
       end
       nil
+    end
+
+    # Fetch all segments with specific type.
+    # If you want to find only one segment,
+    # use {#segment_by_type} instead.
+    # @param [Integer, Symbol, String] type
+    #   The type needed, same format as {#segment_by_type}.
+    # @return [Array<ELFTools::Segment>] The target segments.
+    def segments_by_type(type)
+      type = Util.to_constant(Constants::PT, type, msg: 'PT type')
+      segments.select { |segment| segment.header.p_type == type }
     end
 
     # Acquire the +n+-th segment, 0-based.

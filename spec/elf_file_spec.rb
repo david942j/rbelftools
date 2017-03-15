@@ -90,6 +90,8 @@ describe ELFTools::ELFFile do
       expect(@elf.segment_by_type(:phdr).executable?).to be true
       expect(@elf.segment_by_type(:gnu_stack).executable?).to be false
       expect(@elf.segment_by_type(:gnu_stack).writable?).to be true
+
+      expect(@elf.segments_by_type(:load).size).to be 2
     end
 
     it 'data' do
