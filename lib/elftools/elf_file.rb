@@ -49,12 +49,12 @@ module ELFTools
 
     # Acquire the section named as +name+.
     # @param [String] name The desired section name.
-    # @return [ELFTools::Section, NilClass] The target section.
+    # @return [ELFTools::Sections::Section, NilClass] The target section.
     # @example
     #   elf.section_by_name('.note.gnu.build-id')
-    #   #=> #<ELFTools::Section:0x005647b1282428>
+    #   #=> #<ELFTools::Sections::Section:0x005647b1282428>
     #   elf.section_by_name('')
-    #   #=> #<ELFTools::NullSection:0x005647b11da110>
+    #   #=> #<ELFTools::Sections::NullSection:0x005647b11da110>
     #   elf.section_by_name('no such section')
     #   #=> nil
     def section_by_name(name)
@@ -75,7 +75,7 @@ module ELFTools
     # since not all sections need to be created.
     # @param [Block] block
     #   Just like +Array#each+, you can give a block.
-    # @return [ Array<ELFTools::Section>]
+    # @return [ Array<ELFTools::Sections::Section>]
     #   The whole sections will be returned.
     def each_sections
       Array.new(num_sections) do |i|
@@ -91,7 +91,7 @@ module ELFTools
     #
     # Sections are lazy loaded.
     # @param [Integer] n The index.
-    # @return [ELFTools::Section, NilClass]
+    # @return [ELFTools::Sections::Section, NilClass]
     #   The target section.
     #   If +n+ is out of bound, +nil+ is returned.
     def section_at(n)
@@ -100,7 +100,7 @@ module ELFTools
     end
 
     # Get the StringTable section.
-    # @return [ELFTools::Section] The desired section.
+    # @return [ELFTools::Sections::Section] The desired section.
     def strtab_section
       section_at(header.e_shstrndx)
     end
@@ -231,7 +231,7 @@ module ELFTools
       shdr = ELF_Shdr.new(endian: endian)
       shdr.elf_class = elf_class
       shdr.read(stream)
-      Section.create(shdr, stream,
+      Sections::Section.create(shdr, stream,
                      strtab: method(:strtab_section),
                      section_at: method(:section_at))
     end

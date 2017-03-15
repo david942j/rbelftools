@@ -72,7 +72,7 @@ describe ELFTools::ELFFile do
     end
 
     it 'notes' do
-      secs = @elf.sections.select { |sec| sec.instance_of?(ELFTools::NoteSection) }
+      secs = @elf.sections.select { |sec| sec.instance_of?(ELFTools::Sections::NoteSection) }
       # There're two note sections
       expect(secs.size).to be 2
       bid_sec = secs.last

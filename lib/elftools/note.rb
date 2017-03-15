@@ -4,9 +4,9 @@ require 'elftools/util'
 module ELFTools
   # Since both note sections and note segments
   # refer to notes, this module defines common
-  # methods for {ELFTools::NoteSection} and {ELFTools::NoteSegment}.
+  # methods for {ELFTools::Sections::NoteSection} and {ELFTools::NoteSegment}.
   #
-  # Notice: this module can only be included in {ELFTools::NoteSection} and
+  # Notice: this module can only be included in {ELFTools::Sections::NoteSection} and
   # {ELFTools::NoteSegment} since some methods assume some attributes already
   # exist.
   module Note

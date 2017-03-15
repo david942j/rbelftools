@@ -28,7 +28,7 @@ elf = ELFTools::ELFFile.new(File.open('spec/files/amd64'))
 ```ruby
 elf.section_by_name('.dynstr')
 #=>
-# #<ELFTools::StrTabSection:0x00560b148cef40
+# #<ELFTools::Sections::StrTabSection:0x00560b148cef40
 # @header=
 #  {:sh_name=>86,
 #   :sh_type=>3,
