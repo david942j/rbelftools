@@ -4,15 +4,19 @@ require 'elftools/segments/segment'
 module ELFTools
   # Class of note segment.
   class NoteSegment < Segment
+    # Load note related methods.
     include ELFTools::Note
-    # Iterate all notes
-    # @param [Block] block Will yield each note.
-    # @return [Array<ELFTools::Note::Note>] Array of notes will be returned.
-    def each_notes(&block)
-      internal_each_notes(stream, header.p_offset, header.p_filesz, header.class.self_endian, &block)
+
+    # Address offset of notes start.
+    # @return [Integer] The offset.
+    def note_start
+      header.p_offset
     end
 
-    # Simply +seg.notes+ to get all notes.
-    alias notes each_notes
+    # The total size of notes in this segment.
+    # @return [Integer] The size.
+    def note_total_size
+      header.p_filesz
+    end
   end
 end

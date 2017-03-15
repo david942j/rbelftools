@@ -5,10 +5,16 @@ module ELFTools
   # Since both note sections and note segments
   # refer to notes, this module defines common
   # methods for {ELFTools::NoteSection} and {ELFTools::NoteSegment}.
+  #
+  # Notice: this module can only be included in {ELFTools::NoteSection} and
+  # {ELFTools::NoteSegment} since some methods assume some attributes already
+  # exist.
   module Note
     # Since size of {ELFTools::ELF_Nhdr} will not change no
-    # matter what endian and what arch, so we can do this here.
+    # matter what endian and what arch, we can do this here.
+    # This value should equal to 12.
     SIZE_OF_NHDR = ELF_Nhdr.new(endian: :little).num_bytes
+
     # Iterate all notes in a note section or segment.
     #
     # Structure of notes are:
@@ -24,21 +30,19 @@ module ELFTools
     # |      ...      |
     # +---------------+
     #
-    # @param [File] stream Streaming object.
-    # @param [Integer] start Address offset of notes start.
-    # @param [Integer] total_size The total size of these notes.
-    # @param [Symbol] endian
-    #   +:little+ or +:big+.
-    #   So sad we have to pass this parameter..
+    # Notice: This method assume following methods exist:
+    #   * +stream+
+    #   * +note_start+
+    #   * +note_total_size+
     # @return [Array<ELFTools::Note::Note]
     #   The array of notes will be returned.
-    def internal_each_notes(stream, start, total_size, endian)
+    def each_notes
       @notes_offset_map ||= {}
-      cur = start
+      cur = note_start
       notes = []
-      while cur < start + total_size
+      while cur < note_start + note_total_size
         stream.pos = cur
-        @notes_offset_map[cur] ||= create_note(endian, stream, cur)
+        @notes_offset_map[cur] ||= create_note(cur)
         note = @notes_offset_map[cur]
         # name and desc size needs to be 4-bytes align
         name_size = Util.align(note.header.n_namesz, 2)
@@ -50,9 +54,20 @@ module ELFTools
       notes
     end
 
+    # Simply +#notes+ to get all notes.
+    alias notes each_notes
+
     private
 
-    def create_note(endian, stream, cur)
+    # Get the endian.
+    #
+    # Notice: This method assume method +header+ exists.
+    # @return [Symbol] +:little+ or +:big+.
+    def endian
+      header.class.self_endian
+    end
+
+    def create_note(cur)
       nhdr = ELF_Nhdr.new(endian: endian).read(stream)
       ELFTools::Note::Note.new(nhdr, stream, cur)
     end
@@ -67,7 +82,7 @@ module ELFTools
       # @param [ELF_Nhdr] header The note header.
       # @param [File] stream Streaming object.
       # @param [Integer] offset
-      #   Start address of this note, exclude the header.
+      #   Start address of this note, includes the header.
       def initialize(header, stream, offset)
         @header = header
         @stream = stream
@@ -88,7 +103,7 @@ module ELFTools
       def desc
         return @desc if @desc
         stream.pos = @offset + SIZE_OF_NHDR + Util.align(header.n_namesz, 2)
-        @desc ||= stream.read(header.n_descsz)
+        @desc = stream.read(header.n_descsz)
       end
 
       # If someone likes to use full name.
