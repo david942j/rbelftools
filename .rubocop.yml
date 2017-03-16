@@ -23,4 +23,4 @@ Metrics/LineLength:
 
 Style/ClassAndModuleCamelCase:
   Exclude:
-    - lib/elftools/structures.rb
+    - lib/elftools/structs.rb

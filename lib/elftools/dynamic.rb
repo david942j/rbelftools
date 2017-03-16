@@ -75,7 +75,7 @@ module ELFTools
       return if n < 0
       @tag_at_map ||= {}
       return @tag_at_map[n] if @tag_at_map[n]
-      dyn = ELF_Dyn.new(endian: endian)
+      dyn = Structs::ELF_Dyn.new(endian: endian)
       dyn.elf_class = header.elf_class
       stream.pos = tag_start + n * dyn.num_bytes
       @tag_at_map[n] = Tag.new(dyn.read(stream), stream)

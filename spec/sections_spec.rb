@@ -1,11 +1,11 @@
 # encoding: ascii-8bit
 require 'elftools/sections/sections'
-require 'elftools/structures'
+require 'elftools/structs'
 describe ELFTools::Sections do
   before(:all) do
     @header_maker = lambda do |type: 0|
       # endian is not important
-      shdr = ELFTools::ELF_Shdr.new(endian: :little)
+      shdr = ELFTools::Structs::ELF_Shdr.new(endian: :little)
       shdr.assign(sh_type: type)
       shdr
     end

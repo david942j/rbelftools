@@ -1,4 +1,4 @@
-require 'elftools/structures'
+require 'elftools/structs'
 require 'elftools/util'
 
 module ELFTools
@@ -13,7 +13,7 @@ module ELFTools
     # Since size of {ELFTools::ELF_Nhdr} will not change no
     # matter what endian and what arch, we can do this here.
     # This value should equal to 12.
-    SIZE_OF_NHDR = ELF_Nhdr.new(endian: :little).num_bytes
+    SIZE_OF_NHDR = Structs::ELF_Nhdr.new(endian: :little).num_bytes
 
     # Iterate all notes in a note section or segment.
     #
@@ -68,7 +68,7 @@ module ELFTools
     end
 
     def create_note(cur)
-      nhdr = ELF_Nhdr.new(endian: endian).read(stream)
+      nhdr = Structs::ELF_Nhdr.new(endian: endian).read(stream)
       ELFTools::Note::Note.new(nhdr, stream, cur)
     end
 
