@@ -78,13 +78,19 @@ module ELFTools
       dyn = Structs::ELF_Dyn.new(endian: endian)
       dyn.elf_class = header.elf_class
       stream.pos = tag_start + n * dyn.num_bytes
-      @tag_at_map[n] = Tag.new(dyn.read(stream), stream)
+      @tag_at_map[n] = Tag.new(dyn.read(stream), stream, method(:str_offset))
     end
 
     private
 
     def endian
       header.class.self_endian
+    end
+
+    # Get the DT_STRTAB's +d_val+ offset related to file.
+    def str_offset
+      # TODO: handle DT_STRTAB not exitsts.
+      @str_offset ||= @offset_from_vma.call(tag_by_type(:strtab).header.d_val.to_i)
     end
 
     # A tag class.
@@ -95,12 +101,54 @@ module ELFTools
       # Instantiate a {ELFTools::Dynamic::Tag} object.
       # @param [ELF_Dyn] header The dynamic tag header.
       # @param [File] stream Streaming object.
-      def initialize(header, stream)
+      # @param [Method] str_offset
+      #   Call this method to get the string offset related
+      #   to file.
+      def initialize(header, stream, str_offset)
         @header = header
         @stream = stream
+        @str_offset = str_offset
       end
-      # TODO: Get the name of tags, e.g. SONAME
-      # TODO: Handle (non)-PIE ELF correctly.
+
+      TYPE_WITH_NAME = [Constants::DT_NEEDED,
+                        Constants::DT_SONAME,
+                        Constants::DT_RPATH,
+                        Constants::DT_RUNPATH].freeze
+      # Return the content of this tag records.
+      #
+      # For normal tags, this method just return
+      # +header.d_val+. For tags with +header.d_val+
+      # in meaning of string offset (e.g. DT_NEEDED), this method would
+      # return the string it specified.
+      # Tags with type in {TYPE_WITH_NAME} are those tags with name.
+      # @return [Integer, String] The content this tag records.
+      # @example
+      #   dynamic = elf.segment_by_type(:dynamic)
+      #   dynamic.tag_by_type(:init).value
+      #   #=> 4195600 # 0x400510
+      #   dynamic.tag_by_type(:needed).value
+      #   #=> 'libc.so.6'
+      def value
+        name || header.d_val.to_i
+      end
+
+      # Is this tag has a name?
+      #
+      # The criteria here is if this tag's type is in {TYPE_WITH_NAME}.
+      # @return [Boolean] Is this tag has a name.
+      def name?
+        TYPE_WITH_NAME.include?(header.d_tag)
+      end
+
+      # Return the name of this tag.
+      #
+      # Only tags with name would return a name.
+      # Others would return +nil+.
+      # @return [String, NilClass] The name.
+      def name
+        return nil unless name?
+        Util.cstring(stream, @str_offset.call + header.d_val.to_i)
+      end
     end
   end
 end

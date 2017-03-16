@@ -45,6 +45,26 @@ module ELFTools
         raise ArgumentError, "No constants in #{module_name} named \"#{val}\"" unless mod.const_defined?(val)
         mod.const_get(val)
       end
+
+      # Read from stream until reach a null-byte.
+      # @param [File] stream Streaming object
+      # @param [Integer] offset Start from here.
+      # @return [String] Result string will never contain null byte.
+      # @example
+      #   Util.cstring(File.open('/bin/cat'), 0)
+      #   #=> "\x7FELF\x02\x01\x01"
+      def cstring(stream, offset)
+        stream.pos = offset
+        # read until "\x00"
+        ret = ''
+        loop do
+          c = stream.read(1)
+          return nil if c.nil? # reach EOF
+          break if c == "\x00"
+          ret += c
+        end
+        ret
+      end
     end
     extend ClassMethods
   end

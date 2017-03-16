@@ -72,6 +72,7 @@ module ELFTools
       DT_DEBUG      = 21
       DT_TEXTREL    = 22
       DT_JMPREL     = 23
+      DT_RUNPATH    = 29 # refer from binutils/include/elf/common.h
       DT_ENCODING   = 32
       DT_LOOS       = 0x6000000d
       DT_HIOS       = 0x6ffff000

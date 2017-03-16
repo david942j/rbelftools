@@ -29,6 +29,11 @@ describe ELFTools::Dynamic do
     it 'tags size' do
       expect(@segment.tags.size).to eq 24
     end
+
+    it 'tags name' do
+      expect(@segment.tag_by_type(:init).value).to be 0x400510
+      expect(@segment.tag_by_type(:needed).value).to eq 'libc.so.6'
+    end
   end
 
   describe 'dynamic section' do

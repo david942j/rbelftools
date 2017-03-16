@@ -10,9 +10,12 @@ module ELFTools
       #   Program header.
       # @param [File] stream
       #   Streaming object.
-      def initialize(header, stream)
+      # @param [Method] offset_from_vma
+      #   The method to get offset of file, given virtual memory address.
+      def initialize(header, stream, offset_from_vma: nil)
         @header = header
         @stream = stream
+        @offset_from_vma = offset_from_vma
       end
 
       # The content in this segment.

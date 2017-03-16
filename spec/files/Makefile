@@ -11,8 +11,8 @@ amd64: ${source}
 	strip -s amd64.elf -o amd64.strip.elf
 i386: ${source}
 	g++ -m32 ${source} -o i386.elf ${FLAGS}
-	g++ -m32 ${source} -o i386.so ${FLAGS} ${SO_FLAGS}
+	g++ -m32 ${source} -o i386.so.elf ${FLAGS} ${SO_FLAGS}
 	g++ -m32 ${source} -o i386.pie.elf ${FLAGS} ${PIE_FLAGS}
 
 clean:
-	rm -f *.elf *.so
+	rm -f *.elf

@@ -2,8 +2,10 @@ require 'elftools'
 
 describe 'Full test for shared object' do
   before(:all) do
-    path = File.join(__dir__, '..', 'files', 'i386.so')
+    path = File.join(__dir__, '..', 'files', 'i386.so.elf')
     @elf = ELFTools::ELFFile.new(File.open(path))
+    filepath = File.join(__dir__, '..', 'files', 'libc.so.6')
+    @libc = ELFTools::ELFFile.new(File.open(filepath))
   end
 
   it 'elf_file' do
@@ -24,5 +26,7 @@ describe 'Full test for shared object' do
     expect(@elf.segment_by_type(:interp)).to be nil # shared object no need interpreter
     expect(@elf.segment_by_type(:note).notes.size).to be 1 # only build id remained
     expect(@elf.segment_by_type(:gnu_stack).executable?).to be false
+    expect(@libc.segment_by_type(:dynamic).tag_by_type(:soname).value).to eq 'libc.so.6'
+    expect(@libc.segment_by_type(:dynamic).tag_by_type(:needed).value).to eq 'ld-linux-x86-64.so.2'
   end
 end

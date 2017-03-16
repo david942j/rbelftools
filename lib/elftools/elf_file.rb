@@ -215,14 +215,23 @@ module ELFTools
     end
 
     # Fetch all segments with specific type.
+    #
     # If you want to find only one segment,
     # use {#segment_by_type} instead.
+    # This method accept giving block.
     # @param [Integer, Symbol, String] type
     #   The type needed, same format as {#segment_by_type}.
     # @return [Array<ELFTools::Segments::Segment>] The target segments.
     def segments_by_type(type)
       type = Util.to_constant(Constants::PT, type)
-      segments.select { |segment| segment.header.p_type == type }
+      arr = []
+      each_segments do |segment|
+        if segment.header.p_type == type
+          arr << segment
+          yield segment if block_given?
+        end
+      end
+      arr
     end
 
     # Acquire the +n+-th segment, 0-based.
@@ -235,6 +244,25 @@ module ELFTools
     def segment_at(n)
       @segments ||= LazyArray.new(num_segments, &method(:create_segment))
       @segments[n]
+    end
+
+    # Get the offset related to file, given virtual memory address.
+    #
+    # This method should work no matter ELF is a PIE or not.
+    # This method refers from (actually equals to) binutils/readelf.c#offset_from_vma.
+    # @param [Integer] vma The address need query.
+    # @return [Integer] Offset related to file.
+    # @example
+    #   elf = ELFTools::ELFFile.new(File.open('/bin/cat'))
+    #   elf.offset_from_vma(0x401337)
+    #   #=> 4919 # 0x1337
+    def offset_from_vma(vma, size = 0)
+      segments_by_type(:load) do |seg|
+        if vma >= (seg.header.p_vaddr & -seg.header.p_align) &&
+           vma + size <= seg.header.p_vaddr + seg.header.p_filesz
+          return vma - seg.header.p_vaddr + seg.header.p_offset
+        end
+      end
     end
 
     private
@@ -263,6 +291,7 @@ module ELFTools
       shdr.elf_class = elf_class
       shdr.read(stream)
       Sections::Section.create(shdr, stream,
+                               offset_from_vma: method(:offset_from_vma),
                                strtab: method(:strtab_section),
                                section_at: method(:section_at))
     end
@@ -271,7 +300,7 @@ module ELFTools
       stream.pos = header.e_phoff + n * header.e_phentsize
       phdr = Structs::ELF_Phdr[elf_class].new(endian: endian)
       phdr.elf_class = elf_class
-      Segments::Segment.create(phdr.read(stream), stream)
+      Segments::Segment.create(phdr.read(stream), stream, offset_from_vma: method(:offset_from_vma))
     end
   end
 end

@@ -15,10 +15,13 @@ module ELFTools
       #   The string table object. For fetching section names.
       #   If +Proc+ if given, it will call at the first
       #   time access +#name+.
-      def initialize(header, stream, strtab: nil, **_kwagrs)
+      # @param [Method] offset_from_vma
+      #   The method to get offset of file, given virtual memory address.
+      def initialize(header, stream, offset_from_vma: nil, strtab: nil, **_kwargs)
         @header = header
         @stream = stream
         @strtab = strtab
+        @offset_from_vma = offset_from_vma
       end
 
       # Get name of this section.
