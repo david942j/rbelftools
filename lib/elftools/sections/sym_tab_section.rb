@@ -87,13 +87,14 @@ module ELFTools
 
       def create_symbol(n)
         stream.pos = header.sh_offset + n * header.sh_entsize
-        sym = ELF_sym[header.elf_class].new(endian: header.class.self_endian)
+        sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian)
         sym.read(stream)
         Symbol.new(sym, stream, symstr: method(:symstr))
       end
     end
 
     # Class of symbol.
+    #
     # XXX: Should this class be defined in an independent file?
     class Symbol
       attr_reader :header # @return [ELFTools::ELF32_sym, ELFTools::ELF64_sym] Section header.

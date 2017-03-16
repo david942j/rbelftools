@@ -1,11 +1,11 @@
 # encoding: ascii-8bit
 require 'elftools/segments/segments'
-require 'elftools/structures'
+require 'elftools/structs'
 describe ELFTools::Segments do
   before(:all) do
     @header_maker = lambda do |type: 0, flags: 0|
       # endian is not important
-      phdr = ELFTools::ELF_Phdr[32].new(endian: :little)
+      phdr = ELFTools::Structs::ELF_Phdr[32].new(endian: :little)
       phdr.assign(p_type: type, p_flags: flags)
       phdr
     end

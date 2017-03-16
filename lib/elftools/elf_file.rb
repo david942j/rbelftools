@@ -3,7 +3,7 @@ require 'elftools/exceptions'
 require 'elftools/lazy_array'
 require 'elftools/sections/sections'
 require 'elftools/segments/segments'
-require 'elftools/structures'
+require 'elftools/structs'
 
 module ELFTools
   # The main class for using elftools.
@@ -31,7 +31,7 @@ module ELFTools
     def header
       return @header if @header
       stream.pos = 0
-      @header = ELF_Ehdr.new(endian: endian)
+      @header = Structs::ELF_Ehdr.new(endian: endian)
       @header.elf_class = elf_class
       @header.read(stream)
     end
@@ -259,7 +259,7 @@ module ELFTools
 
     def create_section(n)
       stream.pos = header.e_shoff + n * header.e_shentsize
-      shdr = ELF_Shdr.new(endian: endian)
+      shdr = Structs::ELF_Shdr.new(endian: endian)
       shdr.elf_class = elf_class
       shdr.read(stream)
       Sections::Section.create(shdr, stream,
@@ -269,7 +269,7 @@ module ELFTools
 
     def create_segment(n)
       stream.pos = header.e_phoff + n * header.e_phentsize
-      phdr = ELF_Phdr[elf_class].new(endian: endian)
+      phdr = Structs::ELF_Phdr[elf_class].new(endian: endian)
       phdr.elf_class = elf_class
       Segments::Segment.create(phdr.read(stream), stream)
     end
