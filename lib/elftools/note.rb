@@ -10,7 +10,7 @@ module ELFTools
   # {ELFTools::Segments::NoteSegment} since some methods assume some attributes already
   # exist.
   module Note
-    # Since size of {ELFTools::ELF_Nhdr} will not change no
+    # Since size of {ELFTools::Structs::ELF_Nhdr} will not change no
     # matter what endian and what arch, we can do this here.
     # This value should equal to 12.
     SIZE_OF_NHDR = Structs::ELF_Nhdr.new(endian: :little).num_bytes
@@ -74,7 +74,7 @@ module ELFTools
 
     # Class of a note.
     class Note
-      attr_reader :header # @return [ELFTools::ELF_Nhdr] Note header.
+      attr_reader :header # @return [ELFTools::Structs::ELF_Nhdr] Note header.
       attr_reader :stream # @return [File] Streaming object.
       attr_reader :offset # @return [Integer] Address of this note start, includes note header.
 

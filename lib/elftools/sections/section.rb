@@ -3,11 +3,11 @@ module ELFTools
   module Sections
     # Base class of sections.
     class Section
-      attr_reader :header # @return [ELFTools::ELF_Shdr] Section header.
+      attr_reader :header # @return [ELFTools::Structs::ELF_Shdr] Section header.
       attr_reader :stream # @return [File] Streaming object.
 
       # Instantiate a {Section} object.
-      # @param [ELFTools::ELF_Shdr] header
+      # @param [ELFTools::Structs::ELF_Shdr] header
       #   The section header object.
       # @param [File] stream
       #   The streaming object for further dump.

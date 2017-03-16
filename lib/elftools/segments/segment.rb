@@ -2,11 +2,11 @@ module ELFTools
   module Segments
     # Base class of segments.
     class Segment
-      attr_reader :header # @return [ELFTools::ELF32_Phdr, ELFTools::ELF64_Phdr] Program header.
+      attr_reader :header # @return [ELFTools::Structs::ELF32_Phdr, ELFTools::Structs::ELF64_Phdr] Program header.
       attr_reader :stream # @return [File] Streaming object.
 
       # Instantiate a {Segment} object.
-      # @param [ELFTools::ELF32_Phdr, ELFTools::ELF64_Phdr] header
+      # @param [ELFTools::Structs::ELF32_Phdr, ELFTools::Structs::ELF64_Phdr] header
       #   Program header.
       # @param [File] stream
       #   Streaming object.

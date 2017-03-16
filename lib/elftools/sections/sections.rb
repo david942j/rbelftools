@@ -14,7 +14,7 @@ module ELFTools
     # Class methods of {Sections::Section}.
     class << Section
       # Use different class according to +header.sh_type+.
-      # @param [ELFTools::ELF_Shdr] header Section header.
+      # @param [ELFTools::Structs::ELF_Shdr] header Section header.
       # @param [File] stream Streaming object.
       # @return [ELFTools::Sections::Section]
       #   Return object dependes on +header.sh_type+.

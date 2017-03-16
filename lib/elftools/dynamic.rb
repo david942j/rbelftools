@@ -95,7 +95,7 @@ module ELFTools
 
     # A tag class.
     class Tag
-      attr_reader :header # @return [ELFTools::ELF_Dyn] The dynamic tag header.
+      attr_reader :header # @return [ELFTools::Structs::ELF_Dyn] The dynamic tag header.
       attr_reader :stream # @return [File] Streaming object.
 
       # Instantiate a {ELFTools::Dynamic::Tag} object.

@@ -9,7 +9,7 @@ module ELFTools
       # Instantiate a {SymTabSection} object.
       # There's a +section_at+ lambda for {SymTabSection}
       # to easily fetch other sections.
-      # @param [ELFTools::ELF_Shdr] header
+      # @param [ELFTools::Structs::ELF_Shdr] header
       #   See {Section#initialize} for more information.
       # @param [File] stream
       #   See {Section#initialize} for more information.
@@ -97,11 +97,11 @@ module ELFTools
     #
     # XXX: Should this class be defined in an independent file?
     class Symbol
-      attr_reader :header # @return [ELFTools::ELF32_sym, ELFTools::ELF64_sym] Section header.
+      attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [File] Streaming object.
 
       # Instantiate a {ELFTools::Symbol} object.
-      # @param [ELFTools::ELF32_sym, ELFTools::ELF64_sym] header
+      # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
       # @param [File] stream The streaming object.
       # @param [ELFTools::Sections::StrTabSection, Proc] symstr
