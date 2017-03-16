@@ -20,4 +20,14 @@ describe ELFTools::Constants do
     expect(em.mapping(62)).to eq 'Advanced Micro Devices X86-64'
     expect(em.mapping(183)).to eq 'AArch64'
   end
+
+  it ELFTools::Constants::ET do
+    et = ELFTools::Constants::ET
+    expect(et.mapping(1337)).to eq '<unknown>'
+    expect(et.mapping(0)).to eq 'NONE'
+    expect(et.mapping(1)).to eq 'REL'
+    expect(et.mapping(2)).to eq 'EXEC'
+    expect(et.mapping(3)).to eq 'DYN'
+    expect(et.mapping(4)).to eq 'CORE'
+  end
 end

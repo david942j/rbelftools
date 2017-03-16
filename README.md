@@ -117,7 +117,7 @@ elf.segment_by_type(:interp).interp_name
    **rbelftools** is designed to be a library for furthur usage.
    It will _not_ add any too trivial features.
    For example, to check if NX disabled, you can use
-   `elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`
+   `!elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`
 5. Section and segment parser
 
    Providing common sections and segments parser. For example, .symtab, .shstrtab

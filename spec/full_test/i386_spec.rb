@@ -11,6 +11,7 @@ describe 'Full test for i386' do
     expect(@elf.elf_class).to be 32
     expect(@elf.build_id).to eq '5aea20bbb3584e68603209eb2a90b718750e1f29'
     expect(@elf.machine).to eq 'Intel 80386'
+    expect(@elf.elf_type).to eq 'EXEC'
   end
 
   it 'sections' do

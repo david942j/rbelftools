@@ -1,6 +1,7 @@
 module ELFTools
   # Define constants from elf.h.
-  # Mostly refer from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h.
+  # Mostly refer from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
+  # and binutils/elfcpp/elfcpp.h.
   module Constants
     # ELF magic header
     ELFMAG = "\x7FELF".freeze
@@ -42,54 +43,61 @@ module ELFTools
       PT_LOPROC       = 0x70000000
       PT_HIPROC       = 0x7fffffff
       PT_GNU_EH_FRAME = 0x6474e550
-      PT_GNU_STACK    = (PT_LOOS + 0x474e551)
+      PT_GNU_STACK    = 0x6474e551
+      PT_GNU_RELRO    = 0x6474e552 # Read only after relocation
     end
     include PT
 
     # Dynamic table types, records in +d_tag+.
     module DT
-      DT_NULL       = 0
-      DT_NEEDED     = 1
-      DT_PLTRELSZ   = 2
-      DT_PLTGOT     = 3
-      DT_HASH       = 4
-      DT_STRTAB     = 5
-      DT_SYMTAB     = 6
-      DT_RELA       = 7
-      DT_RELASZ     = 8
-      DT_RELAENT    = 9
-      DT_STRSZ      = 10
-      DT_SYMENT     = 11
-      DT_INIT       = 12
-      DT_FINI       = 13
-      DT_SONAME     = 14
-      DT_RPATH      = 15
-      DT_SYMBOLIC   = 16
-      DT_REL        = 17
-      DT_RELSZ      = 18
-      DT_RELENT     = 19
-      DT_PLTREL     = 20
-      DT_DEBUG      = 21
-      DT_TEXTREL    = 22
-      DT_JMPREL     = 23
-      DT_RUNPATH    = 29 # refer from binutils/include/elf/common.h
-      DT_ENCODING   = 32
-      DT_LOOS       = 0x6000000d
-      DT_HIOS       = 0x6ffff000
-      DT_VALRNGLO   = 0x6ffffd00
-      DT_VALRNGHI   = 0x6ffffdff
-      DT_ADDRRNGLO  = 0x6ffffe00
-      DT_ADDRRNGHI  = 0x6ffffeff
-      DT_VERSYM     = 0x6ffffff0
-      DT_RELACOUNT  = 0x6ffffff9
-      DT_RELCOUNT   = 0x6ffffffa
-      DT_FLAGS_1    = 0x6ffffffb
-      DT_VERDEF     = 0x6ffffffc
-      DT_VERDEFNUM  = 0x6ffffffd
-      DT_VERNEED    = 0x6ffffffe
-      DT_VERNEEDNUM = 0x6fffffff
-      DT_LOPROC     = 0x70000000
-      DT_HIPROC     = 0x7fffffff
+      DT_NULL         = 0
+      DT_NEEDED       = 1
+      DT_PLTRELSZ     = 2
+      DT_PLTGOT       = 3
+      DT_HASH         = 4
+      DT_STRTAB       = 5
+      DT_SYMTAB       = 6
+      DT_RELA         = 7
+      DT_RELASZ       = 8
+      DT_RELAENT      = 9
+      DT_STRSZ        = 10
+      DT_SYMENT       = 11
+      DT_INIT         = 12
+      DT_FINI         = 13
+      DT_SONAME       = 14
+      DT_RPATH        = 15
+      DT_SYMBOLIC     = 16
+      DT_REL          = 17
+      DT_RELSZ        = 18
+      DT_RELENT       = 19
+      DT_PLTREL       = 20
+      DT_DEBUG        = 21
+      DT_TEXTREL      = 22
+      DT_JMPREL       = 23
+      DT_BIND_NOW     = 24
+      DT_INIT_ARRAY   = 25
+      DT_FINI_ARRAY   = 26
+      DT_INIT_ARRAYSZ = 27
+      DT_FINI_ARRAYSZ = 28
+      DT_RUNPATH      = 29
+      DT_FLAGS        = 30
+      DT_ENCODING     = 32
+      DT_LOOS         = 0x6000000d
+      DT_HIOS         = 0x6ffff000
+      DT_VALRNGLO     = 0x6ffffd00
+      DT_VALRNGHI     = 0x6ffffdff
+      DT_ADDRRNGLO    = 0x6ffffe00
+      DT_ADDRRNGHI    = 0x6ffffeff
+      DT_VERSYM       = 0x6ffffff0
+      DT_RELACOUNT    = 0x6ffffff9
+      DT_RELCOUNT     = 0x6ffffffa
+      DT_FLAGS_1      = 0x6ffffffb
+      DT_VERDEF       = 0x6ffffffc
+      DT_VERDEFNUM    = 0x6ffffffd
+      DT_VERNEED      = 0x6ffffffe
+      DT_VERNEEDNUM   = 0x6fffffff
+      DT_LOPROC       = 0x70000000
+      DT_HIPROC       = 0x7fffffff
     end
     include DT
 
@@ -179,5 +187,27 @@ module ELFTools
       end
     end
     include EM
+
+    # This module defines elf file types.
+    module ET
+      ET_NONE = 0
+      ET_REL  = 1
+      ET_EXEC = 2
+      ET_DYN  = 3
+      ET_CORE = 4
+      # Return the type name according to +e_type+ in ELF file header.
+      # @return [String] Type in string format.
+      def self.mapping(type)
+        case type
+        when Constants::ET_NONE then 'NONE'
+        when Constants::ET_REL then 'REL'
+        when Constants::ET_EXEC then 'EXEC'
+        when Constants::ET_DYN then 'DYN'
+        when Constants::ET_CORE then 'CORE'
+        else '<unknown>'
+        end
+      end
+    end
+    include ET
   end
 end

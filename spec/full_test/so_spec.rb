@@ -12,6 +12,7 @@ describe 'Full test for shared object' do
     expect(@elf.endian).to be :little
     expect(@elf.elf_class).to be 32
     expect(@elf.build_id).to eq '09990651ce15ffd2c03e0bd4eda54ab5b4cadbd9'
+    expect(@elf.elf_type).to eq 'DYN'
   end
 
   it 'sections' do

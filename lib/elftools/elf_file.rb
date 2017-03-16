@@ -65,6 +65,17 @@ module ELFTools
       ELFTools::Constants::EM.mapping(header.e_machine)
     end
 
+    # Return the ELF type according to +e_type+.
+    # @return [String] Type in string format.
+    # @example
+    #   ELFFile.new(File.open('spec/files/libc.so.6')).elf_type
+    #   #=> 'DYN'
+    #   ELFFile.new(File.open('spec/files/amd64.elf')).elf_type
+    #   #=> 'EXEC'
+    def elf_type
+      ELFTools::Constants::ET.mapping(header.e_type)
+    end
+
     #========= method about sections
 
     # Number of sections in this file.
