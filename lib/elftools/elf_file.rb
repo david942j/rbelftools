@@ -139,6 +139,31 @@ module ELFTools
       @sections[n]
     end
 
+    # Fetch all sections with specific type.
+    #
+    # The available types are listed in {ELFTools::Constants},
+    # starts with +SHT_+.
+    # This method accept giving block.
+    # @param [Integer, Symbol, String] type
+    #   The type needed, same format as {#segment_by_type}.
+    # @return [Array<ELFTools::Sections::section>] The target sections.
+    # @example
+    #   elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
+    #   elf.sections_by_type(:rela)
+    #   #=> [#<ELFTools::Sections::RelocationSection:0x00563cd3219970>,
+    #   #    #<ELFTools::Sections::RelocationSection:0x00563cd3b89d70>]
+    def sections_by_type(type)
+      type = Util.to_constant(Constants::SHT, type)
+      arr = []
+      each_sections do |sec|
+        if sec.header.sh_type == type
+          yield sec if block_given?
+          arr << sec
+        end
+      end
+      arr
+    end
+
     # Get the string table section.
     #
     # This section is acquired by using the +e_shstrndx+

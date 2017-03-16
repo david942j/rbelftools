@@ -5,6 +5,7 @@ require 'elftools/sections/section'
 require 'elftools/sections/dynamic_section'
 require 'elftools/sections/note_section'
 require 'elftools/sections/null_section'
+require 'elftools/sections/relocation_section'
 require 'elftools/sections/str_tab_section'
 require 'elftools/sections/sym_tab_section'
 
@@ -23,6 +24,7 @@ module ELFTools
                 when Constants::SHT_DYNAMIC then DynamicSection
                 when Constants::SHT_NULL then NullSection
                 when Constants::SHT_NOTE then NoteSection
+                when Constants::SHT_RELA, Constants::SHT_REL then RelocationSection
                 when Constants::SHT_STRTAB then StrTabSection
                 when Constants::SHT_SYMTAB, Constants::SHT_DYNSYM then SymTabSection
                 else Section

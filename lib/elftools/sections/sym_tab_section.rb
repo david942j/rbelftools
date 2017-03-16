@@ -36,7 +36,7 @@ module ELFTools
       #
       # Symbols are lazy loaded.
       # @param [Integer] n The index.
-      # @return [ELFTools:Symbol, NilClass]
+      # @return [ELFTools::Symbol, NilClass]
       #   The target symbol.
       #   If +n+ is out of bound, +nil+ is returned.
       def symbol_at(n)

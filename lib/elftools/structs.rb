@@ -136,5 +136,20 @@ module ELFTools
       # simplify it to be +d_val+ here.
       choice :d_val, **CHOICE_SIZE_T
     end
+
+    # Rel header in .rel section.
+    class ELF_Rel < ELFStruct
+      endian :big_and_little
+      choice :r_offset, **CHOICE_SIZE_T
+      choice :r_info, **CHOICE_SIZE_T
+    end
+
+    # Rela header in .rela section.
+    class ELF_Rela < ELFStruct
+      endian :big_and_little
+      choice :r_offset, **CHOICE_SIZE_T
+      choice :r_info, **CHOICE_SIZE_T
+      choice :r_addend, selection: :elf_class, choices: { 32 => :int32, 64 => :int64 }
+    end
   end
 end
