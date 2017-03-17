@@ -65,6 +65,28 @@ module ELFTools
         end
         ret
       end
+
+      # Select objects from enumerator with +.type+ property
+      # equals to +type+.
+      #
+      # Different from naive +Array#select+ is this method
+      # will yield block whenever find a desired object.
+      #
+      # This method is used to simplify the same logic in methods
+      # {ELFFile#sections_by_type}, {ELFFile#segments_by_type}, etc.
+      # @param [Enumerator] enum An enumerator for further select.
+      # @param [Object] type The type you want.
+      # @return [Array<Object>]
+      #   The return value will be objects in +enum+ with attribute
+      #   +.type+ equals to +type+.
+      def select_by_type(enum, type)
+        enum.select do |sec|
+          if sec.type == type
+            yield sec if block_given?
+            true
+          end
+        end
+      end
     end
     extend ClassMethods
   end

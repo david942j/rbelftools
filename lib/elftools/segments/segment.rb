@@ -18,6 +18,13 @@ module ELFTools
         @offset_from_vma = offset_from_vma
       end
 
+      # Return +header.p_type+ in a simplier way.
+      # @return [Integer]
+      #   The type, meaning of types are defined in {Constants::PT}.
+      def type
+        header.p_type
+      end
+
       # The content in this segment.
       # @return [String] The content.
       def data

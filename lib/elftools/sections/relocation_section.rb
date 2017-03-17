@@ -37,16 +37,24 @@ module ELFTools
       # only be created whenever accessing it.
       # @param [Block] block
       #   Just like +Array#each+, you can give a block.
-      # @return [Array<ELFTools::relocation>]
-      #   The whole relocations will be returned.
+      # @return [Enumerator<ELFTools::Relocation>, Array<ELFTools::Relocation>]
+      #   If block is not given, an enumerator will be returned.
+      #   Otherwise, the whole relocations will be returned.
       def each_relocations
+        return enum_for(:each_relocations) unless block_given?
         Array.new(num_relocations) do |i|
           rel = relocation_at(i)
-          block_given? ? yield(rel) : rel
+          yield rel
+          rel
         end
       end
 
-      alias relocations each_relocations
+      # Simply use {#relocations} to get all relocations.
+      # @return [Array<ELFTools::Relocation>]
+      #   Whole relocations.
+      def relocations
+        each_relocations.to_a
+      end
 
       private
 
@@ -81,6 +89,7 @@ module ELFTools
     def r_info_sym
       header.r_info >> mask_bit
     end
+    alias symbol_index r_info_sym
 
     # +r_info+ contains sym and type, use two methods
     # to access them easier.
@@ -88,6 +97,7 @@ module ELFTools
     def r_info_type
       header.r_info & ((1 << mask_bit) - 1)
     end
+    alias type r_info_type
 
     private
 

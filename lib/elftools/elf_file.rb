@@ -29,7 +29,7 @@ module ELFTools
     # Lazy loading.
     # @retrn [ELFTools::Structs::ELF_Ehdr] The header.
     def header
-      return @header if @header
+      return @header if defined?(@header)
       stream.pos = 0
       @header = Structs::ELF_Ehdr.new(endian: endian)
       @header.elf_class = elf_class
@@ -98,13 +98,7 @@ module ELFTools
     #   elf.section_by_name('no such section')
     #   #=> nil
     def section_by_name(name)
-      @section_name_map ||= {}
-      return @section_name_map[name] if @section_name_map[name]
-      each_sections do |section|
-        @section_name_map[section.name] = section
-        return section if section.name == name
-      end
-      nil
+      each_sections.find { |sec| sec.name == name }
     end
 
     # Iterate all sections.
@@ -115,17 +109,24 @@ module ELFTools
     # since not all sections need to be created.
     # @param [Block] block
     #   Just like +Array#each+, you can give a block.
-    # @return [ Array<ELFTools::Sections::Section>]
-    #   The whole sections will be returned.
+    # @return [Enumerator<ELFTools::Sections::Section>, Array<ELFTools::Sections::Section>]
+    #   As +Array#each+, if block is not given, a enumerator will be returned,
+    #   otherwise, the whole sections will be returned.
     def each_sections
+      return enum_for(:each_sections) unless block_given?
       Array.new(num_sections) do |i|
         sec = section_at(i)
-        block_given? ? yield(sec) : sec
+        yield sec
+        sec
       end
     end
 
-    # Simply use {#sections} without giving block to get all sections.
-    alias sections each_sections
+    # Simply use {#sections} to get all sections.
+    # @return [Array<ELFTools::Sections::Section>]
+    #   Whole sections.
+    def sections
+      each_sections.to_a
+    end
 
     # Acquire the +n+-th section, 0-based.
     #
@@ -142,26 +143,21 @@ module ELFTools
     # Fetch all sections with specific type.
     #
     # The available types are listed in {ELFTools::Constants},
-    # starts with +SHT_+.
+    # start with +SHT_+.
     # This method accept giving block.
     # @param [Integer, Symbol, String] type
-    #   The type needed, same format as {#segment_by_type}.
+    #   The type needed, similar format as {#segment_by_type}.
+    # @param [Block] block
+    #   Block will be yielded whenever find a section.
     # @return [Array<ELFTools::Sections::section>] The target sections.
     # @example
     #   elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
     #   elf.sections_by_type(:rela)
     #   #=> [#<ELFTools::Sections::RelocationSection:0x00563cd3219970>,
     #   #    #<ELFTools::Sections::RelocationSection:0x00563cd3b89d70>]
-    def sections_by_type(type)
+    def sections_by_type(type, &block)
       type = Util.to_constant(Constants::SHT, type)
-      arr = []
-      each_sections do |sec|
-        if sec.header.sh_type == type
-          yield sec if block_given?
-          arr << sec
-        end
-      end
-      arr
+      Util.select_by_type(each_sections, type, &block)
     end
 
     # Get the string table section.
@@ -192,18 +188,24 @@ module ELFTools
     # @return [Array<ELFTools::Segments::Segment>]
     #   Whole segments will be returned.
     def each_segments
+      return enum_for(:each_segments) unless block_given?
       Array.new(num_segments) do |i|
         seg = segment_at(i)
-        block_given? ? yield(seg) : seg
+        yield seg
+        seg
       end
     end
 
-    # Simply use {#segments} without giving block to get all segments.
-    alias segments each_segments
+    # Simply use {#segments} to get all segments.
+    # @return [Array<ELFTools::Segments::Segment>]
+    #   Whole segments.
+    def segments
+      each_segments.to_a
+    end
 
     # Get the first segment with +p_type=type+.
     # The available types are listed in {ELFTools::Constants},
-    # starts with +PT_+.
+    # start with +PT_+.
     #
     # Notice: this method will return the first segment found,
     # to found all segments with specific type you can use {#segments_by_type}.
@@ -244,10 +246,7 @@ module ELFTools
     #   #=> nil # no such segment exists
     def segment_by_type(type)
       type = Util.to_constant(Constants::PT, type)
-      each_segments do |seg|
-        return seg if seg.header.p_type == type
-      end
-      nil
+      each_segments.find { |seg| seg.header.p_type == type }
     end
 
     # Fetch all segments with specific type.
@@ -257,17 +256,12 @@ module ELFTools
     # This method accept giving block.
     # @param [Integer, Symbol, String] type
     #   The type needed, same format as {#segment_by_type}.
+    # @param [Block] block
+    #   Block will be yielded whenever find a segement.
     # @return [Array<ELFTools::Segments::Segment>] The target segments.
-    def segments_by_type(type)
+    def segments_by_type(type, &block)
       type = Util.to_constant(Constants::PT, type)
-      arr = []
-      each_segments do |segment|
-        if segment.header.p_type == type
-          arr << segment
-          yield segment if block_given?
-        end
-      end
-      arr
+      Util.select_by_type(each_segments, type, &block)
     end
 
     # Acquire the +n+-th segment, 0-based.

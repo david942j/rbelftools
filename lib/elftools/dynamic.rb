@@ -14,18 +14,27 @@ module ELFTools
     #   header
     #   tag_start
     # @param [Block] block You can give a block.
-    # @return [Array<ELFTools::Dynamic::Tag>] Array of tags.
+    # @return [Enumerator<ELFTools::Dynamic::Tag>, Array<ELFTools::Dynamic::Tag>]
+    #   If block is not given, an enumerator will be returned.
+    #   Otherwise, return array of tags.
     def each_tags
+      return enum_for(:each_tags) unless block_given?
       arr = []
       0.step do |i|
         tag = tag_at(i)
-        yield tag if block_given?
+        yield tag
         arr << tag
         break if tag.header.d_tag == ELFTools::Constants::DT_NULL
       end
       arr
     end
-    alias tags each_tags
+
+    # Use {#tags} to get all tags.
+    # @return [Array<ELFTools::Dynamic::Tag>]
+    #   Array of tags.
+    def tags
+      each_tags.to_a
+    end
 
     # Get a tag of specific type.
     # @param [Integer, Symbol, String] type
@@ -53,10 +62,7 @@ module ELFTools
     #   #=> #<ELFTools::Dynamic::Tag:0x0055d3d2d91b28 @header={:d_tag=>3, :d_val=>6295552}>
     def tag_by_type(type)
       type = Util.to_constant(Constants::DT, type)
-      each_tags do |tag|
-        return tag if tag.header.d_tag == type
-      end
-      nil
+      each_tags.find { |tag| tag.header.d_tag == type }
     end
 
     # Get the +n+-th tag.

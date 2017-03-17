@@ -24,6 +24,13 @@ module ELFTools
         @offset_from_vma = offset_from_vma
       end
 
+      # Return +header.sh_type+ in a simplier way.
+      # @return [Integer]
+      #   The type, meaning of types are defined in {Constants::SHT}.
+      def type
+        header.sh_type
+      end
+
       # Get name of this section.
       # @return [String] The name.
       def name
