@@ -98,6 +98,21 @@ elf.segment_by_type(:interp).interp_name
 #=> "/lib64/ld-linux-x86-64.so.2"
 ```
 
+## Relocations
+```ruby
+elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
+# Use relocation to get plt names.
+rela_section = elf.sections_by_type(:rela).last
+rela_section.name
+#=> ".rela.plt"
+relocations = rela_section.relocations
+relocations.map { |r| '%x' % r.header.r_info }
+#=> ["100000007", "200000007", "300000007", "400000007", "500000007", "700000007"]
+symtab = elf.section_at(rela_section.header.sh_link) # get the symbol table section
+relocations.map { |r| symtab.symbol_at(r.symbol_index).name }
+#=> ["puts", "__stack_chk_fail", "printf", "__libc_start_main", "fgets", "scanf"]
+```
+
 # Why rbelftools
 
 1. Fully documented

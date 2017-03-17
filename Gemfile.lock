@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    elftools (0.1.0)
+    elftools (0.2.0)
       bindata (~> 2)
 
 GEM
