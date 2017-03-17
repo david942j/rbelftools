@@ -129,7 +129,7 @@ relocations.map { |r| symtab.symbol_at(r.symbol_index).name }
    **rbelftools** efficient.
 4. To be a library
 
-   **rbelftools** is designed to be a library for furthur usage.
+   **rbelftools** is designed to be a library for further usage.
    It will _not_ add any too trivial features.
    For example, to check if NX disabled, you can use
    `!elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`

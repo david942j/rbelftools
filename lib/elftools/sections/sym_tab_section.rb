@@ -16,10 +16,9 @@ module ELFTools
       # @param [Proc] section_at
       #   The method for fetching other sections by index.
       #   This lambda should be {ELFTools::ELFFile#section_at}.
-      def initialize(header, stream, section_at: nil, **_kwagrs)
+      def initialize(header, stream, section_at: nil, **_kwargs)
         @section_at = section_at
         # For faster #symbol_by_name
-        @symbol_name_map = {}
         super
       end
 
@@ -55,23 +54,21 @@ module ELFTools
       # @return [Enumerator<ELFTools::Symbol>, Array<ELFTools::Symbol>]
       #   If block is not given, an enumerator will be returned.
       #   Otherwise return array of symbols.
-      def each_symbols
+      def each_symbols(&block)
         return enum_for(:each_symbols) unless block_given?
         Array.new(num_symbols) do |i|
-          sym = symbol_at(i)
-          yield sym
-          sym
+          symbol_at(i).tap(&block)
         end
       end
 
       # Simply use {#symbols} to get all symbols.
       # @return [Array<ELFTools::Symbol>]
-      #   The whole symols.
+      #   The whole symbols.
       def symbols
         each_symbols.to_a
       end
 
-      # Get symbol by it's name.
+      # Get symbol by its name.
       # @param [String] name
       #   The name of symbol.
       # @return [ELFTools::Symbol] Desired symbol.

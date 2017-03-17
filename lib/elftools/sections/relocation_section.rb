@@ -40,12 +40,10 @@ module ELFTools
       # @return [Enumerator<ELFTools::Relocation>, Array<ELFTools::Relocation>]
       #   If block is not given, an enumerator will be returned.
       #   Otherwise, the whole relocations will be returned.
-      def each_relocations
+      def each_relocations(&block)
         return enum_for(:each_relocations) unless block_given?
         Array.new(num_relocations) do |i|
-          rel = relocation_at(i)
-          yield rel
-          rel
+          relocation_at(i).tap(&block)
         end
       end
 

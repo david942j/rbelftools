@@ -112,12 +112,10 @@ module ELFTools
     # @return [Enumerator<ELFTools::Sections::Section>, Array<ELFTools::Sections::Section>]
     #   As +Array#each+, if block is not given, a enumerator will be returned,
     #   otherwise, the whole sections will be returned.
-    def each_sections
+    def each_sections(&block)
       return enum_for(:each_sections) unless block_given?
       Array.new(num_sections) do |i|
-        sec = section_at(i)
-        yield sec
-        sec
+        section_at(i).tap(&block)
       end
     end
 
@@ -187,12 +185,10 @@ module ELFTools
     #   Just like +Array#each+, you can give a block.
     # @return [Array<ELFTools::Segments::Segment>]
     #   Whole segments will be returned.
-    def each_segments
+    def each_segments(&block)
       return enum_for(:each_segments) unless block_given?
       Array.new(num_segments) do |i|
-        seg = segment_at(i)
-        yield seg
-        seg
+        segment_at(i).tap(&block)
       end
     end
 

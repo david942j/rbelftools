@@ -17,12 +17,11 @@ module ELFTools
     # @return [Enumerator<ELFTools::Dynamic::Tag>, Array<ELFTools::Dynamic::Tag>]
     #   If block is not given, an enumerator will be returned.
     #   Otherwise, return array of tags.
-    def each_tags
+    def each_tags(&block)
       return enum_for(:each_tags) unless block_given?
       arr = []
       0.step do |i|
-        tag = tag_at(i)
-        yield tag
+        tag = tag_at(i).tap(&block)
         arr << tag
         break if tag.header.d_tag == ELFTools::Constants::DT_NULL
       end
