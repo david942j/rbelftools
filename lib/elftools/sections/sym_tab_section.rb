@@ -52,28 +52,31 @@ module ELFTools
       # since not all symbols need to be created.
       # @param [Block] block
       #   Just like +Array#each+, you can give a block.
-      # @return [Array<ELFTools::symbol>]
-      #   The whole symbols will be returned.
+      # @return [Enumerator<ELFTools::Symbol>, Array<ELFTools::Symbol>]
+      #   If block is not given, an enumerator will be returned.
+      #   Otherwise return array of symbols.
       def each_symbols
+        return enum_for(:each_symbols) unless block_given?
         Array.new(num_symbols) do |i|
           sym = symbol_at(i)
-          block_given? ? yield(sym) : sym
+          yield sym
+          sym
         end
       end
 
-      alias symbols each_symbols
+      # Simply use {#symbols} to get all symbols.
+      # @return [Array<ELFTools::Symbol>]
+      #   The whole symols.
+      def symbols
+        each_symbols.to_a
+      end
 
       # Get symbol by it's name.
       # @param [String] name
       #   The name of symbol.
       # @return [ELFTools::Symbol] Desired symbol.
       def symbol_by_name(name)
-        return @symbol_name_map[name] if @symbol_name_map[name]
-        each_symbols do |symbol|
-          @symbol_name_map[symbol.name] = symbol
-          return symbol if symbol.name == name
-        end
-        nil
+        each_symbols.find { |symbol| symbol.name == name }
       end
 
       # Return the symbol string section.

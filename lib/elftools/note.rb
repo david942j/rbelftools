@@ -34,9 +34,11 @@ module ELFTools
     #   stream
     #   note_start
     #   note_total_size
-    # @return [Array<ELFTools::Note::Note>]
-    #   The array of notes will be returned.
+    # @return [Enumerator<ELFTools::Note::Note>, Array<ELFTools::Note::Note>]
+    #   If block is not given, an enumerator will be returned.
+    #   Otherwise, return the array of notes.
     def each_notes
+      return enum_for(:each_notes) unless block_given?
       @notes_offset_map ||= {}
       cur = note_start
       notes = []
@@ -49,13 +51,17 @@ module ELFTools
         desc_size = Util.align(note.header.n_descsz, 2)
         cur += SIZE_OF_NHDR + name_size + desc_size
         notes << note
-        yield note if block_given?
+        yield note
       end
       notes
     end
 
     # Simply +#notes+ to get all notes.
-    alias notes each_notes
+    # @return [Array<ELFTools::Note::Note>]
+    #   Whole notes.
+    def notes
+      each_notes.to_a
+    end
 
     private
 

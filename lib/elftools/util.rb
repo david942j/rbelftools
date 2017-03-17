@@ -80,9 +80,9 @@ module ELFTools
       #   The return value will be objects in +enum+ with attribute
       #   +.type+ equals to +type+.
       def select_by_type(enum, type)
-        enum.select do |sec|
-          if sec.type == type
-            yield sec if block_given?
+        enum.select do |obj|
+          if obj.type == type
+            yield obj if block_given?
             true
           end
         end
