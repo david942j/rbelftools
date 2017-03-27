@@ -13,7 +13,7 @@ module ELFTools
     class << Segment
       # Use different class according to +header.p_type+.
       # @param [ELFTools::Structs::ELF32_Phdr, ELFTools::Structs::ELF64_Phdr] header Program header of a segment.
-      # @param [File] stream Streaming object.
+      # @param [#pos=, #read] stream Streaming object.
       # @return [ELFTools::Segments::Segment]
       #   Return object dependes on +header.p_type+.
       def create(header, stream, *args)

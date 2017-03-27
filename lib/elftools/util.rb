@@ -47,7 +47,7 @@ module ELFTools
       end
 
       # Read from stream until reach a null-byte.
-      # @param [File] stream Streaming object
+      # @param [#pos=, #read] stream Streaming object
       # @param [Integer] offset Start from here.
       # @return [String] Result string will never contain null byte.
       # @example

@@ -23,7 +23,7 @@ module ELFTools
       #
       # relocations are lazy loaded.
       # @param [Integer] n The index.
-      # @return [ELFTools::Relocation, NilClass]
+      # @return [ELFTools::Relocation, nil]
       #   The target relocation.
       #   If +n+ is out of bound, +nil+ is returned.
       def relocation_at(n)
@@ -35,8 +35,8 @@ module ELFTools
       #
       # All relocations are lazy loading, the relocation
       # only be created whenever accessing it.
-      # @param [Block] block
-      #   Just like +Array#each+, you can give a block.
+      # @yieldparam [ELFTools::Relocation] rel A relocation object.
+      # @yieldreturn [void]
       # @return [Enumerator<ELFTools::Relocation>, Array<ELFTools::Relocation>]
       #   If block is not given, an enumerator will be returned.
       #   Otherwise, the whole relocations will be returned.
@@ -73,7 +73,7 @@ module ELFTools
   # XXX: move this to an independent file?
   class Relocation
     attr_reader :header # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] Rel(a) header.
-    attr_reader :stream # @return [File] Streaming object.
+    attr_reader :stream # @return [#pos=, #read] Streaming object.
 
     # Instantiate a {Relocation} object.
     def initialize(header, stream)

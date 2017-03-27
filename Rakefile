@@ -1,6 +1,6 @@
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
-require "yard"
+require 'yard'
 
 task default: %i(rubocop spec)
 
@@ -15,4 +15,5 @@ end
 
 YARD::Rake::YardocTask.new(:doc) do |t|
   t.files = ['lib/**/*.rb']
+  t.stats_options = ['--list-undoc']
 end

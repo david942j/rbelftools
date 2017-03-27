@@ -11,7 +11,7 @@ module ELFTools
       # to easily fetch other sections.
       # @param [ELFTools::Structs::ELF_Shdr] header
       #   See {Section#initialize} for more information.
-      # @param [File] stream
+      # @param [#pos=, #read] stream
       #   See {Section#initialize} for more information.
       # @param [Proc] section_at
       #   The method for fetching other sections by index.
@@ -35,7 +35,7 @@ module ELFTools
       #
       # Symbols are lazy loaded.
       # @param [Integer] n The index.
-      # @return [ELFTools::Symbol, NilClass]
+      # @return [ELFTools::Sections::Symbol, nil]
       #   The target symbol.
       #   If +n+ is out of bound, +nil+ is returned.
       def symbol_at(n)
@@ -49,9 +49,9 @@ module ELFTools
       # only be created whenever accessing it.
       # This method is useful for {#symbol_by_name}
       # since not all symbols need to be created.
-      # @param [Block] block
-      #   Just like +Array#each+, you can give a block.
-      # @return [Enumerator<ELFTools::Symbol>, Array<ELFTools::Symbol>]
+      # @yieldparam [ELFTools::Sections::Symbol] sym A symbol object.
+      # @yieldreturn [void]
+      # @return [Enumerator<ELFTools::Sections::Symbol>, Array<ELFTools::Sections::Symbol>]
       #   If block is not given, an enumerator will be returned.
       #   Otherwise return array of symbols.
       def each_symbols(&block)
@@ -62,7 +62,7 @@ module ELFTools
       end
 
       # Simply use {#symbols} to get all symbols.
-      # @return [Array<ELFTools::Symbol>]
+      # @return [Array<ELFTools::Sections::Symbol>]
       #   The whole symbols.
       def symbols
         each_symbols.to_a
@@ -71,7 +71,7 @@ module ELFTools
       # Get symbol by its name.
       # @param [String] name
       #   The name of symbol.
-      # @return [ELFTools::Symbol] Desired symbol.
+      # @return [ELFTools::Sections::Symbol] Desired symbol.
       def symbol_by_name(name)
         each_symbols.find { |symbol| symbol.name == name }
       end
@@ -98,12 +98,12 @@ module ELFTools
     # XXX: Should this class be defined in an independent file?
     class Symbol
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
-      attr_reader :stream # @return [File] Streaming object.
+      attr_reader :stream # @return [#pos=, #read] Streaming object.
 
       # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
-      # @param [File] stream The streaming object.
+      # @param [#pos=, #read] stream The streaming object.
       # @param [ELFTools::Sections::StrTabSection, Proc] symstr
       #   The symbol string section.
       #   If +Proc+ is given, it will be called at the first time

@@ -8,13 +8,13 @@ require 'elftools/structs'
 module ELFTools
   # The main class for using elftools.
   class ELFFile
-    attr_reader :stream # @return [File] The +File+ object.
+    attr_reader :stream # @return [#pos=, #read] The +File+ object.
     attr_reader :elf_class # @return [Integer] 32 or 64.
     attr_reader :endian # @return [Symbol] +:little+ or +:big+.
 
     # Instantiate an {ELFFile} object.
     #
-    # @param [File] stream
+    # @param [#pos=, #read] stream
     #   The +File+ object to be fetch information from.
     # @example
     #   ELFFile.new(File.open('/bin/cat'))
@@ -37,7 +37,7 @@ module ELFTools
     end
 
     # Return the BuildID of ELF.
-    # @return [String, NilClass]
+    # @return [String, nil]
     #   BuildID in hex form will be returned.
     #   +nil+ is returned if the .note.gnu.build-id section
     #   is not found.
@@ -52,7 +52,7 @@ module ELFTools
       note.desc.unpack('H*').first
     end
 
-    # Get Machine architecture.
+    # Get machine architecture.
     #
     # Mappings of architecture can be found
     # in {ELFTools::Constants::EM.mapping}.
@@ -89,7 +89,7 @@ module ELFTools
 
     # Acquire the section named as +name+.
     # @param [String] name The desired section name.
-    # @return [ELFTools::Sections::Section, NilClass] The target section.
+    # @return [ELFTools::Sections::Section, nil] The target section.
     # @example
     #   elf.section_by_name('.note.gnu.build-id')
     #   #=> #<ELFTools::Sections::Section:0x005647b1282428>
@@ -107,8 +107,8 @@ module ELFTools
     # only be created whenever accessing it.
     # This method is useful for {#section_by_name}
     # since not all sections need to be created.
-    # @param [Block] block
-    #   Just like +Array#each+, you can give a block.
+    # @yieldparam [ELFTools::Sections::Section] section A section.
+    # @yieldreturn [void]
     # @return [Enumerator<ELFTools::Sections::Section>, Array<ELFTools::Sections::Section>]
     #   As +Array#each+, if block is not given, a enumerator will be returned,
     #   otherwise, the whole sections will be returned.
@@ -130,7 +130,7 @@ module ELFTools
     #
     # Sections are lazy loaded.
     # @param [Integer] n The index.
-    # @return [ELFTools::Sections::Section, NilClass]
+    # @return [ELFTools::Sections::Section, nil]
     #   The target section.
     #   If +n+ is out of bound, +nil+ is returned.
     def section_at(n)
@@ -140,13 +140,12 @@ module ELFTools
 
     # Fetch all sections with specific type.
     #
-    # The available types are listed in {ELFTools::Constants},
-    # start with +SHT_+.
+    # The available types are listed in {ELFTools::Constants::PT}.
     # This method accept giving block.
     # @param [Integer, Symbol, String] type
     #   The type needed, similar format as {#segment_by_type}.
-    # @param [Block] block
-    #   Block will be yielded whenever find a section.
+    # @yieldparam [ELFTools::Sections::Section] section A section in specific type.
+    # @yieldreturn [void]
     # @return [Array<ELFTools::Sections::section>] The target sections.
     # @example
     #   elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
@@ -181,8 +180,8 @@ module ELFTools
     # only be created whenever accessing it.
     # This method is useful for {#segment_by_type}
     # since not all segments need to be created.
-    # @param [Block] block
-    #   Just like +Array#each+, you can give a block.
+    # @yieldparam [ELFTools::Segments::Segment] segment A segment.
+    # @yieldreturn [void]
     # @return [Array<ELFTools::Segments::Segment>]
     #   Whole segments will be returned.
     def each_segments(&block)
@@ -200,11 +199,11 @@ module ELFTools
     end
 
     # Get the first segment with +p_type=type+.
-    # The available types are listed in {ELFTools::Constants},
-    # start with +PT_+.
+    # The available types are listed in {ELFTools::Constants::PT}.
     #
-    # Notice: this method will return the first segment found,
-    # to found all segments with specific type you can use {#segments_by_type}.
+    # @note
+    #   This method will return the first segment found,
+    #   to found all segments with specific type you can use {#segments_by_type}.
     # @param [Integer, Symbol, String] type
     #   See examples for clear usage.
     # @return [ELFTools::Segments::Segment] The target segment.
@@ -252,8 +251,8 @@ module ELFTools
     # This method accept giving block.
     # @param [Integer, Symbol, String] type
     #   The type needed, same format as {#segment_by_type}.
-    # @param [Block] block
-    #   Block will be yielded whenever find a segement.
+    # @yieldparam [ELFTools::Segments::Segment] segment A segment in specific type.
+    # @yieldreturn [void]
     # @return [Array<ELFTools::Segments::Segment>] The target segments.
     def segments_by_type(type, &block)
       type = Util.to_constant(Constants::PT, type)
@@ -264,7 +263,7 @@ module ELFTools
     #
     # Segments are lazy loaded.
     # @param [Integer] n The index.
-    # @return [ELFTools::Segments::Segment, NilClass]
+    # @return [ELFTools::Segments::Segment, nil]
     #   The target segment.
     #   If +n+ is out of bound, +nil+ is returned.
     def segment_at(n)

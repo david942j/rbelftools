@@ -1,19 +1,18 @@
 module ELFTools
-  # Define common methods for dynamic sections and
-  # dynamic segments.
+  # Define common methods for dynamic sections and dynamic segments.
   #
-  # Notice: this module can only be included by
-  # {ELFTools::Sections::DynamicSection} and
-  # {ELFTools::Segments::DynamicSegment} because
-  # methods here assume some attributes exist.
+  # @note
+  #   This module can only be included by {ELFTools::Sections::DynamicSection}
+  #   and {ELFTools::Segments::DynamicSegment} because methods here assume some
+  #   attributes exist.
   module Dynamic
     # Iterate all tags.
     #
-    # Notice: this method assume the following methods
-    # already exist:
-    #   header
-    #   tag_start
-    # @param [Block] block You can give a block.
+    # @note
+    #   This method assume the following methods already exist:
+    #     header
+    #     tag_start
+    # @yieldparam [ELFTools::Dynamic::Tag] tag
     # @return [Enumerator<ELFTools::Dynamic::Tag>, Array<ELFTools::Dynamic::Tag>]
     #   If block is not given, an enumerator will be returned.
     #   Otherwise, return array of tags.
@@ -67,13 +66,13 @@ module ELFTools
     # Get the +n+-th tag.
     #
     # Tags are lazy loaded.
-    # Notice: this method assume the following methods
-    # already exist:
-    #   header
-    #   tag_start
-    #
-    # Notice: we cannot do bound checking of +n+ here since
-    # the only way to get size of tags is calling +tags.size+.
+    # @note
+    #   This method assume the following methods already exist:
+    #     header
+    #     tag_start
+    # @note
+    #   We cannot do bound checking of +n+ here since the only way to get size
+    #   of tags is calling +tags.size+.
     # @param [Integer] n The index.
     # @return [ELFTools::Dynamic::Tag] The desired tag.
     def tag_at(n)
@@ -101,11 +100,11 @@ module ELFTools
     # A tag class.
     class Tag
       attr_reader :header # @return [ELFTools::Structs::ELF_Dyn] The dynamic tag header.
-      attr_reader :stream # @return [File] Streaming object.
+      attr_reader :stream # @return [#pos=, #read] Streaming object.
 
       # Instantiate a {ELFTools::Dynamic::Tag} object.
       # @param [ELF_Dyn] header The dynamic tag header.
-      # @param [File] stream Streaming object.
+      # @param [#pos=, #read] stream Streaming object.
       # @param [Method] str_offset
       #   Call this method to get the string offset related
       #   to file.
@@ -150,7 +149,7 @@ module ELFTools
       #
       # Only tags with name would return a name.
       # Others would return +nil+.
-      # @return [String, NilClass] The name.
+      # @return [String, nil] The name.
       def name
         return nil unless name?
         Util.cstring(stream, @str_offset.call + header.d_val.to_i)

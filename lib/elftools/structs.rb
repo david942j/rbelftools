@@ -16,7 +16,7 @@ module ELFTools
       attr_accessor :elf_class # @return [Integer] 32 or 64.
 
       # Hacking to get endian of current class
-      # @return [Symbol, NilClass] +:little+ or +:big+.
+      # @return [Symbol, nil] +:little+ or +:big+.
       def self.self_endian
         bindata_name[-2..-1] == 'ge' ? :big : :little
       end

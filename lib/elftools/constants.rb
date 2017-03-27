@@ -8,109 +8,115 @@ module ELFTools
 
     # Section header types, records in +sh_type+.
     module SHT
-      SHT_NULL     = 0
-      SHT_PROGBITS = 1
-      SHT_SYMTAB   = 2
-      SHT_STRTAB   = 3
-      SHT_RELA     = 4
-      SHT_HASH     = 5
-      SHT_DYNAMIC  = 6
-      SHT_NOTE     = 7
-      SHT_NOBITS   = 8
-      SHT_REL      = 9
-      SHT_SHLIB    = 10
-      SHT_DYNSYM   = 11
-      SHT_NUM      = 12
+      SHT_NULL     = 0 # null section
+      SHT_PROGBITS = 1 # information defined by program itself
+      SHT_SYMTAB   = 2 # symbol table section
+      SHT_STRTAB   = 3 # string table section
+      SHT_RELA     = 4 # relocation with addends
+      SHT_HASH     = 5 # symbol hash table
+      SHT_DYNAMIC  = 6 # information of dynamic linking
+      SHT_NOTE     = 7 # note section
+      SHT_NOBITS   = 8 # section occupies no space
+      SHT_REL      = 9 # relocation
+      SHT_SHLIB    = 10 # reserved
+      SHT_DYNSYM   = 11 # symbols for dynamic
+      # Values between {SHT_LOPROC} and {SHT_HIPROC} are reserved for processor-specific semantics.
       SHT_LOPROC   = 0x70000000
-      SHT_HIPROC   = 0x7fffffff
+      SHT_HIPROC   = 0x7fffffff # see {SHT_LOPROC}
+      # Values between {SHT_LOUSER} and {SHT_HIUSER} are reserved for application programs.
       SHT_LOUSER   = 0x80000000
-      SHT_HIUSER   = 0xffffffff
+      SHT_HIUSER   = 0xffffffff # see {SHT_LOUSER}
     end
     include SHT
 
     # Program header types, records in +p_type+.
     module PT
-      PT_NULL         = 0
-      PT_LOAD         = 1          # Segment to be load
-      PT_DYNAMIC      = 2          # Dynamic tags
-      PT_INTERP       = 3          # Interpreter, same as .interp section
-      PT_NOTE         = 4          # Same as .note* section.
-      PT_SHLIB        = 5
-      PT_PHDR         = 6
-      PT_TLS          = 7          # Thread local storage segment
+      PT_NULL         = 0          # null segment
+      PT_LOAD         = 1          # segment to be load
+      PT_DYNAMIC      = 2          # dynamic tags
+      PT_INTERP       = 3          # interpreter, same as .interp section
+      PT_NOTE         = 4          # same as .note* section
+      PT_SHLIB        = 5          # reserved
+      PT_PHDR         = 6          # where program header starts
+      PT_TLS          = 7          # thread local storage segment
       PT_LOOS         = 0x60000000 # OS-specific
       PT_HIOS         = 0x6fffffff # OS-specific
+      # Values between {PT_LOPROC} and {PT_HIPROC} are reserved for processor-specific semantics.
       PT_LOPROC       = 0x70000000
-      PT_HIPROC       = 0x7fffffff
-      PT_GNU_EH_FRAME = 0x6474e550
-      PT_GNU_STACK    = 0x6474e551 # Permission of stack
-      PT_GNU_RELRO    = 0x6474e552 # Read only after relocation
+      PT_HIPROC       = 0x7fffffff # see {PT_LOPROC}
+      PT_GNU_EH_FRAME = 0x6474e550 # for exception handler
+      PT_GNU_STACK    = 0x6474e551 # permission of stack
+      PT_GNU_RELRO    = 0x6474e552 # read only after relocation
     end
     include PT
 
     # Dynamic table types, records in +d_tag+.
     module DT
-      DT_NULL         = 0
-      DT_NEEDED       = 1
-      DT_PLTRELSZ     = 2
-      DT_PLTGOT       = 3
-      DT_HASH         = 4
-      DT_STRTAB       = 5
-      DT_SYMTAB       = 6
-      DT_RELA         = 7
-      DT_RELASZ       = 8
-      DT_RELAENT      = 9
-      DT_STRSZ        = 10
-      DT_SYMENT       = 11
-      DT_INIT         = 12
-      DT_FINI         = 13
-      DT_SONAME       = 14
-      DT_RPATH        = 15
-      DT_SYMBOLIC     = 16
-      DT_REL          = 17
-      DT_RELSZ        = 18
-      DT_RELENT       = 19
-      DT_PLTREL       = 20
-      DT_DEBUG        = 21
-      DT_TEXTREL      = 22
-      DT_JMPREL       = 23
-      DT_BIND_NOW     = 24
-      DT_INIT_ARRAY   = 25
-      DT_FINI_ARRAY   = 26
-      DT_INIT_ARRAYSZ = 27
-      DT_FINI_ARRAYSZ = 28
-      DT_RUNPATH      = 29
-      DT_FLAGS        = 30
-      DT_ENCODING     = 32
+      DT_NULL         = 0 # marks the end of the _DYNAMIC array
+      DT_NEEDED       = 1 # libraries need to be linked by loader
+      DT_PLTRELSZ     = 2 # total size of relocation entries
+      DT_PLTGOT       = 3 # address of procedure linkage table or global offset table
+      DT_HASH         = 4 # address of symbol hash table
+      DT_STRTAB       = 5 # address of string table
+      DT_SYMTAB       = 6 # address of symbol table
+      DT_RELA         = 7 # address of a relocation table
+      DT_RELASZ       = 8 # total size of the {DT_RELA} table
+      DT_RELAENT      = 9 # size of each entry in the {DT_RELA} table
+      DT_STRSZ        = 10 # total size of {DT_STRTAB}
+      DT_SYMENT       = 11 # size of each entry in {DT_SYMTAB}
+      DT_INIT         = 12 # where the initialization function is
+      DT_FINI         = 13 # where the termination function is
+      DT_SONAME       = 14 # the shared object name
+      DT_RPATH        = 15 # has been superseded by {DT_RUNPATH}
+      DT_SYMBOLIC     = 16 # has been superseded by the DF_SYMBOLIC flag
+      DT_REL          = 17 # similar to {DT_RELA}
+      DT_RELSZ        = 18 # total size of the {DT_REL} table
+      DT_RELENT       = 19 # size of each entry in the {DT_REL} table
+      DT_PLTREL       = 20 # type of relocation entry, either {DT_REL} or {DT_RELA}
+      DT_DEBUG        = 21 # for debugging
+      DT_TEXTREL      = 22 # has been superseded by the DF_TEXTREL flag
+      DT_JMPREL       = 23 # address of relocation entries that are associated solely with the procedure linkage table
+      DT_BIND_NOW     = 24 # if the loader needs to do relocate now, superseded by the DF_BIND_NOW flag
+      DT_INIT_ARRAY   = 25 # address init array
+      DT_FINI_ARRAY   = 26 # address of fini array
+      DT_INIT_ARRAYSZ = 27 # total size of init array
+      DT_FINI_ARRAYSZ = 28 # total size of fini array
+      DT_RUNPATH      = 29 # path of libraries for searching
+      DT_FLAGS        = 30 # flags
+      DT_ENCODING     = 32 # just a lower bound
+      # Values between {DT_LOOS} and {DT_HIOS} are reserved for operating system-specific semantics.
       DT_LOOS         = 0x6000000d
-      DT_HIOS         = 0x6ffff000
+      DT_HIOS         = 0x6ffff000 # see {DT_LOOS}
+      # Values between {DT_VALRNGLO} and {DT_VALRNGHI} use the +d_un.d_val+ field of the dynamic structure.
       DT_VALRNGLO     = 0x6ffffd00
-      DT_VALRNGHI     = 0x6ffffdff
+      DT_VALRNGHI     = 0x6ffffdff # see {DT_VALRNGLO}
+      # Values between {DT_ADDRRNGLO} and {DT_ADDRRNGHI} use the +d_un.d_ptr+ field of the dynamic structure.
       DT_ADDRRNGLO    = 0x6ffffe00
-      DT_ADDRRNGHI    = 0x6ffffeff
-      DT_VERSYM       = 0x6ffffff0
-      DT_RELACOUNT    = 0x6ffffff9
-      DT_RELCOUNT     = 0x6ffffffa
-      DT_FLAGS_1      = 0x6ffffffb
-      DT_VERDEF       = 0x6ffffffc
-      DT_VERDEFNUM    = 0x6ffffffd
-      DT_VERNEED      = 0x6ffffffe
-      DT_VERNEEDNUM   = 0x6fffffff
+      DT_GNU_HASH     = 0x6ffffef5 # the gnu hash
+      DT_ADDRRNGHI    = 0x6ffffeff # see {DT_ADDRRNGLO}
+      DT_RELACOUNT    = 0x6ffffff9 # relative relocation count
+      DT_RELCOUNT     = 0x6ffffffa # relative relocation count
+      DT_FLAGS_1      = 0x6ffffffb # flags
+      DT_VERDEF       = 0x6ffffffc # address of version definition table
+      DT_VERDEFNUM    = 0x6ffffffd # number of entries in {DT_VERDEF}
+      DT_VERNEED      = 0x6ffffffe # address of version dependency table
+      DT_VERNEEDNUM   = 0x6fffffff # number of entries in {DT_VERNEED}
+      # Values between {DT_LOPROC} and {DT_HIPROC} are reserved for processor-specific semantics.
       DT_LOPROC       = 0x70000000
-      DT_HIPROC       = 0x7fffffff
+      DT_HIPROC       = 0x7fffffff # see {DT_LOPROC}
     end
     include DT
 
     # These constants define the various ELF target machines.
     module EM
-      EM_NONE           = 0
-      EM_M32            = 1
-      EM_SPARC          = 2
-      EM_386            = 3
-      EM_68K            = 4
-      EM_88K            = 5
-      EM_486            = 6      # Perhaps disused
-      EM_860            = 7
+      EM_NONE           = 0      # none
+      EM_M32            = 1      # AT&T WE 32100
+      EM_SPARC          = 2      # SPARC
+      EM_386            = 3      # Intel 80386
+      EM_68K            = 4      # Motorola 68000
+      EM_88K            = 5      # Motorola 88000
+      EM_486            = 6      # Intel 80486
+      EM_860            = 7      # Intel 80860
       EM_MIPS           = 8      # MIPS R3000 (officially, big-endian only)
 
       # Next two are historical and binaries and
@@ -191,11 +197,11 @@ module ELFTools
 
     # This module defines elf file types.
     module ET
-      ET_NONE = 0
-      ET_REL  = 1
-      ET_EXEC = 2
-      ET_DYN  = 3
-      ET_CORE = 4
+      ET_NONE = 0 # no file type
+      ET_REL  = 1 # relocatable file
+      ET_EXEC = 2 # executable file
+      ET_DYN  = 3 # shared object
+      ET_CORE = 4 # core file
       # Return the type name according to +e_type+ in ELF file header.
       # @return [String] Type in string format.
       def self.mapping(type)

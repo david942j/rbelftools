@@ -2,17 +2,18 @@ require 'elftools/structs'
 require 'elftools/util'
 
 module ELFTools
-  # Since both note sections and note segments
-  # refer to notes, this module defines common
-  # methods for {ELFTools::Sections::NoteSection} and {ELFTools::Segments::NoteSegment}.
+  # Since both note sections and note segments refer to notes, this module
+  # defines common methods for {ELFTools::Sections::NoteSection} and
+  # {ELFTools::Segments::NoteSegment}.
   #
-  # Notice: this module can only be included in {ELFTools::Sections::NoteSection} and
-  # {ELFTools::Segments::NoteSegment} since some methods assume some attributes already
-  # exist.
+  # @note
+  #   This module can only be included in {ELFTools::Sections::NoteSection} and
+  #   {ELFTools::Segments::NoteSegment} since some methods here assume some
+  #   attributes already exist.
   module Note
-    # Since size of {ELFTools::Structs::ELF_Nhdr} will not change no
-    # matter what endian and what arch, we can do this here.
-    # This value should equal to 12.
+    # Since size of {ELFTools::Structs::ELF_Nhdr} will not change no matter in
+    # what endian and what arch, we can do this here. This value should equal
+    # to 12.
     SIZE_OF_NHDR = Structs::ELF_Nhdr.new(endian: :little).num_bytes
 
     # Iterate all notes in a note section or segment.
@@ -30,10 +31,11 @@ module ELFTools
     #   |      ...      |
     #   +---------------+
     #
-    # Notice: This method assume following methods exist:
-    #   stream
-    #   note_start
-    #   note_total_size
+    # @note
+    #   This method assume following methods exist:
+    #     stream
+    #     note_start
+    #     note_total_size
     # @return [Enumerator<ELFTools::Note::Note>, Array<ELFTools::Note::Note>]
     #   If block is not given, an enumerator will be returned.
     #   Otherwise, return the array of notes.
@@ -67,7 +69,7 @@ module ELFTools
 
     # Get the endian.
     #
-    # Notice: This method assume method +header+ exists.
+    # @note This method assume method +header+ exists.
     # @return [Symbol] +:little+ or +:big+.
     def endian
       header.class.self_endian
@@ -81,12 +83,12 @@ module ELFTools
     # Class of a note.
     class Note
       attr_reader :header # @return [ELFTools::Structs::ELF_Nhdr] Note header.
-      attr_reader :stream # @return [File] Streaming object.
+      attr_reader :stream # @return [#pos=, #read] Streaming object.
       attr_reader :offset # @return [Integer] Address of this note start, includes note header.
 
       # Instantiate a {ELFTools::Note::Note} object.
       # @param [ELF_Nhdr] header The note header.
-      # @param [File] stream Streaming object.
+      # @param [#pos=, #read] stream Streaming object.
       # @param [Integer] offset
       #   Start address of this note, includes the header.
       def initialize(header, stream, offset)

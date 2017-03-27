@@ -3,12 +3,12 @@ module ELFTools
     # Base class of segments.
     class Segment
       attr_reader :header # @return [ELFTools::Structs::ELF32_Phdr, ELFTools::Structs::ELF64_Phdr] Program header.
-      attr_reader :stream # @return [File] Streaming object.
+      attr_reader :stream # @return [#pos=, #read] Streaming object.
 
       # Instantiate a {Segment} object.
       # @param [ELFTools::Structs::ELF32_Phdr, ELFTools::Structs::ELF64_Phdr] header
       #   Program header.
-      # @param [File] stream
+      # @param [#pos=, #read] stream
       #   Streaming object.
       # @param [Method] offset_from_vma
       #   The method to get offset of file, given virtual memory address.

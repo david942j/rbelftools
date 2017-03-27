@@ -7,9 +7,10 @@ module ELFTools
     # Instantiate a {LazyArray} object.
     # @param [Integer] size
     #   The size of array.
-    # @param [Block] block
-    #   At first time accessing +i+-th element,
-    #   block will be called as +block.call(i)+.
+    # @yieldparam [Integer] i
+    #   Needs +i+-th element.
+    # @yieldreturn [Object]
+    #   Value of the +i+-th element.
     # @example
     #   arr = LazyArray.new(10) { |i| p i; i * i }
     #   p arr[2]

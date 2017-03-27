@@ -70,7 +70,7 @@ symtab_section.num_symbols
 
 symtab_section.symbol_by_name('puts@@GLIBC_2.2.5')
 #=>
-# #<ELFTools::Symbol:0x00560b14af67a0
+# #<ELFTools::Sections::Symbol:0x00560b14af67a0
 #  @header={:st_name=>348, :st_info=>18, :st_other=>0, :st_shndx=>0, :st_value=>0, :st_size=>0},
 #  @name="puts@@GLIBC_2.2.5">
 
@@ -115,26 +115,21 @@ relocations.map { |r| symtab.symbol_at(r.symbol_index).name }
 
 # Why rbelftools
 
-1. Fully documented
-
+1. Fully documented   
    Always important for an Open-Source project. Online document is [here](http://www.rubydoc.info/github/david942j/rbelftools/master/frames)
-2. Fully tested
-
+2. Fully tested   
    Of course.
-3. Lazy loading on everything
-
+3. Lazy loading on everything   
    To use **rbelftools**, only need to pass the stream object of ELF file.
    **rbelftools** will read the stream object **as least times as possible** when parsing
    the file. Most information will not be fetched until you need it, which makes
    **rbelftools** efficient.
-4. To be a library
-
+4. To be a library   
    **rbelftools** is designed to be a library for further usage.
    It will _not_ add any too trivial features.
    For example, to check if NX disabled, you can use
    `!elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`
-5. Section and segment parser
-
+5. Section and segment parser   
    Providing common sections and segments parser. For example, .symtab, .shstrtab
    .dynamic sections and INTERP, DYNAMIC segments, etc.
 
