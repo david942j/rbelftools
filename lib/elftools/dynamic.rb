@@ -115,6 +115,7 @@ module ELFTools
         @str_offset = str_offset
       end
 
+      # Some dynamic have name.
       TYPE_WITH_NAME = [Constants::DT_NEEDED,
                         Constants::DT_SONAME,
                         Constants::DT_RPATH,

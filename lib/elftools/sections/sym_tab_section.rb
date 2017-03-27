@@ -100,7 +100,7 @@ module ELFTools
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [File] Streaming object.
 
-      # Instantiate a {ELFTools::Symbol} object.
+      # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
       # @param [File] stream The streaming object.

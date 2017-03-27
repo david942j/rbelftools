@@ -27,7 +27,7 @@ module ELFTools
     # Return the file header.
     #
     # Lazy loading.
-    # @retrn [ELFTools::Structs::ELF_Ehdr] The header.
+    # @return [ELFTools::Structs::ELF_Ehdr] The header.
     def header
       return @header if defined?(@header)
       stream.pos = 0

@@ -31,10 +31,10 @@ module ELFTools
     # Program header types, records in +p_type+.
     module PT
       PT_NULL         = 0
-      PT_LOAD         = 1
-      PT_DYNAMIC      = 2
-      PT_INTERP       = 3
-      PT_NOTE         = 4
+      PT_LOAD         = 1          # Segment to be load
+      PT_DYNAMIC      = 2          # Dynamic tags
+      PT_INTERP       = 3          # Interpreter, same as .interp section
+      PT_NOTE         = 4          # Same as .note* section.
       PT_SHLIB        = 5
       PT_PHDR         = 6
       PT_TLS          = 7          # Thread local storage segment
@@ -43,7 +43,7 @@ module ELFTools
       PT_LOPROC       = 0x70000000
       PT_HIPROC       = 0x7fffffff
       PT_GNU_EH_FRAME = 0x6474e550
-      PT_GNU_STACK    = 0x6474e551
+      PT_GNU_STACK    = 0x6474e551 # Permission of stack
       PT_GNU_RELRO    = 0x6474e552 # Read only after relocation
     end
     include PT
@@ -112,6 +112,7 @@ module ELFTools
       EM_486            = 6      # Perhaps disused
       EM_860            = 7
       EM_MIPS           = 8      # MIPS R3000 (officially, big-endian only)
+
       # Next two are historical and binaries and
       # modules of these types will be rejected by Linux.
       EM_MIPS_RS3_LE    = 10     # MIPS R3000 little-endian

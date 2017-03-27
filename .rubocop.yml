@@ -24,3 +24,4 @@ Metrics/LineLength:
 Style/ClassAndModuleCamelCase:
   Exclude:
     - lib/elftools/structs.rb
+    - lib/elftools/constants.rb

@@ -8,6 +8,7 @@ module ELFTools
   module Structs
     # The base structure to define common methods.
     class ELFStruct < BinData::Record
+      # DRY. Many fields have different type in different arch.
       CHOICE_SIZE_T = {
         selection: :elf_class, choices: { 32 => :uint32, 64 => :uint64 }
       }.freeze
@@ -89,6 +90,7 @@ module ELFTools
       uint64 :p_memsz
       uint64 :p_align
     end
+    # Get program header class according to bits.
     ELF_Phdr = {
       32 => ELF32_Phdr,
       64 => ELF64_Phdr
@@ -115,6 +117,7 @@ module ELFTools
       uint64 :st_value # Value of the symbol
       uint64 :st_size  # Associated symbol size
     end
+    # Get symbol header class according to bits.
     ELF_sym = {
       32 => ELF32_sym,
       64 => ELF64_sym
