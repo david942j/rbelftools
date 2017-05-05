@@ -12,7 +12,7 @@ ELF parser in pure ruby implementation. This work is inspired by [pyelftools](ht
 
 The motivation to create this repository is want to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since ELF parser is a big work, it should not be implemented directly in pwntools.
 
-**rbelftools**'s target is to create a nice ELF parser library in ruby. More features are work in progress.
+**rbelftools**'s target is to create a nice ELF parser library in ruby. More features remain a work in progress.
 
 # Install
 
@@ -144,7 +144,7 @@ rake
 Any comments or suggestions are welcome!
 
 # Cross Platform
-**rbelftools** can be used on Linux and OSX. Should also work on Windows but not tested.
+**rbelftools** can be used and has been fully tested on all platforms include Linux, OSX, and Windows!
 
 # License
 MIT License
