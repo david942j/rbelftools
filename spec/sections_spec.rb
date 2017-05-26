@@ -1,6 +1,8 @@
 # encoding: ascii-8bit
+
 require 'elftools/sections/sections'
 require 'elftools/structs'
+
 describe ELFTools::Sections do
   before(:all) do
     @header_maker = lambda do |type: 0|

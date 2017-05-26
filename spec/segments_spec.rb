@@ -1,6 +1,8 @@
 # encoding: ascii-8bit
+
 require 'elftools/segments/segments'
 require 'elftools/structs'
+
 describe ELFTools::Segments do
   before(:all) do
     @header_maker = lambda do |type: 0, flags: 0|

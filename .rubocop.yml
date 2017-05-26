@@ -25,3 +25,6 @@ Style/ClassAndModuleCamelCase:
   Exclude:
     - lib/elftools/structs.rb
     - lib/elftools/constants.rb
+
+Style/PercentLiteralDelimiters:
+  Enabled: false

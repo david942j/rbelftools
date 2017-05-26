@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/david942j/rbelftools.svg?branch=master)](https://travis-ci.org/david942j/rbelftools)
-[![Build Status](https://ci.appveyor.com/api/projects/status/sq5c4gli8ir95h6k?svg=true&retina=true&failingText=appveyor%20-%20failing&passingText=appveyor%20-%20passing)](https://ci.appveyor.com/project/david942j/rbelftools)
+[![Build Status](https://ci.appveyor.com/api/projects/status/sq5c4gli8ir95h6k?svg=true&retina=true)](https://ci.appveyor.com/project/david942j/rbelftools)
 [![Code Climate](https://codeclimate.com/github/david942j/rbelftools/badges/gpa.svg)](https://codeclimate.com/github/david942j/rbelftools)
 [![Issue Count](https://codeclimate.com/github/david942j/rbelftools/badges/issue_count.svg)](https://codeclimate.com/github/david942j/rbelftools)
 [![Test Coverage](https://codeclimate.com/github/david942j/rbelftools/badges/coverage.svg)](https://codeclimate.com/github/david942j/rbelftools/coverage)
@@ -139,7 +139,7 @@ relocations.map { |r| symtab.symbol_at(r.symbol_index).name }
 git clone https://github.com/david942j/rbelftools.git
 cd rbelftools
 bundle
-rake
+bundle exec rake
 ```
 Any comments or suggestions are welcome!
 

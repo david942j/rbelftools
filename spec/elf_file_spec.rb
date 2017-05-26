@@ -1,5 +1,7 @@
 # encoding: ascii-8bit
+
 require 'elftools/elf_file'
+
 describe ELFTools::ELFFile do
   before(:all) do
     filepath = File.join(__dir__, 'files', 'amd64.elf')
