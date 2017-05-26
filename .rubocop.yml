@@ -26,5 +26,8 @@ Style/ClassAndModuleCamelCase:
     - lib/elftools/structs.rb
     - lib/elftools/constants.rb
 
+Style/EndOfLine:
+  EnforcedStyle: lf
+
 Style/PercentLiteralDelimiters:
   Enabled: false
