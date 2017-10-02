@@ -130,6 +130,7 @@ describe ELFTools::ELFFile do
   describe 'patches' do
     it 'dup' do
       out = Tempfile.new('elftools')
+      out.binmode
       @elf.save(out.path)
       expect(out.read.force_encoding('ascii-8bit')).to eq IO.binread(@filepath)
       out.close
@@ -137,6 +138,7 @@ describe ELFTools::ELFFile do
 
     it 'patch header' do
       out = Tempfile.new('elftools')
+      out.binmode
       # prevent effect other tests
       elf = ELFTools::ELFFile.new(File.open(@filepath))
       expect(elf.machine).to eq 'Advanced Micro Devices X86-64'
