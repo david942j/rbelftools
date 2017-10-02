@@ -137,6 +137,7 @@ describe ELFTools::ELFFile do
 
     it 'patch header' do
       out = Tempfile.new('elftools')
+      out.binmode
       # prevent effect other tests
       elf = ELFTools::ELFFile.new(File.open(@filepath))
       expect(elf.machine).to eq 'Advanced Micro Devices X86-64'
