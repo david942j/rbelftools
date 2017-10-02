@@ -6,6 +6,9 @@
 [![Inline docs](https://inch-ci.org/github/david942j/rbelftools.svg?branch=master)](https://inch-ci.org/github/david942j/rbelftools)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
+# rbelftools
+Pure ruby library for parsing and patching ELF files.
+
 # Introduction
 
 ELF parser in pure ruby implementation. This work is inspired by [pyelftools](https://github.com/eliben/pyelftools) by [Eli Bendersky](https://github.com/eliben).
@@ -23,7 +26,7 @@ gem install elftools
 
 # Features
 
-- [x] Supports Both big and little endian
+- [x] Supports both big and little endian
 - [x] ELF parser
 - [x] ELF headers patcher
 
