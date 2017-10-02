@@ -8,17 +8,17 @@ module ELFTools
     # @param [Integer] size
     #   The size of array.
     # @yieldparam [Integer] i
-    #   Needs +i+-th element.
+    #   Needs the +i+-th element.
     # @yieldreturn [Object]
     #   Value of the +i+-th element.
     # @example
-    #   arr = LazyArray.new(10) { |i| p i; i * i }
+    #   arr = LazyArray.new(10) { |i| p "calc #{i}"; i * i }
     #   p arr[2]
-    #   # 2
+    #   # "calc 2"
     #   # 4
     #
     #   p arr[3]
-    #   # 3
+    #   # "calc 3"
     #   # 9
     #
     #   p arr[3]

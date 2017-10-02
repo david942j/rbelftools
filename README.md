@@ -21,6 +21,14 @@ Available on RubyGems.org!
 gem install elftools
 ```
 
+# Features
+
+- [x] Supports Both big and little endian
+- [x] ELF parser
+- [x] ELF headers patcher
+
+See example usage for more details.
+
 # Example Usage
 
 ## Start from file object
@@ -112,6 +120,39 @@ relocations.map { |r| '%x' % r.header.r_info }
 symtab = elf.section_at(rela_section.header.sh_link) # get the symbol table section
 relocations.map { |r| symtab.symbol_at(r.symbol_index).name }
 #=> ["puts", "__stack_chk_fail", "printf", "__libc_start_main", "fgets", "scanf"]
+```
+
+## Patch
+
+Patch ELF is so easy!
+
+All kinds of headers (i.e. `Ehdr`, `Shdr`, `Phdr`, etc.) can be patched.
+Patched slots will not be applied on the opened file.
+Invoke `elf.save(filename)` to save the patched ELF into `filename`.
+
+```ruby
+elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
+elf.machine
+#=> "Advanced Micro Devices X86-64"
+elf.header.e_machine = 40
+elf.machine
+#=> "ARM"
+
+interp_segment = elf.segment_by_type(:interp)
+interp_segment.interp_name
+#=> "/lib64/ld-linux-x86-64.so.2"
+interp_segment.header.p_filesz
+#=> 28
+interp_segment.header.p_filesz = 20
+interp_segment.interp_name
+#=> "/lib64/ld-linux-x86"
+
+# save the patched ELF
+elf.save('elf.patched')
+
+# in bash
+# $ file elf.patched
+# elf.patched: ELF 64-bit LSB executable, ARM, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86, for GNU...
 ```
 
 # Why rbelftools

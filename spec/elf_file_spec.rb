@@ -1,11 +1,13 @@
 # encoding: ascii-8bit
 
+require 'tempfile'
+
 require 'elftools/elf_file'
 
 describe ELFTools::ELFFile do
   before(:all) do
-    filepath = File.join(__dir__, 'files', 'amd64.elf')
-    @elf = ELFTools::ELFFile.new(File.open(filepath))
+    @filepath = File.join(__dir__, 'files', 'amd64.elf')
+    @elf = ELFTools::ELFFile.new(File.open(@filepath))
   end
 
   it 'basic' do
@@ -122,6 +124,31 @@ describe ELFTools::ELFFile do
       expect(@elf.segment_by_type(:PT_NOTE)).to be_a ELFTools::Segments::NoteSegment
       expect { @elf.segment_by_type(1337) }.to raise_error(ArgumentError, 'No constants in Constants::PT is 1337')
       expect { @elf.segment_by_type(:xx) }.to raise_error(ArgumentError, 'No constants in Constants::PT named "PT_XX"')
+    end
+  end
+
+  describe 'patches' do
+    it 'dup' do
+      out = Tempfile.new('elftools')
+      @elf.save(out.path)
+      expect(out.read.force_encoding('ascii-8bit')).to eq IO.binread(@filepath)
+      out.close
+    end
+
+    it 'patch header' do
+      out = Tempfile.new('elftools')
+      # prevent effect other tests
+      elf = ELFTools::ELFFile.new(File.open(@filepath))
+      expect(elf.machine).to eq 'Advanced Micro Devices X86-64'
+      expect(elf.section_by_name('.text').header.sh_addr).to eq 0x4005b0
+      elf.header.e_machine = 40
+      elf.section_by_name('.text').header.sh_addr = 0xdeadbeef
+      expect(elf.machine).to eq 'ARM'
+      elf.save(out.path)
+      patched_elf = ELFTools::ELFFile.new(out)
+      expect(patched_elf.machine).to eq 'ARM'
+      expect(patched_elf.section_by_name('.text').header.sh_addr).to eq 0xdeadbeef
+      out.close
     end
   end
 end

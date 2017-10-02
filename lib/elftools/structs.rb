@@ -16,18 +16,51 @@ module ELFTools
       attr_accessor :elf_class # @return [Integer] 32 or 64.
       attr_accessor :offset # @return [Integer] The file offset of this header.
 
+      # Records which fields have been patched.
+      # @return [Hash{Integer => Integer}] Patches.
+      def patches
+        @patches ||= {}
+      end
+
       class << self
         # Hook constructor, while +BinData::Record+ doesn't allow us to override +#initialize+,
         # so we hack +new+ here.
         def new(**kwargs)
           offset = kwargs.delete(:offset)
-          super.tap { |obj| obj.offset = offset }
+          super.tap do |obj|
+            obj.offset = offset
+            obj.field_names.each do |f|
+              m = "#{f}=".to_sym
+              old_method = obj.singleton_method(m)
+              obj.define_singleton_method(m) do |val|
+                org = obj.send(f)
+                obj.patches[org.abs_offset] = ELFStruct.pack(val, org.num_bytes)
+                old_method.call(val)
+              end
+            end
+          end
         end
 
         # Hacking to get endian of current class
         # @return [Symbol, nil] +:little+ or +:big+.
         def self_endian
           bindata_name[-2..-1] == 'ge' ? :big : :little
+        end
+
+        # Pack integer into string.
+        # @param [Integer] val
+        # @param [Integer] bytes
+        # @return [String]
+        def pack(val, bytes)
+          raise ArgumentError, "Not supported assign type #{val.class}" unless val.is_a?(Integer)
+          number = val & ((1 << (8 * bytes)) - 1)
+          out = []
+          bytes.times do
+            out << (number & 0xff)
+            number >>= 8
+          end
+          out = out.pack('C*')
+          self_endian == :little ? out : out.reverse
         end
       end
     end
