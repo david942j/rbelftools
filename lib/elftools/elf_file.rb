@@ -21,6 +21,8 @@ module ELFTools
     #   #=> #<ELFTools::ELFFile:0x00564b106c32a0 @elf_class=64, @endian=:little, @stream=#<File:/bin/cat>>
     def initialize(stream)
       @stream = stream
+      # always set binmode if stream is an IO object.
+      @stream.binmode if @stream.respond_to?(:binmode)
       identify # fetch the most basic information
     end
 
