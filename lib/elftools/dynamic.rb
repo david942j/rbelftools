@@ -82,6 +82,7 @@ module ELFTools
       dyn = Structs::ELF_Dyn.new(endian: endian)
       dyn.elf_class = header.elf_class
       stream.pos = tag_start + n * dyn.num_bytes
+      dyn.offset = stream.pos
       @tag_at_map[n] = Tag.new(dyn.read(stream), stream, method(:str_offset))
     end
 

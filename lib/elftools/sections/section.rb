@@ -28,7 +28,7 @@ module ELFTools
       # @return [Integer]
       #   The type, meaning of types are defined in {Constants::SHT}.
       def type
-        header.sh_type
+        header.sh_type.to_i
       end
 
       # Get name of this section.

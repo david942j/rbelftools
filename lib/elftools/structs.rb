@@ -2,7 +2,7 @@ require 'bindata'
 module ELFTools
   # Define ELF related structures in this module.
   #
-  # Structures are fetch from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h.
+  # Structures are fetched from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h.
   # Using the bindata gem to make these structures support 32/64 bits and
   # little/big endian simultaneously.
   module Structs
@@ -14,11 +14,21 @@ module ELFTools
       }.freeze
 
       attr_accessor :elf_class # @return [Integer] 32 or 64.
+      attr_accessor :offset # @return [Integer] The file offset of this header.
 
-      # Hacking to get endian of current class
-      # @return [Symbol, nil] +:little+ or +:big+.
-      def self.self_endian
-        bindata_name[-2..-1] == 'ge' ? :big : :little
+      class << self
+        # Hook constructor, while +BinData::Record+ doesn't allow us to override +#initialize+,
+        # so we hack +new+ here.
+        def new(**kwargs)
+          offset = kwargs.delete(:offset)
+          super.tap { |obj| obj.offset = offset }
+        end
+
+        # Hacking to get endian of current class
+        # @return [Symbol, nil] +:little+ or +:big+.
+        def self_endian
+          bindata_name[-2..-1] == 'ge' ? :big : :little
+        end
       end
     end
 

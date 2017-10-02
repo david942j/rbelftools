@@ -87,7 +87,7 @@ module ELFTools
 
       def create_symbol(n)
         stream.pos = header.sh_offset + n * header.sh_entsize
-        sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian)
+        sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian, offset: stream.pos)
         sym.read(stream)
         Symbol.new(sym, stream, symstr: method(:symstr))
       end

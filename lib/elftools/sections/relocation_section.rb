@@ -59,7 +59,7 @@ module ELFTools
       def create_relocation(n)
         stream.pos = header.sh_offset + n * header.sh_entsize
         klass = rela? ? Structs::ELF_Rela : Structs::ELF_Rel
-        rel = klass.new(endian: header.class.self_endian)
+        rel = klass.new(endian: header.class.self_endian, offset: stream.pos)
         rel.elf_class = header.elf_class
         rel.read(stream)
         Relocation.new(rel, stream)

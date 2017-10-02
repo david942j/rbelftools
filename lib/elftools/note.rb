@@ -76,7 +76,7 @@ module ELFTools
     end
 
     def create_note(cur)
-      nhdr = Structs::ELF_Nhdr.new(endian: endian).read(stream)
+      nhdr = Structs::ELF_Nhdr.new(endian: endian, offset: stream.pos).read(stream)
       ELFTools::Note::Note.new(nhdr, stream, cur)
     end
 
