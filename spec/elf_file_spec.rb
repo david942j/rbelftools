@@ -130,6 +130,7 @@ describe ELFTools::ELFFile do
   describe 'patches' do
     it 'dup' do
       out = Tempfile.new('elftools')
+      out.binmode
       @elf.save(out.path)
       expect(out.read.force_encoding('ascii-8bit')).to eq IO.binread(@filepath)
       out.close
