@@ -2,6 +2,9 @@ AllCops:
   DisplayCopNames: true
   DisplayStyleGuide: true
 
+Layout/EndOfLine:
+  EnforcedStyle: lf
+
 Metrics/AbcSize:
   Enabled: false
 
@@ -25,9 +28,6 @@ Style/ClassAndModuleCamelCase:
   Exclude:
     - lib/elftools/structs.rb
     - lib/elftools/constants.rb
-
-Style/EndOfLine:
-  EnforcedStyle: lf
 
 Style/PercentLiteralDelimiters:
   Enabled: false
