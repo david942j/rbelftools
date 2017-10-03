@@ -15,7 +15,7 @@ ELF parser in pure ruby implementation. This work is inspired by [pyelftools](ht
 
 The motivation to create this repository is want to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since ELF parser is a big work, it should not be implemented directly in pwntools.
 
-**rbelftools**'s target is to create a nice ELF parser library in ruby. More features remain a work in progress.
+**rbelftools**'s target is to create a nice ELF parsing library in ruby. More features remain a work in progress.
 
 # Install
 
@@ -175,12 +175,12 @@ elf.save('elf.patched')
    For example, to check if NX disabled, you can use
    `!elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`
 5. Section and segment parser   
-   Providing common sections and segments parser. For example, .symtab, .shstrtab
-   .dynamic sections and INTERP, DYNAMIC segments, etc.
+   Providing common sections and segments parser. For example, `.symtab`, `.shstrtab`
+   `.dynamic` sections and `INTERP`, `DYNAMIC` segments, etc.
 
 # Development
 ```bash
-git clone https://github.com/david942j/rbelftools.git
+git clone https://github.com/david942j/rbelftools
 cd rbelftools
 bundle
 bundle exec rake
