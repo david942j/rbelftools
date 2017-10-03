@@ -44,7 +44,7 @@ module ELFTools
         # Hacking to get endian of current class
         # @return [Symbol, nil] +:little+ or +:big+.
         def self_endian
-          bindata_name[-2..-1] == 'ge' ? :big : :little
+          bindata_name[-2..-1] == 'be' ? :big : :little
         end
 
         # Pack integer into string.
