@@ -26,7 +26,7 @@ GEM
       slop (~> 3.4)
     rainbow (2.2.2)
       rake
-    rake (12.0.0)
+    rake (12.1.0)
     rspec (3.6.0)
       rspec-core (~> 3.6.0)
       rspec-expectations (~> 3.6.0)
@@ -64,7 +64,7 @@ DEPENDENCIES
   codeclimate-test-reporter (~> 0.6)
   elftools!
   pry (~> 0.10)
-  rake (~> 12.0)
+  rake (~> 12.1)
   rspec (~> 3.5)
   rubocop (~> 0.47)
   simplecov (~> 0.13.0)

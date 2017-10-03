@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'codeclimate-test-reporter', '~> 0.6'
   s.add_development_dependency 'pry', '~> 0.10'
-  s.add_development_dependency 'rake', '~> 12.0'
+  s.add_development_dependency 'rake', '~> 12.1'
   s.add_development_dependency 'rspec', '~> 3.5'
   s.add_development_dependency 'rubocop', '~> 0.47'
   s.add_development_dependency 'simplecov', '~> 0.13.0'

@@ -32,6 +32,7 @@ module ELFTools
             obj.field_names.each do |f|
               m = "#{f}=".to_sym
               old_method = obj.singleton_method(m)
+              obj.singleton_class.send(:undef_method, m)
               obj.define_singleton_method(m) do |val|
                 org = obj.send(f)
                 obj.patches[org.abs_offset] = ELFStruct.pack(val, org.num_bytes)
