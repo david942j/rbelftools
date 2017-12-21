@@ -24,10 +24,16 @@ Metrics/LineLength:
   Enabled: true
   Max: 120
 
+Naming/ConstantName:
+  Enabled: false
+
 Style/ClassAndModuleCamelCase:
   Exclude:
     - lib/elftools/structs.rb
     - lib/elftools/constants.rb
+
+Style/FormatStringToken:
+  Enabled: false
 
 Style/PercentLiteralDelimiters:
   Enabled: false
