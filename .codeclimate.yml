@@ -1,22 +1,17 @@
 ---
-engines:
-  bundler-audit:
-    enabled: true
+version: "2"
+plugins:
   duplication:
     enabled: true
-    config:
-      languages:
-        - ruby
     exclude_paths:
-      - lib/elftools/structs.rb
-  fixme:
+    - spec/
+checks:
+  method-lines:
     enabled: false
-  rubocop:
+  method-count:
     enabled: false
-ratings:
-  paths:
-  - Gemfile.lock
-  - "**.rb"
-exclude_paths:
-- spec/
-- examples/
+  method-complexity:
+    config:
+      threshold: 10
+exclude_patterns:
+- "spec/"

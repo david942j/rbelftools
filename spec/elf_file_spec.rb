@@ -145,6 +145,7 @@ describe ELFTools::ELFFile do
       elf.section_by_name('.text').header.sh_addr = 0xdeadbeef
       expect(elf.machine).to eq 'ARM'
       elf.save(out.path)
+      out.reopen(out.path, 'rb')
       patched_elf = ELFTools::ELFFile.new(out)
       expect(patched_elf.machine).to eq 'ARM'
       expect(patched_elf.section_by_name('.text').header.sh_addr).to eq 0xdeadbeef
