@@ -5,6 +5,9 @@ AllCops:
 Layout/EndOfLine:
   EnforcedStyle: lf
 
+Lint/SplatKeywordArguments:
+  Enabled: false
+
 Metrics/AbcSize:
   Enabled: false
 
