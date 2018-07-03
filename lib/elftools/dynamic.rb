@@ -31,7 +31,7 @@ module ELFTools
     # @return [Array<ELFTools::Dynamic::Tag>]
     #   Array of tags.
     def tags
-      each_tags.to_a
+      @tags ||= each_tags.to_a
     end
 
     # Get a tag of specific type.
