@@ -253,5 +253,49 @@ module ELFTools
       SHT_HIUSER   = 0xffffffff # see {SHT_LOUSER}
     end
     include SHT
+
+    # Symbol binding from Sym st_info field.
+    module STB
+      STB_LOCAL      = 0 # Local symbol
+      STB_GLOBAL     = 1 # Global symbol
+      STB_WEAK       = 2 # Weak symbol
+      STB_NUM        = 3 # Number of defined types.
+      STB_LOOS       = 10 # Start of OS-specific
+      STB_GNU_UNIQUE = 10 # Unique symbol.
+      STB_HIOS       = 12 # End of OS-specific
+      STB_LOPROC     = 13 # Start of processor-specific
+      STB_HIPROC     = 15 # End of processor-specific
+    end
+    include STB
+
+    # Symbol types from Sym st_info field.
+    module STT
+      STT_NOTYPE         = 0 # Symbol type is unspecified
+      STT_OBJECT         = 1 # Symbol is a data object
+      STT_FUNC           = 2 # Symbol is a code object
+      STT_SECTION        = 3 # Symbol associated with a section
+      STT_FILE           = 4 # Symbol's name is file name
+      STT_COMMON         = 5 # Symbol is a common data object
+      STT_TLS            = 6 # Symbol is thread-local data object
+      STT_NUM            = 7 # Number of defined types.
+
+      # GNU extension: symbol value points to a function which is called
+      # at runtime to determine the final value of the symbol.
+      STT_GNU_IFUNC      = 10
+
+      STT_LOOS           = 10 # Start of OS-specific
+      STT_HIOS           = 12 # End of OS-specific
+      STT_LOPROC         = 13 # Start of processor-specific
+      STT_HIPROC         = 15 # End of processor-specific
+
+      # The section type that must be used for register symbols on
+      # Sparc. These symbols initialize a global register.
+      STT_SPARC_REGISTER = 13
+
+      # ARM: a THUMB function. This is not defined in ARM ELF Specification but
+      # used by the GNU tool-chain.
+      STT_ARM_TFUNC      = 13
+    end
+    include STT
   end
 end
