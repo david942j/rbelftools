@@ -6,49 +6,42 @@ module ELFTools
     # ELF magic header
     ELFMAG = "\x7FELF".freeze
 
-    # Section header types, records in +sh_type+.
-    module SHT
-      SHT_NULL     = 0 # null section
-      SHT_PROGBITS = 1 # information defined by program itself
-      SHT_SYMTAB   = 2 # symbol table section
-      SHT_STRTAB   = 3 # string table section
-      SHT_RELA     = 4 # relocation with addends
-      SHT_HASH     = 5 # symbol hash table
-      SHT_DYNAMIC  = 6 # information of dynamic linking
-      SHT_NOTE     = 7 # note section
-      SHT_NOBITS   = 8 # section occupies no space
-      SHT_REL      = 9 # relocation
-      SHT_SHLIB    = 10 # reserved
-      SHT_DYNSYM   = 11 # symbols for dynamic
-      # Values between {SHT_LOPROC} and {SHT_HIPROC} are reserved for processor-specific semantics.
-      SHT_LOPROC   = 0x70000000
-      SHT_HIPROC   = 0x7fffffff # see {SHT_LOPROC}
-      # Values between {SHT_LOUSER} and {SHT_HIUSER} are reserved for application programs.
-      SHT_LOUSER   = 0x80000000
-      SHT_HIUSER   = 0xffffffff # see {SHT_LOUSER}
-    end
-    include SHT
+    # Values of `d_un.d_val' in the DT_FLAGS and DT_FLAGS_1 entry.
+    module DF
+      DF_ORIGIN       = 0x00000001 # Object may use DF_ORIGIN
+      DF_SYMBOLIC     = 0x00000002 # Symbol resolutions starts here
+      DF_TEXTREL      = 0x00000004 # Object contains text relocations
+      DF_BIND_NOW     = 0x00000008 # No lazy binding for this object
+      DF_STATIC_TLS   = 0x00000010 # Module uses the static TLS model
 
-    # Program header types, records in +p_type+.
-    module PT
-      PT_NULL         = 0          # null segment
-      PT_LOAD         = 1          # segment to be load
-      PT_DYNAMIC      = 2          # dynamic tags
-      PT_INTERP       = 3          # interpreter, same as .interp section
-      PT_NOTE         = 4          # same as .note* section
-      PT_SHLIB        = 5          # reserved
-      PT_PHDR         = 6          # where program header starts
-      PT_TLS          = 7          # thread local storage segment
-      PT_LOOS         = 0x60000000 # OS-specific
-      PT_HIOS         = 0x6fffffff # OS-specific
-      # Values between {PT_LOPROC} and {PT_HIPROC} are reserved for processor-specific semantics.
-      PT_LOPROC       = 0x70000000
-      PT_HIPROC       = 0x7fffffff # see {PT_LOPROC}
-      PT_GNU_EH_FRAME = 0x6474e550 # for exception handler
-      PT_GNU_STACK    = 0x6474e551 # permission of stack
-      PT_GNU_RELRO    = 0x6474e552 # read only after relocation
+      DF_1_NOW        = 0x00000001 # Set RTLD_NOW for this object.
+      DF_1_GLOBAL     = 0x00000002 # Set RTLD_GLOBAL for this object.
+      DF_1_GROUP      = 0x00000004 # Set RTLD_GROUP for this object.
+      DF_1_NODELETE   = 0x00000008 # Set RTLD_NODELETE for this object.
+      DF_1_LOADFLTR   = 0x00000010 # Trigger filtee loading at runtime.
+      DF_1_INITFIRST  = 0x00000020 # Set RTLD_INITFIRST for this object
+      DF_1_NOOPEN     = 0x00000040 # Set RTLD_NOOPEN for this object.
+      DF_1_ORIGIN     = 0x00000080 # $ORIGIN must be handled.
+      DF_1_DIRECT     = 0x00000100 # Direct binding enabled.
+      DF_1_TRANS      = 0x00000200 # :nodoc:
+      DF_1_INTERPOSE  = 0x00000400 # Object is used to interpose.
+      DF_1_NODEFLIB   = 0x00000800 # Ignore default lib search path.
+      DF_1_NODUMP     = 0x00001000 # Object can't be dldump'ed.
+      DF_1_CONFALT    = 0x00002000 # Configuration alternative created.
+      DF_1_ENDFILTEE  = 0x00004000 # Filtee terminates filters search.
+      DF_1_DISPRELDNE = 0x00008000 # Disp reloc applied at build time.
+      DF_1_DISPRELPND = 0x00010000 # Disp reloc applied at run-time.
+      DF_1_NODIRECT   = 0x00020000 # Object has no-direct binding.
+      DF_1_IGNMULDEF  = 0x00040000 # :nodoc:
+      DF_1_NOKSYMS    = 0x00080000 # :nodoc:
+      DF_1_NOHDR      = 0x00100000 # :nodoc:
+      DF_1_EDITED     = 0x00200000 # Object is modified after built.
+      DF_1_NORELOC    = 0x00400000 # :nodoc:
+      DF_1_SYMINTPOSE = 0x00800000 # Object has individual interposers.
+      DF_1_GLOBAUDIT  = 0x01000000 # Global auditing required.
+      DF_1_SINGLETON  = 0x02000000 # Singleton symbols are used.
     end
-    include PT
+    include DF
 
     # Dynamic table types, records in +d_tag+.
     module DT
@@ -106,43 +99,6 @@ module ELFTools
       DT_HIPROC       = 0x7fffffff # see {DT_LOPROC}
     end
     include DT
-
-    # Values of `d_un.d_val' in the DT_FLAGS and DT_FLAGS_1 entry.
-    module DF
-      DF_ORIGIN       = 0x00000001 # Object may use DF_ORIGIN
-      DF_SYMBOLIC     = 0x00000002 # Symbol resolutions starts here
-      DF_TEXTREL      = 0x00000004 # Object contains text relocations
-      DF_BIND_NOW     = 0x00000008 # No lazy binding for this object
-      DF_STATIC_TLS   = 0x00000010 # Module uses the static TLS model
-
-      DF_1_NOW        = 0x00000001 # Set RTLD_NOW for this object.
-      DF_1_GLOBAL     = 0x00000002 # Set RTLD_GLOBAL for this object.
-      DF_1_GROUP      = 0x00000004 # Set RTLD_GROUP for this object.
-      DF_1_NODELETE   = 0x00000008 # Set RTLD_NODELETE for this object.
-      DF_1_LOADFLTR   = 0x00000010 # Trigger filtee loading at runtime.
-      DF_1_INITFIRST  = 0x00000020 # Set RTLD_INITFIRST for this object
-      DF_1_NOOPEN     = 0x00000040 # Set RTLD_NOOPEN for this object.
-      DF_1_ORIGIN     = 0x00000080 # $ORIGIN must be handled.
-      DF_1_DIRECT     = 0x00000100 # Direct binding enabled.
-      DF_1_TRANS      = 0x00000200 # :nodoc:
-      DF_1_INTERPOSE  = 0x00000400 # Object is used to interpose.
-      DF_1_NODEFLIB   = 0x00000800 # Ignore default lib search path.
-      DF_1_NODUMP     = 0x00001000 # Object can't be dldump'ed.
-      DF_1_CONFALT    = 0x00002000 # Configuration alternative created.
-      DF_1_ENDFILTEE  = 0x00004000 # Filtee terminates filters search.
-      DF_1_DISPRELDNE = 0x00008000 # Disp reloc applied at build time.
-      DF_1_DISPRELPND = 0x00010000 # Disp reloc applied at run-time.
-      DF_1_NODIRECT   = 0x00020000 # Object has no-direct binding.
-      DF_1_IGNMULDEF  = 0x00040000 # :nodoc:
-      DF_1_NOKSYMS    = 0x00080000 # :nodoc:
-      DF_1_NOHDR      = 0x00100000 # :nodoc:
-      DF_1_EDITED     = 0x00200000 # Object is modified after built.
-      DF_1_NORELOC    = 0x00400000 # :nodoc:
-      DF_1_SYMINTPOSE = 0x00800000 # Object has individual interposers.
-      DF_1_GLOBAUDIT  = 0x01000000 # Global auditing required.
-      DF_1_SINGLETON  = 0x02000000 # Singleton symbols are used.
-    end
-    include DF
 
     # These constants define the various ELF target machines.
     module EM
@@ -253,5 +209,49 @@ module ELFTools
       end
     end
     include ET
+
+    # Program header types, records in +p_type+.
+    module PT
+      PT_NULL         = 0          # null segment
+      PT_LOAD         = 1          # segment to be load
+      PT_DYNAMIC      = 2          # dynamic tags
+      PT_INTERP       = 3          # interpreter, same as .interp section
+      PT_NOTE         = 4          # same as .note* section
+      PT_SHLIB        = 5          # reserved
+      PT_PHDR         = 6          # where program header starts
+      PT_TLS          = 7          # thread local storage segment
+      PT_LOOS         = 0x60000000 # OS-specific
+      PT_HIOS         = 0x6fffffff # OS-specific
+      # Values between {PT_LOPROC} and {PT_HIPROC} are reserved for processor-specific semantics.
+      PT_LOPROC       = 0x70000000
+      PT_HIPROC       = 0x7fffffff # see {PT_LOPROC}
+      PT_GNU_EH_FRAME = 0x6474e550 # for exception handler
+      PT_GNU_STACK    = 0x6474e551 # permission of stack
+      PT_GNU_RELRO    = 0x6474e552 # read only after relocation
+    end
+    include PT
+
+    # Section header types, records in +sh_type+.
+    module SHT
+      SHT_NULL     = 0 # null section
+      SHT_PROGBITS = 1 # information defined by program itself
+      SHT_SYMTAB   = 2 # symbol table section
+      SHT_STRTAB   = 3 # string table section
+      SHT_RELA     = 4 # relocation with addends
+      SHT_HASH     = 5 # symbol hash table
+      SHT_DYNAMIC  = 6 # information of dynamic linking
+      SHT_NOTE     = 7 # note section
+      SHT_NOBITS   = 8 # section occupies no space
+      SHT_REL      = 9 # relocation
+      SHT_SHLIB    = 10 # reserved
+      SHT_DYNSYM   = 11 # symbols for dynamic
+      # Values between {SHT_LOPROC} and {SHT_HIPROC} are reserved for processor-specific semantics.
+      SHT_LOPROC   = 0x70000000
+      SHT_HIPROC   = 0x7fffffff # see {SHT_LOPROC}
+      # Values between {SHT_LOUSER} and {SHT_HIUSER} are reserved for application programs.
+      SHT_LOUSER   = 0x80000000
+      SHT_HIUSER   = 0xffffffff # see {SHT_LOUSER}
+    end
+    include SHT
   end
 end
