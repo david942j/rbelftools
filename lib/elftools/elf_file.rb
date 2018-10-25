@@ -32,6 +32,7 @@ module ELFTools
     # @return [ELFTools::Structs::ELF_Ehdr] The header.
     def header
       return @header if defined?(@header)
+
       stream.pos = 0
       @header = Structs::ELF_Ehdr.new(endian: endian, offset: stream.pos)
       @header.elf_class = elf_class
@@ -49,8 +50,10 @@ module ELFTools
     def build_id
       section = section_by_name('.note.gnu.build-id')
       return nil if section.nil?
+
       note = section.notes.first
       return nil if note.nil?
+
       note.desc.unpack('H*').first
     end
 
@@ -116,6 +119,7 @@ module ELFTools
     #   otherwise, the whole sections will be returned.
     def each_sections(&block)
       return enum_for(:each_sections) unless block_given?
+
       Array.new(num_sections) do |i|
         section_at(i).tap(&block)
       end
@@ -188,6 +192,7 @@ module ELFTools
     #   Whole segments will be returned.
     def each_segments(&block)
       return enum_for(:each_segments) unless block_given?
+
       Array.new(num_segments) do |i|
         segment_at(i).tap(&block)
       end
@@ -324,6 +329,7 @@ module ELFTools
       explore = lambda do |obj|
         return obj if obj.is_a?(::ELFTools::Structs::ELFStruct)
         return obj.map(&explore) if obj.is_a?(Array)
+
         obj.instance_variables.map do |s|
           explore.call(obj.instance_variable_get(s))
         end
@@ -335,12 +341,14 @@ module ELFTools
       stream.pos = 0
       magic = stream.read(4)
       raise ELFError, "Invalid magic number #{magic.inspect}" unless magic == Constants::ELFMAG
+
       ei_class = stream.read(1).ord
       @elf_class = {
         1 => 32,
         2 => 64
       }[ei_class]
       raise ELFError, format('Invalid EI_CLASS "\x%02x"', ei_class) if elf_class.nil?
+
       ei_data = stream.read(1).ord
       @endian = {
         1 => :little,

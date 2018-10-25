@@ -54,6 +54,7 @@ module ELFTools
         # @return [String]
         def pack(val, bytes)
           raise ArgumentError, "Not supported assign type #{val.class}" unless val.is_a?(Integer)
+
           number = val & ((1 << (8 * bytes)) - 1)
           out = []
           bytes.times do

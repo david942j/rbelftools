@@ -56,6 +56,7 @@ module ELFTools
       #   Otherwise return array of symbols.
       def each_symbols(&block)
         return enum_for(:each_symbols) unless block_given?
+
         Array.new(num_symbols) do |i|
           symbol_at(i).tap(&block)
         end

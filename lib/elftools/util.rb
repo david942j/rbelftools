@@ -17,6 +17,7 @@ module ELFTools
       def align(num, bit)
         n = 2**bit
         return num if (num % n).zero?
+
         (num + n) & ~(n - 1)
       end
 
@@ -36,6 +37,7 @@ module ELFTools
         # if val is an integer, check if exists in mod
         if val.is_a?(Integer)
           return val if mod.constants.any? { |c| mod.const_get(c) == val }
+
           raise ArgumentError, "No constants in #{module_name} is #{val}"
         end
         val = val.to_s.upcase
@@ -43,6 +45,7 @@ module ELFTools
         val = prefix + '_' + val unless val.start_with?(prefix)
         val = val.to_sym
         raise ArgumentError, "No constants in #{module_name} named \"#{val}\"" unless mod.const_defined?(val)
+
         mod.const_get(val)
       end
 
@@ -61,6 +64,7 @@ module ELFTools
           c = stream.read(1)
           return nil if c.nil? # reach EOF
           break if c == "\x00"
+
           ret += c
         end
         ret

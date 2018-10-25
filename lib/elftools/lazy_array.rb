@@ -38,6 +38,7 @@ module ELFTools
     def [](i)
       # XXX: support negative index?
       return nil if i < 0 || i >= @internal.size
+
       @internal[i] ||= @block.call(i)
     end
   end

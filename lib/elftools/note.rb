@@ -41,6 +41,7 @@ module ELFTools
     #   Otherwise, return the array of notes.
     def each_notes
       return enum_for(:each_notes) unless block_given?
+
       @notes_offset_map ||= {}
       cur = note_start
       notes = []
@@ -101,6 +102,7 @@ module ELFTools
       # @return [String] The name.
       def name
         return @name if @name
+
         stream.pos = @offset + SIZE_OF_NHDR
         @name = stream.read(header.n_namesz)[0..-2]
       end
@@ -108,7 +110,8 @@ module ELFTools
       # Description of this note.
       # @return [String] The description.
       def desc
-        return @desc if @desc
+        return @desc if instance_variable_defined?(:@desc)
+
         stream.pos = @offset + SIZE_OF_NHDR + Util.align(header.n_namesz, 2)
         @desc = stream.read(header.n_descsz)
       end

@@ -42,6 +42,7 @@ module ELFTools
       #   Otherwise, the whole relocations will be returned.
       def each_relocations(&block)
         return enum_for(:each_relocations) unless block_given?
+
         Array.new(num_relocations) do |i|
           relocation_at(i).tap(&block)
         end

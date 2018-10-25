@@ -18,6 +18,7 @@ module ELFTools
     #   Otherwise, return array of tags.
     def each_tags(&block)
       return enum_for(:each_tags) unless block_given?
+
       arr = []
       0.step do |i|
         tag = tag_at(i).tap(&block)
@@ -77,8 +78,10 @@ module ELFTools
     # @return [ELFTools::Dynamic::Tag] The desired tag.
     def tag_at(n)
       return if n < 0
+
       @tag_at_map ||= {}
       return @tag_at_map[n] if @tag_at_map[n]
+
       dyn = Structs::ELF_Dyn.new(endian: endian)
       dyn.elf_class = header.elf_class
       stream.pos = tag_start + n * dyn.num_bytes
@@ -153,6 +156,7 @@ module ELFTools
       # @return [String, nil] The name.
       def name
         return nil unless name?
+
         Util.cstring(stream, @str_offset.call + header.d_val.to_i)
       end
     end
