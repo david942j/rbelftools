@@ -282,8 +282,8 @@ module ELFTools
     #
     # This method should work no matter ELF is a PIE or not.
     # This method refers from (actually equals to) binutils/readelf.c#offset_from_vma.
-    # @param [Integer] vma The address need query.
-    # @return [Integer] Offset related to file.
+    # @param [Integer] vma The virtual address to be queried.
+    # @return [Integer] Related file offset.
     # @example
     #   elf = ELFTools::ELFFile.new(File.open('/bin/cat'))
     #   elf.offset_from_vma(0x401337)

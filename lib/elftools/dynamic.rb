@@ -64,6 +64,18 @@ module ELFTools
       each_tags.find { |tag| tag.header.d_tag == type }
     end
 
+    # Get tags of specific type.
+    # @param [Integer, Symbol, String] type
+    #   Constant value, symbol, or string of type
+    #   is acceptable. See examples for more information.
+    # @return [Array<ELFTools::Dynamic::Tag>] The desired tags.
+    #
+    # @see #tag_by_type
+    def tags_by_type(type)
+      type = Util.to_constant(Constants::DT, type)
+      each_tags.select { |tag| tag.header.d_tag == type }
+    end
+
     # Get the +n+-th tag.
     #
     # Tags are lazy loaded.

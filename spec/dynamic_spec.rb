@@ -26,6 +26,10 @@ describe ELFTools::Dynamic do
       expect { @segment.tag_by_type(:xx) }.to raise_error(ArgumentError, 'No constants in Constants::DT named "DT_XX"')
     end
 
+    it 'tags_by_type' do
+      expect(@segment.tags_by_type(:needed).map(&:name)).to eq %w[libc.so.6]
+    end
+
     it 'tags size' do
       expect(@segment.tags.size).to eq 24
     end
