@@ -36,6 +36,12 @@ describe ELFTools::Segments do
       expect(dynamic).to be_a ELFTools::Segments::DynamicSegment
       expect(dynamic.respond_to?(:tags)).to be true
     end
+
+    it 'load' do
+      load_seg = ELFTools::Segments::Segment.create(@header_maker.call(type: 1), nil)
+      expect(load_seg).to be_a ELFTools::Segments::LoadSegment
+      expect(load_seg.respond_to?(:vma_to_offset)).to be true
+    end
   end
 
   describe 'common methods' do

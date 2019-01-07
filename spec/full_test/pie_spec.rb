@@ -24,5 +24,7 @@ describe 'Full test for PIE' do
     expect(@elf.segment_by_type(:interp).interp_name).to eq '/lib/ld-linux.so.2'
     expect(@elf.segment_by_type(:note).notes.size).to be 2
     expect(@elf.segment_by_type(:gnu_stack).executable?).to be false
+    expect(@elf.segment_by_type(:load).offset_in?(0x12345678)).to be false
+    expect(@elf.segment_by_type(:load).offset_to_vma(0x33)).to be 0x33
   end
 end

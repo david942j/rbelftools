@@ -23,5 +23,7 @@ describe 'Full test for striped binary' do
     expect(@elf.segment_by_type(:interp).interp_name).to eq '/lib64/ld-linux-x86-64.so.2'
     expect(@elf.segment_by_type(:note).notes.size).to be 2
     expect(@elf.segment_by_type(:gnu_stack).executable?).to be false
+    expect(@elf.segment_by_type(:load).offset_in?(0x33)).to be true
+    expect(@elf.segment_by_type(:load).offset_to_vma(0x33)).to be 0x400033
   end
 end

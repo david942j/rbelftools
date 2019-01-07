@@ -4,6 +4,7 @@ require 'elftools/segments/segment'
 
 require 'elftools/segments/dynamic_segment'
 require 'elftools/segments/interp_segment'
+require 'elftools/segments/load_segment'
 require 'elftools/segments/note_segment'
 
 module ELFTools
@@ -20,6 +21,7 @@ module ELFTools
         klass = case header.p_type
                 when Constants::PT_DYNAMIC then DynamicSegment
                 when Constants::PT_INTERP then InterpSegment
+                when Constants::PT_LOAD then LoadSegment
                 when Constants::PT_NOTE then NoteSegment
                 else Segment
                 end

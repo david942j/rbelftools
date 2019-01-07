@@ -290,10 +290,7 @@ module ELFTools
     #   #=> 4919 # 0x1337
     def offset_from_vma(vma, size = 0)
       segments_by_type(:load) do |seg|
-        if vma >= (seg.header.p_vaddr & -seg.header.p_align) &&
-           vma + size <= seg.header.p_vaddr + seg.header.p_filesz
-          return vma - seg.header.p_vaddr + seg.header.p_offset
-        end
+        return seg.vma_to_offset(vma) if seg.vma_in?(vma, size)
       end
     end
 
