@@ -1,6 +1,6 @@
-*.gem
+/.yardoc/
 /coverage/
 /doc/
-/.yardoc/
+/pkg/
 
 Gemfile.lock
