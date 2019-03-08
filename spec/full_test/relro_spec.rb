@@ -39,7 +39,7 @@ describe 'Full test for relro types' do
     section = @partial.section_by_name('.rela.plt')
     symtab = @partial.section_at(section.header.sh_link)
     symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
-    expect(symbols).to eq %w(puts __stack_chk_fail printf __libc_start_main fgets scanf)
+    expect(symbols).to eq %w[puts __stack_chk_fail printf __libc_start_main fgets scanf]
 
     section = @nrelro.section_by_name('.rela.plt')
     symtab = @nrelro.section_at(section.header.sh_link)
@@ -51,11 +51,11 @@ describe 'Full test for relro types' do
     section = @partial.section_by_name('.rela.dyn')
     symtab = @partial.section_at(section.header.sh_link)
     symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
-    expect(symbols).to eq %w(__gmon_start__ stdin)
+    expect(symbols).to eq %w[__gmon_start__ stdin]
 
     section = @frelro.section_by_name('.rela.dyn')
     symtab = @frelro.section_at(section.header.sh_link)
     frelro_symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
-    expect(frelro_symbols).to eq %w(puts __stack_chk_fail printf __libc_start_main fgets __gmon_start__ scanf stdin)
+    expect(frelro_symbols).to eq %w[puts __stack_chk_fail printf __libc_start_main fgets __gmon_start__ scanf stdin]
   end
 end

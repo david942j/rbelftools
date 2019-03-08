@@ -37,6 +37,3 @@ Naming/UncommunicativeMethodParamName:
 
 Style/FormatStringToken:
   Enabled: false
-
-Style/PercentLiteralDelimiters:
-  Enabled: false
