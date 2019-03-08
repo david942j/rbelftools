@@ -5,6 +5,7 @@ plugins:
     enabled: true
     exclude_paths:
     - spec/
+    - lib/elftools/constants.rb
 checks:
   method-lines:
     enabled: false
