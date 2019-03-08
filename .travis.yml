@@ -1,5 +1,4 @@
 language: ruby
-sudo: required
 os:
   - linux
   - osx

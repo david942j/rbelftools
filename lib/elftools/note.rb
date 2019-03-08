@@ -101,7 +101,7 @@ module ELFTools
       # Name of this note.
       # @return [String] The name.
       def name
-        return @name if @name
+        return @name if defined?(@name)
 
         stream.pos = @offset + SIZE_OF_NHDR
         @name = stream.read(header.n_namesz)[0..-2]

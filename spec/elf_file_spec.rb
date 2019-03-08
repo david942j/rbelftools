@@ -28,14 +28,14 @@ describe ELFTools::ELFFile do
     end
 
     it 'names' do
-      expect(@elf.sections.map(&:name)).to eq [''] + %w(
+      expect(@elf.sections.map(&:name)).to eq [''] + %w[
         .interp .note.ABI-tag .note.gnu.build-id .gnu.hash
         .dynsym .dynstr .gnu.version .gnu.version_r
         .rela.dyn .rela.plt .init .plt .plt.got .text
         .fini .rodata .eh_frame_hdr .eh_frame .init_array
         .fini_array .jcr .dynamic .got .got.plt .data .bss
         .comment .shstrtab .symtab .strtab
-      )
+      ]
 
       expect(@elf.section_by_name('.shstrtab')).to be @elf.strtab_section
       expect(@elf.section_by_name('no such section')).to be nil
@@ -50,15 +50,15 @@ describe ELFTools::ELFFile do
     it 'symbols' do
       # symbols from .dynsym
       section = @elf.section_by_name('.dynsym')
-      expect(section.symbols.map(&:name)).to eq [''] + %w(
+      expect(section.symbols.map(&:name)).to eq [''] + %w[
         puts __stack_chk_fail printf __libc_start_main
         fgets __gmon_start__ scanf stdin
-      )
+      ]
 
       # symbols from .symtab
       section = @elf.section_by_name('.symtab')
       # Too many symbols, only test non-empty names
-      expect(section.symbols.map(&:name).reject(&:empty?)).to eq %w(
+      expect(section.symbols.map(&:name).reject(&:empty?)).to eq %w[
         crtstuff.c __JCR_LIST__ deregister_tm_clones register_tm_clones
         __do_global_dtors_aux completed.7588 __do_global_dtors_aux_fini_array_entry
         frame_dummy __frame_dummy_init_array_entry source.cpp _ZZ4funcvE4test
@@ -70,7 +70,7 @@ describe ELFTools::ELFFile do
         _Z4funcv __gmon_start__ __dso_handle _IO_stdin_used __libc_csu_init
         _end _start s __bss_start main scanf@@GLIBC_2.2.5 _Jv_RegisterClasses
         __TMC_END__ _ITM_registerTMCloneTable _init
-      )
+      ]
 
       # can use 'be' here becauase they should always refer to same object
       expect(section.symbol_by_name('_init')).to be section.symbols.last
