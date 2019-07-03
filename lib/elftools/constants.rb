@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module ELFTools
   # Define constants from elf.h.
   # Mostly refer from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
   # and binutils/elfcpp/elfcpp.h.
   module Constants
     # ELF magic header
-    ELFMAG = "\x7FELF".freeze
+    ELFMAG = "\x7FELF"
 
     # Values of `d_un.d_val' in the DT_FLAGS and DT_FLAGS_1 entry.
     module DF

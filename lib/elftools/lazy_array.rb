@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ELFTools
   # A helper class for {ELFTools} easy to implement
   # 'lazy loading' objects.
@@ -37,7 +39,7 @@ module ELFTools
     #   return type of block given in {#initialize}.
     def [](i)
       # XXX: support negative index?
-      return nil if i < 0 || i >= @internal.size
+      return nil unless i.between?(0, @internal.size - 1)
 
       @internal[i] ||= @block.call(i)
     end

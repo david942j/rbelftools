@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools/constants'
 module ELFTools
   module Sections

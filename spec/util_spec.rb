@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools/util'
 
 describe ELFTools::Util do

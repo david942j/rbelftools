@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools/constants'
 require 'elftools/sections/section'
 require 'elftools/structs'

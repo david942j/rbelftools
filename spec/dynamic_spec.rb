@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools/elf_file'
 
 describe ELFTools::Dynamic do

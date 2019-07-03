@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ELFTools
   # Define some util methods.
   module Util

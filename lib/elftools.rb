@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools/constants'
 require 'elftools/elf_file'
 require 'elftools/version'
