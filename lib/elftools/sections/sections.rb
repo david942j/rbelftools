@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Require this file to load all sections classes.
 
 require 'elftools/sections/section'

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools/constants'
 require 'elftools/exceptions'
 require 'elftools/lazy_array'

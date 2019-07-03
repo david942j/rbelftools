@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'elftools'
 
 describe 'Full test for shared object' do

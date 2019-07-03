@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ELFTools
   # Define common methods for dynamic sections and dynamic segments.
   #
@@ -89,7 +91,7 @@ module ELFTools
     # @param [Integer] n The index.
     # @return [ELFTools::Dynamic::Tag] The desired tag.
     def tag_at(n)
-      return if n < 0
+      return if n.negative?
 
       @tag_at_map ||= {}
       return @tag_at_map[n] if @tag_at_map[n]

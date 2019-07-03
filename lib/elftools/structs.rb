@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'bindata'
 module ELFTools
   # Define ELF related structures in this module.
