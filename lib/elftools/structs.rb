@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require 'bindata'
+
 module ELFTools
   # Define ELF related structures in this module.
   #
   # Structures are fetched from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h.
-  # Using the bindata gem to make these structures support 32/64 bits and
-  # little/big endian simultaneously.
+  # Use gem +bindata+ to have these structures support 32/64 bits and little/big endian simultaneously.
   module Structs
     # The base structure to define common methods.
     class ELFStruct < BinData::Record
@@ -25,9 +25,13 @@ module ELFTools
       end
 
       class << self
-        # Hook constructor, while +BinData::Record+ doesn't allow us to override +#initialize+,
-        # so we hack +new+ here.
-        def new(**kwargs)
+        # Hooks the constructor.
+        #
+        # +BinData::Record+ doesn't allow us to override +#initialize+, so we hack +new+ here.
+        def new(*args)
+          # XXX: The better implementation is +new(*args, **kwargs)+, but we can't do this unless bindata changed
+          # lib/bindata/dsl.rb#override_new_in_class to invoke +new+ with both +args+ and +kwargs+.
+          kwargs = args.last.is_a?(Hash) ? args.last : {}
           offset = kwargs.delete(:offset)
           super.tap do |obj|
             obj.offset = offset
@@ -44,13 +48,13 @@ module ELFTools
           end
         end
 
-        # Hacking to get endian of current class
-        # @return [Symbol, nil] +:little+ or +:big+.
+        # Gets the endianness of current class.
+        # @return [:little, :big] The endianness.
         def self_endian
           bindata_name[-2..-1] == 'be' ? :big : :little
         end
 
-        # Pack integer into string.
+        # Packs an integer to string.
         # @param [Integer] val
         # @param [Integer] bytes
         # @return [String]
@@ -112,7 +116,7 @@ module ELFTools
       choice :sh_entsize, **CHOICE_SIZE_T
     end
 
-    # Program header structure for 32bit.
+    # Program header structure for 32-bit.
     class ELF32_Phdr < ELFStruct
       endian :big_and_little
       uint32 :p_type
@@ -125,7 +129,7 @@ module ELFTools
       uint32 :p_align
     end
 
-    # Program header structure for 64bit.
+    # Program header structure for 64-bit.
     class ELF64_Phdr < ELFStruct
       endian :big_and_little
       uint32 :p_type
@@ -137,13 +141,14 @@ module ELFTools
       uint64 :p_memsz
       uint64 :p_align
     end
-    # Get program header class according to bits.
+
+    # Gets the class of program header according to bits.
     ELF_Phdr = {
       32 => ELF32_Phdr,
       64 => ELF64_Phdr
     }.freeze
 
-    # Symbol structure for 32bit.
+    # Symbol structure for 32-bit.
     class ELF32_sym < ELFStruct
       endian :big_and_little
       uint32 :st_name
@@ -154,7 +159,7 @@ module ELFTools
       uint16 :st_shndx
     end
 
-    # Symbol structure for 64bit.
+    # Symbol structure for 64-bit.
     class ELF64_sym < ELFStruct
       endian :big_and_little
       uint32 :st_name  # Symbol name, index in string tbl
@@ -164,6 +169,7 @@ module ELFTools
       uint64 :st_value # Value of the symbol
       uint64 :st_size  # Associated symbol size
     end
+
     # Get symbol header class according to bits.
     ELF_sym = {
       32 => ELF32_sym,
