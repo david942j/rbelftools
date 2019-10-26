@@ -19,7 +19,7 @@ module ELFTools
       # @param [#pos=, #read] stream Streaming object.
       # @return [ELFTools::Segments::Segment]
       #   Return object dependes on +header.p_type+.
-      def create(header, stream, *args)
+      def create(header, stream, *args, **kwargs)
         klass = case header.p_type
                 when Constants::PT_DYNAMIC then DynamicSegment
                 when Constants::PT_INTERP then InterpSegment
@@ -27,7 +27,7 @@ module ELFTools
                 when Constants::PT_NOTE then NoteSegment
                 else Segment
                 end
-        klass.new(header, stream, *args)
+        klass.new(header, stream, *args, **kwargs)
       end
     end
   end

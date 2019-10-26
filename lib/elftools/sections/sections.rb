@@ -21,7 +21,7 @@ module ELFTools
       # @param [#pos=, #read] stream Streaming object.
       # @return [ELFTools::Sections::Section]
       #   Return object dependes on +header.sh_type+.
-      def create(header, stream, *args)
+      def create(header, stream, *args, **kwargs)
         klass = case header.sh_type
                 when Constants::SHT_DYNAMIC then DynamicSection
                 when Constants::SHT_NULL then NullSection
@@ -31,7 +31,7 @@ module ELFTools
                 when Constants::SHT_SYMTAB, Constants::SHT_DYNSYM then SymTabSection
                 else Section
                 end
-        klass.new(header, stream, *args)
+        klass.new(header, stream, *args, **kwargs)
       end
     end
   end
