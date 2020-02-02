@@ -339,21 +339,21 @@ module ELFTools
     def identify
       stream.pos = 0
       magic = stream.read(4)
-      raise ELFError, "Invalid magic number #{magic.inspect}" unless magic == Constants::ELFMAG
+      raise ELFMagicError, "Invalid magic number #{magic.inspect}" unless magic == Constants::ELFMAG
 
       ei_class = stream.read(1).ord
       @elf_class = {
         1 => 32,
         2 => 64
       }[ei_class]
-      raise ELFError, format('Invalid EI_CLASS "\x%02x"', ei_class) if elf_class.nil?
+      raise ELFClassError, format('Invalid EI_CLASS "\x%02x"', ei_class) if elf_class.nil?
 
       ei_data = stream.read(1).ord
       @endian = {
         1 => :little,
         2 => :big
       }[ei_data]
-      raise ELFError, format('Invalid EI_DATA "\x%02x"', ei_data) if endian.nil?
+      raise ELFDataError, format('Invalid EI_DATA "\x%02x"', ei_data) if endian.nil?
     end
 
     def create_section(n)
