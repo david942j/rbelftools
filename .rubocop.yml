@@ -6,6 +6,10 @@ AllCops:
 Layout/EndOfLine:
   EnforcedStyle: lf
 
+Layout/LineLength:
+  Enabled: true
+  Max: 120
+
 Metrics/AbcSize:
   Enabled: false
 
@@ -21,10 +25,6 @@ Metrics/BlockLength:
 Metrics/CyclomaticComplexity:
   Enabled: false
 
-Metrics/LineLength:
-  Enabled: true
-  Max: 120
-
 Naming/ClassAndModuleCamelCase:
   Exclude:
     - lib/elftools/structs.rb
@@ -33,7 +33,7 @@ Naming/ClassAndModuleCamelCase:
 Naming/ConstantName:
   Enabled: false
 
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Enabled: false
 
 Style/FormatStringToken:
