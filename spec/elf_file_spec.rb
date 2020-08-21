@@ -84,7 +84,7 @@ describe ELFTools::ELFFile do
       bid_sec = secs.last
       expect(bid_sec.notes[0].name).to eq 'GNU'
       # The build id
-      expect(bid_sec.notes[0].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
+      expect(bid_sec.notes[0].desc.unpack1('H*')).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
     end
   end
 
@@ -112,7 +112,7 @@ describe ELFTools::ELFFile do
       seg = @elf.segment_by_type(ELFTools::Constants::PT_NOTE)
       expect(seg.notes[1].name).to eq 'GNU'
       # The build id
-      expect(seg.notes[1].desc.unpack('H*')[0]).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
+      expect(seg.notes[1].desc.unpack1('H*')).to eq '73ab62cb7bc9959ce053c2b711322158708cdc07'
     end
 
     it 'segment_by_type' do
