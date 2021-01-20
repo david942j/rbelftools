@@ -259,7 +259,7 @@ module ELFTools
       SHT_RELA     = 4 # relocation with addends
       SHT_HASH     = 5 # symbol hash table
       SHT_DYNAMIC  = 6 # information of dynamic linking
-      SHT_NOTE     = 7 # note section
+      SHT_NOTE     = 7 # section for notes
       SHT_NOBITS   = 8 # section occupies no space
       SHT_REL      = 9 # relocation
       SHT_SHLIB    = 10 # reserved
