@@ -36,5 +36,8 @@ Naming/ConstantName:
 Naming/MethodParameterName:
   Enabled: false
 
+Style/AccessorGrouping:
+  Enabled: false
+
 Style/FormatStringToken:
   Enabled: false
