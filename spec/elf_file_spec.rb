@@ -8,7 +8,7 @@ require 'elftools/elf_file'
 describe ELFTools::ELFFile do
   before(:all) do
     @filepath = File.join(__dir__, 'files', 'amd64.elf')
-    @elf = ELFTools::ELFFile.new(File.open(@filepath))
+    @elf = described_class.new(File.open(@filepath))
   end
 
   it 'basic' do
@@ -130,16 +130,19 @@ describe ELFTools::ELFFile do
 
   describe 'patches' do
     it 'dup' do
-      out = Tempfile.new('elftools').binmode
-      @elf.save(out.path)
-      expect(out.read.force_encoding('ascii-8bit')).to eq IO.binread(@filepath)
+      out = Tempfile.new('elftools')
       out.close
+      @elf.save(out.path)
+      out.reopen(out.path, 'rb')
+      expect(out.read.force_encoding('ascii-8bit')).to eq IO.binread(@filepath)
+      out.close!
     end
 
     it 'patch header' do
-      out = Tempfile.new('elftools').binmode
-      # prevent effect other tests
-      elf = ELFTools::ELFFile.new(File.open(@filepath))
+      out = Tempfile.new('elftools')
+      out.close
+      # prevent affect other tests
+      elf = described_class.new(File.open(@filepath))
       expect(elf.machine).to eq 'Advanced Micro Devices X86-64'
       expect(elf.section_by_name('.text').header.sh_addr).to eq 0x4005b0
       elf.header.e_machine = 40
@@ -147,10 +150,10 @@ describe ELFTools::ELFFile do
       expect(elf.machine).to eq 'ARM'
       elf.save(out.path)
       out.reopen(out.path, 'rb')
-      patched_elf = ELFTools::ELFFile.new(out)
+      patched_elf = described_class.new(out)
       expect(patched_elf.machine).to eq 'ARM'
       expect(patched_elf.section_by_name('.text').header.sh_addr).to eq 0xdeadbeef
-      out.close
+      out.close!
     end
   end
 end
