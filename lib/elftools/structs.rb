@@ -12,7 +12,7 @@ module ELFTools
     class ELFStruct < BinData::Record
       # DRY. Many fields have different type in different arch.
       CHOICE_SIZE_T = {
-        selection: :elf_class, choices: { 32 => :uint32, 64 => :uint64 }
+        selection: :elf_class, choices: { 32 => :uint32, 64 => :uint64 }, copy_on_change: true
       }.freeze
 
       attr_accessor :elf_class # @return [Integer] 32 or 64.
@@ -22,6 +22,10 @@ module ELFTools
       # @return [Hash{Integer => Integer}] Patches.
       def patches
         @patches ||= {}
+      end
+
+      def to_h
+        self.field_names.map { |f| [f, self.send(f)] }.to_h
       end
 
       class << self

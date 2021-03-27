@@ -7,6 +7,7 @@ module ELFTools
     class Section
       attr_reader :header # @return [ELFTools::Structs::ELF_Shdr] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
+      attr_accessor :data
 
       # Instantiate a {Section} object.
       # @param [ELFTools::Structs::ELF_Shdr] header
@@ -42,14 +43,32 @@ module ELFTools
       # Fetch data of this section.
       # @return [String] Data.
       def data
-        stream.pos = header.sh_offset
-        stream.read(header.sh_size)
+        unless @data
+          stream.pos = header.sh_offset
+          @data = stream.read(header.sh_size).force_encoding('ascii-8bit')
+        end
+        @data
       end
 
       # Is this a null section?
       # @return [Boolean] No it's not.
       def null?
         false
+      end
+
+      def size
+        data.size
+      end
+
+      def size=(size)
+        throw ArgumentError.new('new size is negative') if size < 0
+        size -= data.size
+        if size > 0
+          @data += '\0' * size
+        elsif size < 0
+          @data = @data[0...size]
+        end
+        @data.size
       end
     end
   end

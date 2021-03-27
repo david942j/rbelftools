@@ -86,13 +86,22 @@ module ELFTools
         @symstr ||= @section_at.call(header.sh_link)
       end
 
+      def section_at(n)
+        @section_at[n]
+      end
+
+      def resize(n)
+        inner = @symbols.instance_variable_get('@internal')
+        inner.size = n
+      end
+
       private
 
       def create_symbol(n)
         stream.pos = header.sh_offset + n * header.sh_entsize
         sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian, offset: stream.pos)
         sym.read(stream)
-        Symbol.new(sym, stream, symstr: method(:symstr))
+        Symbol.new(sym, stream, self)
       end
     end
 
@@ -111,16 +120,24 @@ module ELFTools
       #   The symbol string section.
       #   If +Proc+ is given, it will be called at the first time
       #   access {Symbol#name}.
-      def initialize(header, stream, symstr: nil)
+      def initialize(header, stream, section)
         @header = header
         @stream = stream
-        @symstr = symstr
+        @section = -> () { section }
+      end
+
+      def section
+        @section.call
       end
 
       # Return the symbol name.
       # @return [String] The name.
       def name
-        @name ||= @symstr.call.name_at(header.st_name)
+        @name ||= section.symstr.name_at(header.st_name)
+      end
+
+      def data
+        @data ||= section.section_at(header.st_shndx).data[header.st_value,header.st_size]
       end
     end
   end
