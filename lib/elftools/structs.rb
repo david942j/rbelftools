@@ -44,9 +44,15 @@ module ELFTools
               old_method = obj.singleton_method(m)
               obj.singleton_class.send(:undef_method, m)
               obj.define_singleton_method(m) do |val|
-                org = obj.send(f)
-                obj.patches[org.abs_offset] = ELFStruct.pack(val, org.num_bytes)
-                old_method.call(val)
+                begin
+                  org = obj.send(f)
+                  obj.patches[org.abs_offset] = org.to_binary_s
+                rescue StandardError => er
+                  puts "Error at capturing patch changes: #{$!}"
+                  puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
+                ensure
+                  old_method.call(val)
+                end
               end
             end
           end

@@ -321,38 +321,26 @@ module ELFTools
       IO.binwrite(filename, all)
     end
 
-    def preload
-      sections.each {|s| s.data }
-    end
-
-    def elf_class=(arch)
-      raise ArgumentError.new('invalid arch, must be 32/64 bit') unless [32, 64].include? arch
-      preload
-      @elf_class = arch
-      header.elf_class = arch
-      [*sections, *segments].each do |s|
-        puts s.header.class.name
-        s.header.send(:instantiate_all_objs)
-        s.header.elf_class = arch
-      end
-    end
-
     def rebuild
       all = header.to_binary_s
+
       sections.each do |s|
         assert(s.header.elf_class == elf_class)
+        s.header.sh_size = s.size
+
         next if s.size <= 0
         if s.header.sh_addralign != 0
           # align with 0 bytes
           all += "\0" * (-all.size % s.header.sh_addralign)
         end
-        s.header.sh_size = s.size
+
         s.header.sh_offset = all.size
         all += s.data
       end
 
       header.e_shnum = sections.size
       header.e_shoff = all.size
+
       sections.each do |s|
         assert s.header.num_bytes == (elf_class == 64 ? 64 : 40)
         assert s.header.elf_class == elf_class
@@ -360,6 +348,7 @@ module ELFTools
         assert sh.size == 64
         all += sh
       end
+
       all[0...header.num_bytes] = header.to_binary_s
       assert all.size == header.e_shoff + 64 * sections.size
       all
