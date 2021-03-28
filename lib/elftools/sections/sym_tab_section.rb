@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/sections/section'
+require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -112,6 +113,33 @@ module ELFTools
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
 
+      # based on https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-79797.html
+      class Bind < Enum
+        exclusive true
+        enum_attr :local, 0
+        enum_attr :global, 1
+        enum_attr :weak, 2
+        enum_attr :loos, 10
+        enum_attr :hios, 12
+        enum_attr :loproc, 13
+        enum_attr :hiproc, 15
+      end
+
+      class Type < Enum
+        exclusive true
+        enum_attr :notype, 0
+        enum_attr :object, 1
+        enum_attr :func, 2
+        enum_attr :section, 3
+        enum_attr :file, 4
+        enum_attr :common, 5
+        enum_attr :tls, 6
+        enum_attr :loos, 10
+        enum_attr :hios, 12
+        enum_attr :sparc_register, 13
+        enum_attr :loproc, 13
+        enum_attr :hiproc, 15
+      end
       # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
@@ -138,6 +166,22 @@ module ELFTools
 
       def data
         @data ||= section.section_at(header.st_shndx).data[header.st_value,header.st_size]
+      end
+
+      def st_bind
+        Bind.new(header.st_info >> 4)
+      end
+
+      def st_bind=(bind)
+        header.st_info = (header.st_info & 0xf) | (bind.to_i << 4)
+      end
+
+      def st_type
+        Type.new(header.st_info & 0xf)
+      end
+
+      def st_type=(type)
+        header.st_info = (header.st_info & (~0xf)) | (type.to_i & 0xf)
       end
     end
   end
