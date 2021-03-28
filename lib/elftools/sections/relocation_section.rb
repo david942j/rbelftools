@@ -3,6 +3,7 @@
 require 'elftools/constants'
 require 'elftools/sections/section'
 require 'elftools/structs'
+require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -78,6 +79,52 @@ module ELFTools
     attr_reader :header # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] Rel(a) header.
     attr_reader :stream # @return [#pos=, #read] Streaming object.
 
+    class Relocation32 < Enum
+      exclusive true
+      enum_attr :"none", 0
+      enum_attr :"32", 1
+      enum_attr :"pc32", 2
+      enum_attr :"got32", 3
+      enum_attr :"plt32", 4
+      enum_attr :"copy", 5
+      enum_attr :"glob_dat", 6
+      enum_attr :"jmp_slot", 7
+      enum_attr :"relative", 8
+      enum_attr :"gotoff", 9
+      enum_attr :"gotpc", 10
+      enum_attr :"32plt", 11
+      enum_attr :"16", 20
+      enum_attr :"pc16", 21
+      enum_attr :"8", 22
+      enum_attr :"pc8", 23
+      enum_attr :"size32", 38
+    end
+
+    class Relocation64 < Enum
+      exclusive true
+      enum_attr :"none", 0
+      enum_attr :"64", 1
+      enum_attr :"pc32", 2
+      enum_attr :"got32", 3
+      enum_attr :"plt32", 4
+      enum_attr :"copy", 5
+      enum_attr :"glob_dat", 6
+      enum_attr :"jump_slot", 7
+      enum_attr :"relative", 8
+      enum_attr :"gotpcrel", 9
+      enum_attr :"32", 10
+      enum_attr :"32s", 11
+      enum_attr :"16", 12
+      enum_attr :"pc16", 13
+      enum_attr :"8", 14
+      enum_attr :"pc8", 15
+      enum_attr :"pc64", 24
+      enum_attr :"gotoff64", 25
+      enum_attr :"gotpc32", 26
+      enum_attr :"size32", 32
+      enum_attr :"size64", 33
+    end
+
     # Instantiate a {Relocation} object.
     def initialize(header, stream)
       @header = header
@@ -100,10 +147,17 @@ module ELFTools
     end
     alias type r_info_type
 
-    private
+    def type_enum(bits = self.header.elf_class)
+      (bits == 32 ? Relocation32 : Relocation64).new(self.type)
+    end
 
-    def mask_bit
-      header.elf_class == 32 ? 8 : 32
+    def type=(type)
+      mask = (1 << mask_bit) - 1
+      header.r_info = (header.r_info & (~mask)) | (type.to_i & mask)
+    end
+
+    def mask_bit(bits = self.header.elf_class)
+      bits == 32 ? 8 : 32
     end
   end
 end

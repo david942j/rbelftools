@@ -208,6 +208,10 @@ module ELFTools
       endian :big_and_little
       choice :r_offset, **CHOICE_SIZE_T["uint"]
       choice :r_info, **CHOICE_SIZE_T["uint"]
+
+      def r_addend
+        nil
+      end
     end
 
     # Rela header in .rela section.

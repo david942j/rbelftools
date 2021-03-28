@@ -140,6 +140,17 @@ module ELFTools
         enum_attr :loproc, 13
         enum_attr :hiproc, 15
       end
+
+      class Visibility < Enum
+        exclusive true
+        enum_attr :default, 0
+        enum_attr :internal, 1
+        enum_attr :hidden, 2
+        enum_attr :protected, 3
+        enum_attr :exported, 4
+        enum_attr :singleton, 5
+        enum_attr :eliminate, 6
+      end
       # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
@@ -182,6 +193,14 @@ module ELFTools
 
       def st_type=(type)
         header.st_info = (header.st_info & (~0xf)) | (type.to_i & 0xf)
+      end
+
+      def st_vis
+        Visibility.new(header.st_other & 0x7)
+      end
+
+      def st_vis=(vis)
+        header.st_other = type.to_i & 0x7
       end
     end
   end

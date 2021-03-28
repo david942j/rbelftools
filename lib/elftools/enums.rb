@@ -44,7 +44,8 @@ class Enum
   end
 
   def initialize(attrs = 0)
-    @attrs = attrs
+    @attrs = self.class.values.key(attrs) || attrs
+    throw ArgumentError.new("Uknown enum #{attrs}") unless @attrs
   end
 
   def to_i
@@ -57,6 +58,10 @@ class Enum
 
   def inspect
     v = self.class.values[@attrs]
-    v ? "#{self.class.name}::#{v}" : @attrs
+    v ? "#{self.class.name}.#{v.upcase}" : @attrs
+  end
+
+  def ==(other)
+    to_i == other.to_i
   end
 end
