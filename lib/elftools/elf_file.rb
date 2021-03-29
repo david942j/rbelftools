@@ -143,6 +143,7 @@ module ELFTools
     #   If +n+ is out of bound, +nil+ is returned.
     def section_at(n)
       @sections ||= LazyArray.new(num_sections, &method(:create_section))
+      @sections[n].index = n if @sections[n]
       @sections[n]
     end
 
@@ -326,7 +327,7 @@ module ELFTools
 
       sections.each do |s|
         assert(s.header.elf_class == elf_class)
-        s.header.sh_size = s.size
+        s.rebuild
 
         next if s.size <= 0
         if s.header.sh_addralign != 0

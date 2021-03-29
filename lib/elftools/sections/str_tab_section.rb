@@ -16,6 +16,16 @@ module ELFTools
       def name_at(offset)
         Util.cstring(stream, header.sh_offset + offset)
       end
+
+      def find_or_insert(name)
+        return 0 if name.empty?
+        ind = self.data.index("#{name}\0")
+        if ind.nil?
+          ind = self.data.size
+          self.data += "#{name}\0"
+        end
+        ind
+      end
     end
   end
 end

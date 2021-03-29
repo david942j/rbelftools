@@ -31,6 +31,7 @@ module ELFTools
       #   If +n+ is out of bound, +nil+ is returned.
       def relocation_at(n)
         @relocations ||= LazyArray.new(num_relocations, &method(:create_relocation))
+        @relocations[n].index = n if @relocations[n]
         @relocations[n]
       end
 
@@ -78,6 +79,7 @@ module ELFTools
   class Relocation
     attr_reader :header # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] Rel(a) header.
     attr_reader :stream # @return [#pos=, #read] Streaming object.
+    attr_accessor :index
 
     class Relocation32 < Enum
       exclusive true
@@ -125,6 +127,11 @@ module ELFTools
       enum_attr :"size64", 33
     end
 
+    RELOCATION_ARCH = {
+      32 => Relocation32,
+      64 => Relocation64
+    }.freeze
+
     # Instantiate a {Relocation} object.
     def initialize(header, stream)
       @header = header
@@ -148,16 +155,31 @@ module ELFTools
     alias type r_info_type
 
     def type_enum(bits = self.header.elf_class)
-      (bits == 32 ? Relocation32 : Relocation64).new(self.type)
+      RELOCATION_ARCH[bits].new(self.type)
     end
 
     def type=(type)
+      type = RELOCATION_ARCH[self.header.elf_class].new(type) if type.is_a? String
       mask = (1 << mask_bit) - 1
       header.r_info = (header.r_info & (~mask)) | (type.to_i & mask)
     end
 
+    def symbol_index=(ind)
+      mask = (1 << mask_bit) - 1
+      header.r_info = (ind << mask_bit) | (header.r_info & mask)
+    end
+
     def mask_bit(bits = self.header.elf_class)
       bits == 32 ? 8 : 32
+    end
+
+    def rebuild
+      @data = ''
+      each_relocations do |r|
+        @data += r.header.to_binary_s
+      end
+
+      super
     end
   end
 end

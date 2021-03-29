@@ -43,6 +43,7 @@ module ELFTools
       #   If +n+ is out of bound, +nil+ is returned.
       def symbol_at(n)
         @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
+        @symbols[n].index = n if @symbols[n]
         @symbols[n]
       end
 
@@ -91,9 +92,19 @@ module ELFTools
         @section_at[n]
       end
 
-      def resize(n)
-        inner = @symbols.instance_variable_get('@internal')
-        inner.size = n
+      def rebuild
+        @data = ''
+        each_symbols do |s|
+          @data += s.header.to_binary_s
+        end
+
+        super
+      end
+
+      def append(sym)
+        @symbols.push(sym)
+        self.data += sym.header.to_binary_s
+        header.sh_size += header.sh_entsize
       end
 
       private
@@ -112,6 +123,7 @@ module ELFTools
     class Symbol
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
+      attr_accessor :index
 
       # based on https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-79797.html
       class Bind < Enum
@@ -200,7 +212,7 @@ module ELFTools
       end
 
       def st_vis=(vis)
-        header.st_other = type.to_i & 0x7
+        header.st_other = vis.to_i & 0x7
       end
     end
   end

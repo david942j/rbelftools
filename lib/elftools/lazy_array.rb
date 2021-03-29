@@ -43,5 +43,9 @@ module ELFTools
 
       @internal[i] ||= @block.call(i)
     end
+
+    def push(*args)
+      @internal.push(*args)
+    end
   end
 end

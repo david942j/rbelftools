@@ -44,7 +44,12 @@ class Enum
   end
 
   def initialize(attrs = 0)
-    @attrs = self.class.values.key(attrs) || attrs
+    @attrs =
+      if self.class.values.keys.include?(attrs)
+        attrs
+      else
+        self.class.values.index(attrs.to_s.downcase)
+      end
     throw ArgumentError.new("Uknown enum #{attrs}") unless @attrs
   end
 

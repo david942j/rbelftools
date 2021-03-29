@@ -8,6 +8,7 @@ module ELFTools
       attr_reader :header # @return [ELFTools::Structs::ELF_Shdr] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
       attr_accessor :data
+      attr_accessor :index
 
       # Instantiate a {Section} object.
       # @param [ELFTools::Structs::ELF_Shdr] header
@@ -69,6 +70,11 @@ module ELFTools
           @data = @data[0...size]
         end
         @data.size
+      end
+
+      def rebuild
+        header.sh_size = data.size
+        @data
       end
     end
   end
