@@ -21,10 +21,11 @@ module ELFTools
       #   time access +#name+.
       # @param [Method] offset_from_vma
       #   The method to get offset of file, given virtual memory address.
-      def initialize(header, stream, offset_from_vma: nil, strtab: nil, **_kwargs)
+      def initialize(header, stream, offset_from_vma: nil, strtab: nil, elf: nil, **_kwargs)
         @header = header
+        @elf = elf && -> { elf }
         @stream = stream
-        @strtab = strtab
+        @strtab = strtab || elf&.strtab
         @offset_from_vma = offset_from_vma
         @data = nil
       end
@@ -76,6 +77,10 @@ module ELFTools
       def rebuild
         header.sh_size = data.size
         @data
+      end
+
+      def elf
+        @elf && @elf.call
       end
     end
   end

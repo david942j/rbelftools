@@ -175,6 +175,7 @@ module ELFTools
       #   If +Proc+ is given, it will be called at the first time
       #   access {Symbol#name}.
       def initialize(header, stream, section)
+        raise ArgumentError.new("Invalid section") unless section.is_a? Section
         @header = header
         @stream = stream
         @section = -> { section }

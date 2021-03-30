@@ -175,6 +175,16 @@ module ELFTools
       section_at(header.e_shstrndx)
     end
 
+    alias_method :shstrtab, :strtab_section
+
+    def strtab
+      @strtab ||= section_by_name('.strtab')
+    end
+
+    def symtab
+      @symtab ||= section_by_name('.symtab')
+    end
+
     #========= method about segments
 
     # Number of segments in this file.
@@ -399,7 +409,8 @@ module ELFTools
       Sections::Section.create(shdr, stream,
                                offset_from_vma: method(:offset_from_vma),
                                strtab: method(:strtab_section),
-                               section_at: method(:section_at))
+                               section_at: method(:section_at),
+                               elf: self)
     end
 
     def create_segment(n)
