@@ -7,7 +7,7 @@ module ELFTools
     class Section
       attr_reader :header # @return [ELFTools::Structs::ELF_Shdr] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
-      attr_accessor :data
+      attr_writer :data
       attr_accessor :index
 
       # Instantiate a {Section} object.
@@ -26,6 +26,7 @@ module ELFTools
         @stream = stream
         @strtab = strtab
         @offset_from_vma = offset_from_vma
+        @data = nil
       end
 
       # Return +header.sh_type+ in a simplier way.
