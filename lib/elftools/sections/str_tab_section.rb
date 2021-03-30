@@ -14,6 +14,7 @@ module ELFTools
       #   Usually from +shdr.sh_name+ or +sym.st_name+.
       # @return [String] The name without null bytes.
       def name_at(offset)
+        return @data[offset...@data.index("\0", offset)] if @data
         Util.cstring(stream, header.sh_offset + offset)
       end
 

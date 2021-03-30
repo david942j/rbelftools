@@ -19,6 +19,7 @@ module ELFTools
       # Number of relocations in this section.
       # @return [Integer] The number.
       def num_relocations
+        return 0 if header.sh_entsize.zero?
         header.sh_size / header.sh_entsize
       end
 
@@ -57,6 +58,15 @@ module ELFTools
       #   Whole relocations.
       def relocations
         each_relocations.to_a
+      end
+
+      def rebuild
+        @data = ''
+        each_relocations do |r|
+          @data += r.header.to_binary_s
+        end
+
+        super
       end
 
       private
@@ -171,15 +181,6 @@ module ELFTools
 
     def mask_bit(bits = self.header.elf_class)
       bits == 32 ? 8 : 32
-    end
-
-    def rebuild
-      @data = ''
-      each_relocations do |r|
-        @data += r.header.to_binary_s
-      end
-
-      super
     end
   end
 end

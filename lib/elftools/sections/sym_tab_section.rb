@@ -98,6 +98,8 @@ module ELFTools
           @data += s.header.to_binary_s
         end
 
+        header.sh_info = symbols.index { |s| s.st_bind == Symbol::Bind.GLOBAL } || num_symbols
+
         super
       end
 
