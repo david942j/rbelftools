@@ -1,12 +1,12 @@
+# frozen_string_literal: true
+
 # copyright https://stackoverflow.com/questions/75759/how-to-implement-enums-in-ruby
 #
 class Enum
-  private
-
   def self.enum_attr(name, num)
     name = name.to_s
 
-    define_method(name + '?') do
+    define_method("#{name}?") do
       if self.class.exclusive?
         @attrs == num
       else
@@ -14,7 +14,7 @@ class Enum
       end
     end
 
-    define_method(name + '=') do |set|
+    define_method("#{name}=") do |set|
       if set
         @attrs |= num
       else
@@ -22,8 +22,8 @@ class Enum
       end
     end
 
-    self.define_singleton_method(name.upcase.to_sym) do
-      self.new(num)
+    define_singleton_method(name.upcase.to_sym) do
+      new(num)
     end
 
     @values ||= {}
@@ -34,13 +34,12 @@ class Enum
     @exclusive = enabled
   end
 
-  public
   def self.exclusive?
     @exclusive
   end
 
-  def self.values
-    @values
+  class << self
+    attr_reader :values
   end
 
   def initialize(attrs = 0)

@@ -330,6 +330,7 @@ module ELFTools
         s.rebuild
 
         next if s.size <= 0
+
         if s.header.sh_addralign != 0
           # align with 0 bytes
           all += "\0" * (-all.size % s.header.sh_addralign)

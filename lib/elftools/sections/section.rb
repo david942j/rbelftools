@@ -62,11 +62,11 @@ module ELFTools
       end
 
       def size=(size)
-        throw ArgumentError.new('new size is negative') if size < 0
+        throw ArgumentError.new('new size is negative') if size.negative?
         size -= data.size
-        if size > 0
+        if size.positive?
           @data += '\0' * size
-        elsif size < 0
+        elsif size.negative?
           @data = @data[0...size]
         end
         @data.size

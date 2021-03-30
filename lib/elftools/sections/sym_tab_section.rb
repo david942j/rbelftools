@@ -165,6 +165,7 @@ module ELFTools
         enum_attr :singleton, 5
         enum_attr :eliminate, 6
       end
+
       # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
@@ -176,7 +177,7 @@ module ELFTools
       def initialize(header, stream, section)
         @header = header
         @stream = stream
-        @section = -> () { section }
+        @section = -> { section }
       end
 
       def section
@@ -190,7 +191,7 @@ module ELFTools
       end
 
       def data
-        @data ||= section.section_at(header.st_shndx).data[header.st_value,header.st_size]
+        @data ||= section.section_at(header.st_shndx).data[header.st_value, header.st_size]
       end
 
       def st_bind
