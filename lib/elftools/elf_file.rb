@@ -336,7 +336,6 @@ module ELFTools
       all = header.to_binary_s
 
       sections.each do |s|
-        assert(s.header.elf_class == elf_class)
         s.rebuild
 
         next if s.size <= 0
@@ -354,15 +353,11 @@ module ELFTools
       header.e_shoff = all.size
 
       sections.each do |s|
-        assert s.header.num_bytes == (elf_class == 64 ? 64 : 40)
-        assert s.header.elf_class == elf_class
         sh = s.header.to_binary_s
-        assert sh.size == 64
         all += sh
       end
 
       all[0...header.num_bytes] = header.to_binary_s
-      assert all.size == header.e_shoff + 64 * sections.size
       all
     end
 
