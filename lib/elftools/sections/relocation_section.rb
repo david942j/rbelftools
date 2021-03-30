@@ -78,7 +78,7 @@ module ELFTools
         rel = klass.new(endian: header.class.self_endian, offset: stream.pos)
         rel.elf_class = header.elf_class
         rel.read(stream)
-        Relocation.new(rel, stream)
+        Relocation.new(rel, stream, self)
       end
     end
   end
@@ -144,9 +144,14 @@ module ELFTools
     }.freeze
 
     # Instantiate a {Relocation} object.
-    def initialize(header, stream)
+    def initialize(header, stream, section = nil)
       @header = header
       @stream = stream
+      @section = section && -> { section }
+    end
+
+    def section
+      @section && @section.call
     end
 
     # +r_info+ contains sym and type, use two methods
