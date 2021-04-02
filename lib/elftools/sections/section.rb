@@ -18,7 +18,7 @@ module ELFTools
       #   The streaming object for further dump.
       # @param [ELFTools::ELFFile] elf
       #   ELFFile that contains section
-      def initialize(header, stream, offset_from_vma: nil, elf: nil, **_kwargs)
+      def initialize(header, stream, elf: nil, **_kwargs)
         @header = header
         @elf = elf
         @stream = stream

@@ -9,18 +9,6 @@ module ELFTools
     # Usually for section .symtab and .dynsym,
     # which will refer to symbols in ELF file.
     class SymTabSection < Section
-      # Instantiate a {SymTabSection} object.
-      # There's a +section_at+ lambda for {SymTabSection}
-      # to easily fetch other sections.
-      # @param [ELFTools::Structs::ELF_Shdr] header
-      #   See {Section#initialize} for more information.
-      # @param [#pos=, #read] stream
-      #   See {Section#initialize} for more information.
-      def initialize(header, stream, **_kwargs)
-        # For faster #symbol_by_name
-        super
-      end
-
       # Number of symbols.
       # @return [Integer] The number.
       # @example
@@ -95,7 +83,7 @@ module ELFTools
         super
       end
 
-      def append(name: "", type:, vis: Symbol::Visibility.DEFAULT, bind: Symbol::Bind.LOCAL)
+      def append(type:, name: '', vis: Symbol::Visibility.DEFAULT, bind: Symbol::Bind.LOCAL)
         hdr = Structs::ELF_sym[elf_class].new(endian: header.class.self_endian)
         hdr.elf_class = elf_class
         hdr.st_name = elf.strtab.find_or_insert(name)

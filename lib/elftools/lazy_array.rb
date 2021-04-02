@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'delegate'
 
 module ELFTools
@@ -27,7 +28,7 @@ module ELFTools
     #   p arr[3]
     #   # 9
     def initialize(size, &block)
-      __setobj__(Array.new(size))
+      super(Array.new(size))
       @block = block
     end
 

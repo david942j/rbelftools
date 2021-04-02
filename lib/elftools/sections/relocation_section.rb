@@ -11,6 +11,7 @@ module ELFTools
     # Note section records notes
     class RelocationSection < Section
       attr_writer :relocations
+
       # Is this relocation a RELA or REL type.
       # @return [Boolean] If is RELA.
       def rela?
@@ -71,8 +72,8 @@ module ELFTools
         super
       end
 
-      def append(type:, index:, offset:, addend:nil)
-        raise ArgumentError.new("#{addend.nil? ? '' : 'un'}expected addend") if addend.nil? == rela?
+      def append(type:, index:, offset:, addend: nil)
+        raise ArgumentError, "#{addend.nil? ? '' : 'un'}expected addend" if addend.nil? == rela?
 
         klass = rela? ? Structs::ELF_Rela : Structs::ELF_Rel
         hdr = klass.new(endian: header.class.self_endian)
