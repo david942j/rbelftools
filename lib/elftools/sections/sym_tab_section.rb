@@ -16,11 +16,7 @@ module ELFTools
       #   See {Section#initialize} for more information.
       # @param [#pos=, #read] stream
       #   See {Section#initialize} for more information.
-      # @param [Proc] section_at
-      #   The method for fetching other sections by index.
-      #   This lambda should be {ELFTools::ELFFile#section_at}.
-      def initialize(header, stream, section_at: nil, **_kwargs)
-        @section_at = section_at
+      def initialize(header, stream, **_kwargs)
         # For faster #symbol_by_name
         super
       end
@@ -85,11 +81,7 @@ module ELFTools
       # Lazy loaded.
       # @return [ELFTools::Sections::StrTabSection] The string table section.
       def symstr
-        @symstr ||= @section_at.call(header.sh_link)
-      end
-
-      def section_at(n)
-        @section_at[n]
+        @symstr ||= elf.section_at(header.sh_link)
       end
 
       def rebuild
@@ -103,10 +95,23 @@ module ELFTools
         super
       end
 
-      def append(sym)
+      def append(name: "", type:, vis: Symbol::Visibility.DEFAULT, bind: Symbol::Bind.LOCAL)
+        hdr = Structs::ELF_sym[elf_class].new(endian: header.class.self_endian)
+        hdr.elf_class = elf_class
+        hdr.st_name = elf.strtab.find_or_insert(name)
+
+        sym = Symbol.new(hdr, stream, self)
+        sym.st_bind = bind
+        sym.st_type = type
+        sym.st_vis = vis
+        sym.index = num_symbols
+
+        @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
         @symbols.push(sym)
         self.data += sym.header.to_binary_s
         header.sh_size += header.sh_entsize
+
+        sym
       end
 
       private
@@ -175,7 +180,8 @@ module ELFTools
       #   If +Proc+ is given, it will be called at the first time
       #   access {Symbol#name}.
       def initialize(header, stream, section)
-        raise ArgumentError.new("Invalid section") unless section.is_a? Section
+        raise ArgumentError, 'Invalid section' unless section.is_a? Section
+
         @header = header
         @stream = stream
         @section = -> { section }
@@ -192,7 +198,7 @@ module ELFTools
       end
 
       def data
-        @data ||= section.section_at(header.st_shndx).data[header.st_value, header.st_size]
+        @data ||= section.elf.section_at(header.st_shndx).data[header.st_value, header.st_size]
       end
 
       def st_bind

@@ -175,7 +175,7 @@ module ELFTools
       section_at(header.e_shstrndx)
     end
 
-    alias_method :shstrtab, :strtab_section
+    alias shstrtab strtab_section
 
     def strtab
       @strtab ||= section_by_name('.strtab')
@@ -319,7 +319,8 @@ module ELFTools
       patch
     end
 
-    # Apply patches and save as +filename+.
+    # Apply header patches and save as +filename+.
+    # Neither does modify sections data nor adds newly created sections.
     #
     # @param [String] filename
     # @return [void]
@@ -361,6 +362,25 @@ module ELFTools
       all
     end
 
+    def append_symbol(*args, **kwargs)
+      symtab.append(*args, **kwargs)
+    end
+
+    def append_section(name, type)
+      header.e_shnum += 1
+
+      shdr = Structs::ELF_Shdr.new(endian: endian)
+      shdr.elf_class = elf_class
+      shdr.sh_type = type
+      shdr.sh_name = shstrtab.find_or_insert(name)
+      res = Sections::Section.create(shdr, nil, elf: self)
+      res.data = ''
+      res.index = @sections.size
+      @sections.push(res)
+
+      res
+    end
+
     private
 
     # bad idea..
@@ -370,8 +390,9 @@ module ELFTools
         return obj.map(&explore) if obj.is_a?(Array)
 
         obj.instance_variables.map do |s|
-          explore.call(obj.instance_variable_get(s))
-        end
+          s = obj.instance_variable_get(s)
+          s.is_a?(::ELFTools::ELFFile) ? nil : explore.call(s)
+        end.compact
       end
       explore.call(self).flatten
     end
@@ -401,11 +422,7 @@ module ELFTools
       shdr = Structs::ELF_Shdr.new(endian: endian, offset: stream.pos)
       shdr.elf_class = elf_class
       shdr.read(stream)
-      Sections::Section.create(shdr, stream,
-                               offset_from_vma: method(:offset_from_vma),
-                               strtab: method(:strtab_section),
-                               section_at: method(:section_at),
-                               elf: self)
+      Sections::Section.create(shdr, stream, elf: self)
     end
 
     def create_segment(n)

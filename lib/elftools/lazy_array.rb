@@ -1,11 +1,12 @@
 # frozen_string_literal: true
+require 'delegate'
 
 module ELFTools
   # A helper class for {ELFTools} easy to implement
   # 'lazy loading' objects.
   # Mainly used when loading sections, segments, and
   # symbols.
-  class LazyArray
+  class LazyArray < SimpleDelegator
     # Instantiate a {LazyArray} object.
     # @param [Integer] size
     #   The size of array.
@@ -26,7 +27,7 @@ module ELFTools
     #   p arr[3]
     #   # 9
     def initialize(size, &block)
-      @internal = Array.new(size)
+      __setobj__(Array.new(size))
       @block = block
     end
 
@@ -39,13 +40,9 @@ module ELFTools
     #   return type of block given in {#initialize}.
     def [](i)
       # XXX: support negative index?
-      return nil unless i.between?(0, @internal.size - 1)
+      return nil unless i.between?(0, __getobj__.size - 1)
 
-      @internal[i] ||= @block.call(i)
-    end
-
-    def push(*args)
-      @internal.push(*args)
+      __getobj__[i] ||= @block.call(i)
     end
   end
 end

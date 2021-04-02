@@ -10,6 +10,7 @@ module ELFTools
     # Class of note section.
     # Note section records notes
     class RelocationSection < Section
+      attr_writer :relocations
       # Is this relocation a RELA or REL type.
       # @return [Boolean] If is RELA.
       def rela?
@@ -70,14 +71,36 @@ module ELFTools
         super
       end
 
+      def append(type:, index:, offset:, addend:nil)
+        raise ArgumentError.new("#{addend.nil? ? '' : 'un'}expected addend") if addend.nil? == rela?
+
+        klass = rela? ? Structs::ELF_Rela : Structs::ELF_Rel
+        hdr = klass.new(endian: header.class.self_endian)
+        hdr.elf_class = header.elf_class
+        hdr.r_offset = offset
+        hdr.r_addend = addend if addend
+
+        res = Relocation.new(hdr, stream, self)
+        res.type = type
+        res.symbol_index = index
+
+        @relocations ||= LazyArray.new(num_relocations, &method(:create_relocation))
+        @relocations.push(res)
+
+        self.data += hdr.to_binary_s
+        header.sh_size += header.sh_entsize
+
+        res
+      end
+
       private
 
       def create_relocation(n)
-        stream.pos = header.sh_offset + n * header.sh_entsize
+        stream.pos = header.sh_offset + n * header.sh_entsize if stream
         klass = rela? ? Structs::ELF_Rela : Structs::ELF_Rel
-        rel = klass.new(endian: header.class.self_endian, offset: stream.pos)
+        rel = klass.new(endian: header.class.self_endian, offset: stream&.pos)
         rel.elf_class = header.elf_class
-        rel.read(stream)
+        rel.read(stream) if stream
         Relocation.new(rel, stream, self)
       end
     end
@@ -151,7 +174,7 @@ module ELFTools
     end
 
     def section
-      @section && @section.call
+      @section&.call
     end
 
     # +r_info+ contains sym and type, use two methods
@@ -187,6 +210,10 @@ module ELFTools
 
     def mask_bit(bits = header.elf_class)
       bits == 32 ? 8 : 32
+    end
+
+    def symbol_name
+      section.elf.symtab.symbols[symbol_index].name
     end
   end
 end

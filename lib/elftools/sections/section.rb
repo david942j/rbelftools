@@ -7,6 +7,7 @@ module ELFTools
     class Section
       attr_reader :header # @return [ELFTools::Structs::ELF_Shdr] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
+      attr_reader :elf # @return [ELFTools::ELFFile] Containing ELFFile.
       attr_writer :data
       attr_accessor :index
 
@@ -15,18 +16,12 @@ module ELFTools
       #   The section header object.
       # @param [#pos=, #read] stream
       #   The streaming object for further dump.
-      # @param [ELFTools::Sections::StrTabSection, Proc] strtab
-      #   The string table object. For fetching section names.
-      #   If +Proc+ if given, it will call at the first
-      #   time access +#name+.
-      # @param [Method] offset_from_vma
-      #   The method to get offset of file, given virtual memory address.
-      def initialize(header, stream, offset_from_vma: nil, strtab: nil, elf: nil, **_kwargs)
+      # @param [ELFTools::ELFFile] elf
+      #   ELFFile that contains section
+      def initialize(header, stream, offset_from_vma: nil, elf: nil, **_kwargs)
         @header = header
-        @elf = elf && -> { elf }
+        @elf = elf
         @stream = stream
-        @strtab = strtab || elf&.strtab
-        @offset_from_vma = offset_from_vma
         @data = nil
       end
 
@@ -40,7 +35,7 @@ module ELFTools
       # Get name of this section.
       # @return [String] The name.
       def name
-        @name ||= @strtab.call.name_at(header.sh_name)
+        @name ||= elf.shstrtab.name_at(header.sh_name)
       end
 
       # Fetch data of this section.
@@ -77,10 +72,6 @@ module ELFTools
       def rebuild
         header.sh_size = data.size
         @data
-      end
-
-      def elf
-        @elf && @elf.call
       end
     end
   end
