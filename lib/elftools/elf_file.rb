@@ -143,8 +143,7 @@ module ELFTools
     #   If +n+ is out of bound, +nil+ is returned.
     def section_at(n)
       @sections ||= LazyArray.new(num_sections, &method(:create_section))
-      @sections[n].index = n if @sections[n]
-      @sections[n]
+      @sections[n].tap { |sec| sec.index = n if sec }
     end
 
     # Fetch all sections with specific type.

@@ -35,8 +35,7 @@ module ELFTools
       #   If +n+ is out of bound, +nil+ is returned.
       def relocation_at(n)
         @relocations ||= LazyArray.new(num_relocations, &method(:create_relocation))
-        @relocations[n].index = n if @relocations[n]
-        @relocations[n]
+        @relocations[n].tap { |rel| rel.index = n if rel }
       end
 
       # Iterate all relocations.
