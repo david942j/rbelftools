@@ -376,7 +376,7 @@ module ELFTools
       # sections headers are at the end of the ELF
       all += sections.map { |s| s.header.to_binary_s }.join
 
-      # replaces updated header
+      # fields of header were changed
       all[0...header.num_bytes] = header.to_binary_s
       all
     end
