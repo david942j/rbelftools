@@ -374,10 +374,7 @@ module ELFTools
       header.e_shoff = all.size
 
       # sections headers are at the end of the ELF
-      sections.each do |s|
-        sh = s.header.to_binary_s
-        all += sh
-      end
+      all += sections.map { |s| s.header.to_binary_s }.join
 
       # replaces updated header
       all[0...header.num_bytes] = header.to_binary_s
