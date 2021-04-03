@@ -250,7 +250,7 @@ module ELFTools
     end
     include SHN
 
-    # Section header types, records in +sh_type+.
+    # Section flag mask types, records in +sh_flag+.
     module SHF
       SHF_WRITE = (1 << 0) # Writable
       SHF_ALLOC = (1 << 1) # Occupies memory during execution
