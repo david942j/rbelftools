@@ -71,6 +71,8 @@ module ELFTools
         @symstr ||= elf.section_at(header.sh_link)
       end
 
+      # Regenereates section's data to be saved in a rebuilt file.
+      # @return [String] Binary representation of section data
       def rebuild
         @data = ''
         each_symbols do |s|
@@ -82,6 +84,14 @@ module ELFTools
         super
       end
 
+      # Appends new symbol to the section.
+      # Requires ELFFile rebuild to save changes.
+      #
+      # @param [Symbol::Type] type Symbol type, stored in header's st_info
+      # @param [String] name Symbol name, added to ".strtab" section if needed
+      # @param [Symbol::Visibility] vis Symbol visibility, stored in header's st_other
+      # @param [Symbol::Bind] vis Symbol scope, stored in header's st_info
+      # @return [Symbol]
       def append(type:, name: '', vis: Symbol::Visibility.DEFAULT, bind: Symbol::Bind.LOCAL)
         hdr = Structs::ELF_sym[elf_class].new(endian: header.class.self_endian)
         hdr.elf_class = elf_class
@@ -117,7 +127,7 @@ module ELFTools
     class Symbol
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
-      attr_accessor :index
+      attr_accessor :index # @return [ELFTools::Sections::SymTabSection] Section containing the symbol.
 
       # based on https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-79797.html
       class Bind < Enum
@@ -162,18 +172,19 @@ module ELFTools
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
       # @param [#pos=, #read] stream The streaming object.
-      # @param [ELFTools::Sections::StrTabSection, Proc] symstr
-      #   The symbol string section.
-      #   If +Proc+ is given, it will be called at the first time
-      #   access {Symbol#name}.
+      # @param [ELFTools::Sections::SymTabSection, Proc] section
+      #   The section containing this symbol, available for later access with {Symbol#section}.
       def initialize(header, stream, section)
         raise ArgumentError, 'Invalid section' unless section.is_a? Section
 
         @header = header
         @stream = stream
-        @section = -> { section }
+        # Proc wrapper used for {ELFFile#loaded_headers} to work
+        @section = section && -> { section }
       end
 
+      # Returns section containing the symbol.
+      # @return [ELFTools::Sections::SymTabSection] section
       def section
         @section.call
       end
@@ -184,30 +195,44 @@ module ELFTools
         @name ||= section.symstr.name_at(header.st_name)
       end
 
+      # Reads the symbol data from text section at st_shndx.
+      # @return [String] symbol data
       def data
         @data ||= section.elf.section_at(header.st_shndx).data[header.st_value, header.st_size]
       end
 
+      # Return the symbol bind property.
+      # @return [Symbol::Bind] Bind property.
       def st_bind
         Bind.new(header.st_info >> 4)
       end
 
+      # Updates the symbol bind property. Stored in header's st_info high bits.
+      # @param [Symbol::Bind, Integer] bind Bind property.
       def st_bind=(bind)
         header.st_info = (header.st_info & 0xf) | (bind.to_i << 4)
       end
 
+      # Return the symbol type property.
+      # @return [Symbol::Type] type Type property.
       def st_type
         Type.new(header.st_info & 0xf)
       end
 
+      # Updates the symbol type property. Stored in header's st_info low bits.
+      # @param [Symbol::Type, Integer] type Type property.
       def st_type=(type)
         header.st_info = (header.st_info & (~0xf)) | (type.to_i & 0xf)
       end
 
+      # Return the symbol visibility property.
+      # @return [Symbol::Visibility] vis Visibility property.
       def st_vis
         Visibility.new(header.st_other & 0x7)
       end
 
+      # Updates the symbol visibility property. Stored in header's st_other.
+      # @param [Symbol::Visibility, Integer] vis Visibility property.
       def st_vis=(vis)
         header.st_other = vis.to_i & 0x7
       end

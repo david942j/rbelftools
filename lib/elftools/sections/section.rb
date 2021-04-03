@@ -54,10 +54,15 @@ module ELFTools
         false
       end
 
+      # Return the size of section data with considering modifications.
+      # @return [Integer] Section size.
       def size
-        data.size
+        @data ? @data.size : header.sh_size
       end
 
+      # Updates section size, loading data if necessary and trimming it or extending with null bytes.
+      # @param [Integer] size New section size.
+      # @return [Integer] New section size.
       def size=(size)
         throw ArgumentError.new('new size is negative') if size.negative?
         size -= data.size
@@ -69,6 +74,8 @@ module ELFTools
         @data.size
       end
 
+      # Rebuilds section data, loading it if necessary. Updates headers to match the data.
+      # @return [String] Binary representation of section data
       def rebuild
         header.sh_size = data.size
         @data

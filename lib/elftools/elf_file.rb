@@ -173,13 +173,20 @@ module ELFTools
     def strtab_section
       section_at(header.e_shstrndx)
     end
-
     alias shstrtab strtab_section
 
+    # Get the symbol string table section.
+    # Wrapper for finding section ".strtab" by name
+    #
+    # @return [ELFTools::Sections::StrTabSection, nil] The desired section or nil.
     def strtab
       @strtab ||= section_by_name('.strtab')
     end
 
+    # Get the symbol table section.
+    # Wrapper for finding section ".symtab" by name
+    #
+    # @return [ELFTools::Sections::SymTabSection, nil] The desired section or nil.
     def symtab
       @symtab ||= section_by_name('.symtab')
     end
@@ -319,11 +326,14 @@ module ELFTools
     end
 
     # Apply header patches and save as +filename+.
-    # Neither does modify sections data nor adds newly created sections.
+    # By default does neither modify sections data nor add newly created sections, only patches headers.
     #
     # @param [String] filename
+    # @param [Boolean] rebuild Whether to fully rebuild the ELF file with {ELFFile#rebuild} method. Does not work with segments!
     # @return [void]
-    def save(filename)
+    def save(filename, rebuild: false)
+      return IO.binwrite(filename, self.rebuild) if rebuild
+
       stream.pos = 0
       all = stream.read.force_encoding('ascii-8bit')
       patches.each do |pos, val|
@@ -332,16 +342,24 @@ module ELFTools
       IO.binwrite(filename, all)
     end
 
+    # Rebuilds ELF binary data from ELFFile state.
+    # Rebuilds every section, its headers and ELF headers and assembles into a correct ELF format.
+    #
+    # Does not work with segments!
+    #
+    # @return [String] Binary data to write to file
     def rebuild
+      # ELF header is placed at the beginning of ELF
       all = header.to_binary_s
 
       sections.each do |s|
         s.rebuild
 
+        # skip adding section data if it has none
         next if s.size <= 0
 
         if s.header.sh_addralign != 0
-          # align with 0 bytes
+          # align with null bytes
           all += "\0" * (-all.size % s.header.sh_addralign)
         end
 
@@ -349,22 +367,40 @@ module ELFTools
         all += s.data
       end
 
+      # all sections have been updated, rebuilt and copied to the middle of ELF file
+
       header.e_shnum = sections.size
       header.e_shoff = all.size
 
+      # sections headers are at the end of the ELF
       sections.each do |s|
         sh = s.header.to_binary_s
         all += sh
       end
 
+      # replaces updated header
       all[0...header.num_bytes] = header.to_binary_s
       all
     end
 
+    # Finds ".symtab" section and appends a symbol there.
+    # Requires ELF rebuild to save changes.
+    #
+    # @param [Symbol::Type] type Symbol type, stored in symbol header's st_info
+    # @param [String] name Symbol name, added to ".strtab" section if needed
+    # @param [Symbol::Visibility] vis Symbol visibility, stored in symbol header's st_other
+    # @param [Symbol::Bind] vis Symbol scope, stored in symbol header's st_info
+    # @return [Symbol]
     def append_symbol(*args, **kwargs)
       symtab.append(*args, **kwargs)
     end
 
+    # Creates new section and appends it to ELFFile section list.
+    # Requires ELF rebuild to save changes.
+    #
+    # @param [String] name Section name, added to ".shstrtab" section if needed
+    # @param [Constants::SHT, uint32] type Section type, stored in section header's sh_type
+    # @return [Section]
     def append_section(name, type)
       header.e_shnum += 1
 

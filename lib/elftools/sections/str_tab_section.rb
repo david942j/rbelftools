@@ -19,6 +19,10 @@ module ELFTools
         Util.cstring(stream, header.sh_offset + offset)
       end
 
+      # Return offset of string in section, appending to section data if necessary.
+      # @param [String] name
+      #   Used for appending new symbols or sections with custom names to {ELFTools::ELFFile}.
+      # @return [Integer] The offset in section at which the name was found or appended.
       def find_or_insert(name)
         return 0 if name.empty?
 

@@ -62,6 +62,8 @@ module ELFTools
         each_relocations.to_a
       end
 
+      # Regenereates section's data to be saved in a rebuilt file.
+      # @return [String] Binary representation of section data
       def rebuild
         @data = ''
         each_relocations do |r|
@@ -71,6 +73,14 @@ module ELFTools
         super
       end
 
+      # Appends new relocation to the section.
+      # Requires ELFFile rebuild to save changes.
+      #
+      # @param [Relocation32, Relocation64] type Relocation type, stored in header's r_info low bits.
+      # @param [Integer] index Relocation symbol index, stored in header's r_info high bits.
+      # @param [Integer] offset Relocation offset, stored in header's r_offset.
+      # @param [Integer, nil] addend Relocation addend, required iff section is a RELA section. Stored in header's r_addend.
+      # @return [Relocation]
       def append(type:, index:, offset:, addend: nil)
         raise ArgumentError, "#{addend.nil? ? '' : 'un'}expected addend" if addend.nil? == rela?
 
@@ -113,7 +123,7 @@ module ELFTools
   class Relocation
     attr_reader :header # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] Rel(a) header.
     attr_reader :stream # @return [#pos=, #read] Streaming object.
-    attr_accessor :index
+    attr_accessor :index # @return [ELFTools::Sections::RelocationSection] Section containing the relocation.
 
     class Relocation32 < Enum
       exclusive true
@@ -161,6 +171,7 @@ module ELFTools
       enum_attr :size64, 33
     end
 
+    # Hash containing x86 relocation types class depending on elf_class
     RELOCATION_ARCH = {
       32 => Relocation32,
       64 => Relocation64
@@ -170,11 +181,14 @@ module ELFTools
     def initialize(header, stream, section = nil)
       @header = header
       @stream = stream
+      # Proc wrapper used for {ELFFile#loaded_headers} to work
       @section = section && -> { section }
     end
 
+    # Returns section containing the relocation.
+    # @return [ELFTools::Sections::RelocationSection] section
     def section
-      @section&.call
+      @section.call
     end
 
     # +r_info+ contains sym and type, use two methods
@@ -193,16 +207,23 @@ module ELFTools
     end
     alias type r_info_type
 
+    # Convenience method returning relocation type wrapped in an Relocation Enum type.
+    # @param [Integer] bits Use {bits} x86 arch instead of elf_class to parse type enum.
+    # @return [Relocation32, Relocation64] relocation type enum
     def type_enum(bits = header.elf_class)
       RELOCATION_ARCH[bits].new(type)
     end
 
+    # Update relocation type.
+    # @param [String, Relocation64, RElocation32, Integer] type Relocation type
     def type=(type)
       type = RELOCATION_ARCH[header.elf_class].new(type) if type.is_a? String
       mask = (1 << mask_bit) - 1
       header.r_info = (header.r_info & (~mask)) | (type.to_i & mask)
     end
 
+    # Update relocation symbol index.
+    # @param [Integer] ind symbol index.
     def symbol_index=(ind)
       mask = (1 << mask_bit) - 1
       header.r_info = (ind << mask_bit) | (header.r_info & mask)
@@ -212,6 +233,7 @@ module ELFTools
       bits == 32 ? 8 : 32
     end
 
+    # Returns relocation symbol name read from ".strtab" section at offset from ".symtab"
     def symbol_name
       section.elf.symtab.symbols[symbol_index].name
     end
