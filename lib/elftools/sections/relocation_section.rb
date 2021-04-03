@@ -79,7 +79,8 @@ module ELFTools
       # @param [Relocation32, Relocation64] type Relocation type, stored in header's r_info low bits.
       # @param [Integer] index Relocation symbol index, stored in header's r_info high bits.
       # @param [Integer] offset Relocation offset, stored in header's r_offset.
-      # @param [Integer, nil] addend Relocation addend, required iff section is a RELA section. Stored in header's r_addend.
+      # @param [Integer, nil] addend Relocation addend, required iff section is a RELA section.
+      #   Stored in header's r_addend.
       # @return [Relocation]
       def append(type:, index:, offset:, addend: nil)
         raise ArgumentError, "#{addend.nil? ? '' : 'un'}expected addend" if addend.nil? == rela?

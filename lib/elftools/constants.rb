@@ -263,8 +263,8 @@ module ELFTools
       SHF_GROUP = (1 << 9) # Section is member of a group.
       SHF_TLS = (1 << 10) # Section hold thread-local data.
       SHF_COMPRESSED = (1 << 11) # Section with compressed data.
-      SHF_MASKOS = 0x0ff00000	# OS-specific.
-      SHF_MASKPROC = 0xf0000000	# Processor-specific
+      SHF_MASKOS = 0x0ff00000 # OS-specific.
+      SHF_MASKPROC = 0xf0000000 # Processor-specific
       SHF_GNU_RETAIN = (1 << 21) # Not to be GCed by linker.
       SHF_ORDERED = (1 << 30) # Special ordering requirement
       SHF_EXCLUDE = (1 << 31) # Section is excluded unless referenced or allocated (Solaris).

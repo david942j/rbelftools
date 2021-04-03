@@ -329,7 +329,8 @@ module ELFTools
     # By default does neither modify sections data nor add newly created sections, only patches headers.
     #
     # @param [String] filename
-    # @param [Boolean] rebuild Whether to fully rebuild the ELF file with {ELFFile#rebuild} method. Does not work with segments!
+    # @param [Boolean] rebuild Whether to fully rebuild the ELF file with {ELFFile#rebuild} method.
+    #   Does not work with segments!
     # @return [void]
     def save(filename, rebuild: false)
       return IO.binwrite(filename, self.rebuild) if rebuild
