@@ -3,6 +3,7 @@
 require 'elftools/constants'
 require 'elftools/sections/section'
 require 'elftools/structs'
+require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -91,9 +92,9 @@ module ELFTools
         hdr.r_addend = addend if addend
 
         res = Relocation.new(hdr, stream, self)
-        # TODO: enums based
-        # res.type = type
-        # res.symbol_index = index
+
+        res.type = type
+        res.symbol_index = index
 
         @relocations ||= LazyArray.new(num_relocations, &method(:create_relocation))
         @relocations.push(res)

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/sections/section'
+require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -77,8 +78,8 @@ module ELFTools
         each_symbols do |s|
           @data += s.header.to_binary_s
         end
-        # TODO: requires enums
-        # header.sh_info = symbols.index { |s| s.st_bind == Symbol::Bind.GLOBAL } || num_symbols
+
+        header.sh_info = symbols.index { |s| s.st_bind == Symbol::Bind.GLOBAL } || num_symbols
 
         super
       end
@@ -97,10 +98,10 @@ module ELFTools
         hdr.st_name = elf.strtab.find_or_insert(name)
 
         sym = Symbol.new(hdr, stream, self)
-        # TODO: requires enums
-        # sym.st_bind = bind
-        # sym.st_type = type
-        # sym.st_vis = vis
+
+        sym.st_bind = bind
+        sym.st_type = type
+        sym.st_vis = vis
         sym.index = num_symbols
 
         @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
