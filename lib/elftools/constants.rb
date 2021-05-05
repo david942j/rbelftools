@@ -250,6 +250,27 @@ module ELFTools
     end
     include SHN
 
+    # Section flag mask types, records in +sh_flag+.
+    module SHF
+      SHF_WRITE = (1 << 0) # Writable
+      SHF_ALLOC = (1 << 1) # Occupies memory during execution
+      SHF_EXECINSTR = (1 << 2) # Executable
+      SHF_MERGE = (1 << 4) # Might be merged
+      SHF_STRINGS = (1 << 5) # Contains nul-terminated strings
+      SHF_INFO_LINK = (1 << 6) # `sh_info' contains SHT index
+      SHF_LINK_ORDER = (1 << 7) # Preserve order after combining
+      SHF_OS_NONCONFORMING = (1 << 8) # Non-standard OS specific handling required
+      SHF_GROUP = (1 << 9) # Section is member of a group.
+      SHF_TLS = (1 << 10) # Section hold thread-local data.
+      SHF_COMPRESSED = (1 << 11) # Section with compressed data.
+      SHF_MASKOS = 0x0ff00000 # OS-specific.
+      SHF_MASKPROC = 0xf0000000 # Processor-specific
+      SHF_GNU_RETAIN = (1 << 21) # Not to be GCed by linker.
+      SHF_ORDERED = (1 << 30) # Special ordering requirement
+      SHF_EXCLUDE = (1 << 31) # Section is excluded unless referenced or allocated (Solaris).
+    end
+    include SHF
+
     # Section header types, records in +sh_type+.
     module SHT
       SHT_NULL     = 0 # null section
