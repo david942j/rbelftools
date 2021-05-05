@@ -3,6 +3,7 @@
 require 'elftools/constants'
 require 'elftools/sections/section'
 require 'elftools/structs'
+require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -78,6 +79,58 @@ module ELFTools
     attr_reader :header # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] Rel(a) header.
     attr_reader :stream # @return [#pos=, #read] Streaming object.
 
+    class Relocation32 < Enum
+      exclusive true
+      enum_attr :none, 0
+      enum_attr :"32", 1
+      enum_attr :pc32, 2
+      enum_attr :got32, 3
+      enum_attr :plt32, 4
+      enum_attr :copy, 5
+      enum_attr :glob_dat, 6
+      enum_attr :jmp_slot, 7
+      enum_attr :relative, 8
+      enum_attr :gotoff, 9
+      enum_attr :gotpc, 10
+      enum_attr :"32plt", 11
+      enum_attr :"16", 20
+      enum_attr :pc16, 21
+      enum_attr :"8", 22
+      enum_attr :pc8, 23
+      enum_attr :size32, 38
+    end
+
+    class Relocation64 < Enum
+      exclusive true
+      enum_attr :none, 0
+      enum_attr :"64", 1
+      enum_attr :pc32, 2
+      enum_attr :got32, 3
+      enum_attr :plt32, 4
+      enum_attr :copy, 5
+      enum_attr :glob_dat, 6
+      enum_attr :jump_slot, 7
+      enum_attr :relative, 8
+      enum_attr :gotpcrel, 9
+      enum_attr :"32", 10
+      enum_attr :"32s", 11
+      enum_attr :"16", 12
+      enum_attr :pc16, 13
+      enum_attr :"8", 14
+      enum_attr :pc8, 15
+      enum_attr :pc64, 24
+      enum_attr :gotoff64, 25
+      enum_attr :gotpc32, 26
+      enum_attr :size32, 32
+      enum_attr :size64, 33
+    end
+
+    # Hash containing x86 relocation types class depending on elf_class
+    RELOCATION_ARCH = {
+      32 => Relocation32,
+      64 => Relocation64
+    }.freeze
+
     # Instantiate a {Relocation} object.
     def initialize(header, stream)
       @header = header
@@ -100,8 +153,29 @@ module ELFTools
     end
     alias type r_info_type
 
-    private
+    # Convenience method returning relocation type wrapped in an Relocation Enum type.
+    # @param [Integer] bits Use {bits} x86 arch instead of elf_class to parse type enum.
+    # @return [Relocation32, Relocation64] relocation type enum
+    def type_enum(bits = header.elf_class)
+      RELOCATION_ARCH[bits].new(type)
+    end
 
+    # Update relocation type.
+    # @param [String, Relocation64, RElocation32, Integer] type Relocation type
+    def type=(type)
+      type = RELOCATION_ARCH[header.elf_class].new(type) if type.is_a? String
+      mask = (1 << mask_bit) - 1
+      header.r_info = (header.r_info & (~mask)) | (type.to_i & mask)
+    end
+
+    # Update relocation symbol index.
+    # @param [Integer] ind symbol index.
+    def symbol_index=(ind)
+      mask = (1 << mask_bit) - 1
+      header.r_info = (ind << mask_bit) | (header.r_info & mask)
+    end
+
+    private
     def mask_bit
       header.elf_class == 32 ? 8 : 32
     end
