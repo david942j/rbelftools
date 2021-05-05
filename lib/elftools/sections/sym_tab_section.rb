@@ -27,7 +27,7 @@ module ELFTools
       #   If +n+ is out of bound, +nil+ is returned.
       def symbol_at(n)
         @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
-        @symbols[n].tap { |sym| sym.index = n if sym }
+        @symbols[n]&.tap { |sym| sym.index = n }
       end
 
       # Iterate all symbols.
