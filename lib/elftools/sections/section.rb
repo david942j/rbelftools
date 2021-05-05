@@ -7,23 +7,22 @@ module ELFTools
     class Section
       attr_reader :header # @return [ELFTools::Structs::ELF_Shdr] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
+      attr_reader :elf # @return [ELFTools::ELFFile] Containing ELFFile.
+      attr_writer :data
+      attr_accessor :index
 
       # Instantiate a {Section} object.
       # @param [ELFTools::Structs::ELF_Shdr] header
       #   The section header object.
       # @param [#pos=, #read] stream
       #   The streaming object for further dump.
-      # @param [ELFTools::Sections::StrTabSection, Proc] strtab
-      #   The string table object. For fetching section names.
-      #   If +Proc+ if given, it will call at the first
-      #   time access +#name+.
-      # @param [Method] offset_from_vma
-      #   The method to get offset of file, given virtual memory address.
-      def initialize(header, stream, offset_from_vma: nil, strtab: nil, **_kwargs)
+      # @param [ELFTools::ELFFile] elf
+      #   ELFFile that contains section
+      def initialize(header, stream, elf: nil, **_kwargs)
         @header = header
+        @elf = elf
         @stream = stream
-        @strtab = strtab
-        @offset_from_vma = offset_from_vma
+        @data = nil
       end
 
       # Return +header.sh_type+ in a simplier way.
@@ -36,20 +35,50 @@ module ELFTools
       # Get name of this section.
       # @return [String] The name.
       def name
-        @name ||= @strtab.call.name_at(header.sh_name)
+        @name ||= elf.shstrtab.name_at(header.sh_name)
       end
 
       # Fetch data of this section.
       # @return [String] Data.
       def data
-        stream.pos = header.sh_offset
-        stream.read(header.sh_size)
+        unless @data
+          stream.pos = header.sh_offset
+          @data = stream.read(header.sh_size).force_encoding('ascii-8bit')
+        end
+        @data
       end
 
       # Is this a null section?
       # @return [Boolean] No it's not.
       def null?
         false
+      end
+
+      # Return the size of section data with considering modifications.
+      # @return [Integer] Section size.
+      def size
+        @data ? @data.size : header.sh_size
+      end
+
+      # Updates section size, loading data if necessary and trimming it or extending with null bytes.
+      # @param [Integer] size New section size.
+      # @return [Integer] New section size.
+      def size=(size)
+        throw ArgumentError.new('new size is negative') if size.negative?
+        size -= data.size
+        if size.positive?
+          @data += '\0' * size
+        elsif size.negative?
+          @data = @data[0...size]
+        end
+        @data.size
+      end
+
+      # Rebuilds section data, loading it if necessary. Updates headers to match the data.
+      # @return [String] Binary representation of section data
+      def rebuild
+        header.sh_size = data.size
+        @data
       end
     end
   end

@@ -143,7 +143,7 @@ module ELFTools
     #   If +n+ is out of bound, +nil+ is returned.
     def section_at(n)
       @sections ||= LazyArray.new(num_sections, &method(:create_section))
-      @sections[n]
+      @sections[n]&.tap { |sec| sec.index = n }
     end
 
     # Fetch all sections with specific type.
@@ -172,6 +172,23 @@ module ELFTools
     # @return [ELFTools::Sections::StrTabSection] The desired section.
     def strtab_section
       section_at(header.e_shstrndx)
+    end
+    alias shstrtab strtab_section
+
+    # Get the symbol string table section.
+    # Wrapper for finding section ".strtab" by name
+    #
+    # @return [ELFTools::Sections::StrTabSection, nil] The desired section or nil.
+    def strtab
+      @strtab ||= section_by_name('.strtab')
+    end
+
+    # Get the symbol table section.
+    # Wrapper for finding section ".symtab" by name
+    #
+    # @return [ELFTools::Sections::SymTabSection, nil] The desired section or nil.
+    def symtab
+      @symtab ||= section_by_name('.symtab')
     end
 
     #========= method about segments
@@ -308,17 +325,93 @@ module ELFTools
       patch
     end
 
-    # Apply patches and save as +filename+.
+    # Apply header patches and save as +filename+.
+    # By default does neither modify sections data nor add newly created sections, only patches headers.
     #
     # @param [String] filename
+    # @param [Boolean] rebuild Whether to fully rebuild the ELF file with {ELFFile#rebuild} method.
+    #   Does not work with segments!
     # @return [void]
-    def save(filename)
+    def save(filename, rebuild: false)
+      return IO.binwrite(filename, self.rebuild) if rebuild
+
       stream.pos = 0
       all = stream.read.force_encoding('ascii-8bit')
       patches.each do |pos, val|
         all[pos, val.size] = val
       end
       IO.binwrite(filename, all)
+    end
+
+    # Rebuilds ELF binary data from ELFFile state.
+    # Rebuilds every section, its headers and ELF headers and assembles into a correct ELF format.
+    #
+    # Does not work with segments!
+    #
+    # @return [String] Binary data to write to file
+    def rebuild
+      # ELF header is placed at the beginning of ELF
+      all = header.to_binary_s
+
+      sections.each do |s|
+        s.rebuild
+
+        # skip adding section data if it has none
+        next if s.size <= 0
+
+        if s.header.sh_addralign != 0
+          # align with null bytes
+          all += "\0" * (-all.size % s.header.sh_addralign)
+        end
+
+        s.header.sh_offset = all.size
+        all += s.data
+      end
+
+      # all sections have been updated, rebuilt and copied to the middle of ELF file
+
+      header.e_shnum = sections.size
+      header.e_shoff = all.size
+
+      # sections headers are at the end of the ELF
+      all += sections.map { |s| s.header.to_binary_s }.join
+
+      # fields of header were changed
+      all[0...header.num_bytes] = header.to_binary_s
+      all
+    end
+
+    # Finds ".symtab" section and appends a symbol there.
+    # Requires ELF rebuild to save changes.
+    #
+    # @param [Symbol::Type] type Symbol type, stored in symbol header's st_info
+    # @param [String] name Symbol name, added to ".strtab" section if needed
+    # @param [Symbol::Visibility] vis Symbol visibility, stored in symbol header's st_other
+    # @param [Symbol::Bind] vis Symbol scope, stored in symbol header's st_info
+    # @return [Symbol]
+    def append_symbol(*args, **kwargs)
+      symtab.append(*args, **kwargs)
+    end
+
+    # Creates new section and appends it to ELFFile section list.
+    # Requires ELF rebuild to save changes.
+    #
+    # @param [String] name Section name, added to ".shstrtab" section if needed
+    # @param [Constants::SHT, uint32] type Section type, stored in section header's sh_type
+    # @return [Section]
+    def append_section(name, type)
+      header.e_shnum += 1
+
+      shdr = Structs::ELF_Shdr.new(endian: endian)
+      shdr.elf_class = elf_class
+      shdr.sh_type = type
+      shdr.sh_name = shstrtab.find_or_insert(name)
+      res = Sections::Section.create(shdr, nil, elf: self)
+      res.data = ''
+      res.index = @sections.size
+      @sections.push(res)
+
+      res
     end
 
     private
@@ -330,8 +423,9 @@ module ELFTools
         return obj.map(&explore) if obj.is_a?(Array)
 
         obj.instance_variables.map do |s|
-          explore.call(obj.instance_variable_get(s))
-        end
+          s = obj.instance_variable_get(s)
+          s.is_a?(::ELFTools::ELFFile) ? nil : explore.call(s)
+        end.compact
       end
       explore.call(self).flatten
     end
@@ -361,10 +455,7 @@ module ELFTools
       shdr = Structs::ELF_Shdr.new(endian: endian, offset: stream.pos)
       shdr.elf_class = elf_class
       shdr.read(stream)
-      Sections::Section.create(shdr, stream,
-                               offset_from_vma: method(:offset_from_vma),
-                               strtab: method(:strtab_section),
-                               section_at: method(:section_at))
+      Sections::Section.create(shdr, stream, elf: self)
     end
 
     def create_segment(n)
