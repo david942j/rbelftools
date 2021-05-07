@@ -80,7 +80,6 @@ module ELFTools
     attr_reader :stream # @return [#pos=, #read] Streaming object.
 
     class Relocation32 < Enum
-      exclusive true
       enum_attr :none, 0
       enum_attr :"32", 1
       enum_attr :pc32, 2
@@ -101,7 +100,6 @@ module ELFTools
     end
 
     class Relocation64 < Enum
-      exclusive true
       enum_attr :none, 0
       enum_attr :"64", 1
       enum_attr :pc32, 2

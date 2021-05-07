@@ -106,7 +106,6 @@ module ELFTools
 
       # based on https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-79797.html
       class Bind < Enum
-        exclusive true
         enum_attr :local, 0
         enum_attr :global, 1
         enum_attr :weak, 2
@@ -117,7 +116,6 @@ module ELFTools
       end
 
       class Type < Enum
-        exclusive true
         enum_attr :notype, 0
         enum_attr :object, 1
         enum_attr :func, 2
@@ -133,7 +131,6 @@ module ELFTools
       end
 
       class Visibility < Enum
-        exclusive true
         enum_attr :default, 0
         enum_attr :internal, 1
         enum_attr :hidden, 2

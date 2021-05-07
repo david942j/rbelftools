@@ -7,19 +7,7 @@ class Enum
     name = name.to_s
 
     define_method("#{name}?") do
-      if self.class.exclusive?
-        @attrs == num
-      else
-        @attrs & num != 0
-      end
-    end
-
-    define_method("#{name}=") do |set|
-      if set
-        @attrs |= num
-      else
-        @attrs &= ~num
-      end
+      @attrs == num
     end
 
     define_singleton_method(name.upcase.to_sym) do
@@ -32,16 +20,6 @@ class Enum
 
   class << self
     attr_reader :values
-
-    def exclusive?
-      @exclusive
-    end
-
-    private
-
-    def exclusive(enabled)
-      @exclusive = enabled
-    end
   end
 
   # Initialize enum with value or name
