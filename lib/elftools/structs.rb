@@ -24,9 +24,8 @@ module ELFTools
         @patches ||= {}
       end
 
-      def to_h
-        field_names.map { |f| [f, send(f)] }.to_h
-      end
+      # More like HashWithIndifferentAccess
+      alias to_h snapshot
 
       class << self
         # Hooks the constructor.

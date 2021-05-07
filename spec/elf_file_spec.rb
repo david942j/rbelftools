@@ -156,4 +156,12 @@ describe ELFTools::ELFFile do
       out.close!
     end
   end
+
+  describe 'accessibility' do
+    it 'allows headers to_h' do
+      dyn = @elf.sections_by_type(:dynamic).first.tag_at(0)
+      expect(dyn.header.to_h.keys).to eq [:d_tag, :d_val]
+      expect(dyn.header.to_h.values).to eq [1, 1]
+    end
+  end
 end
