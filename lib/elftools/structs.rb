@@ -53,23 +53,6 @@ module ELFTools
         def self_endian
           bindata_name[-2..-1] == 'be' ? :big : :little
         end
-
-        # Packs an integer to string.
-        # @param [Integer] val
-        # @param [Integer] bytes
-        # @return [String]
-        def pack(val, bytes)
-          raise ArgumentError, "Not supported assign type #{val.class}" unless val.is_a?(Integer)
-
-          number = val & ((1 << (8 * bytes)) - 1)
-          out = []
-          bytes.times do
-            out << (number & 0xff)
-            number >>= 8
-          end
-          out = out.pack('C*')
-          self_endian == :little ? out : out.reverse
-        end
       end
     end
 
