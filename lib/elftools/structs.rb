@@ -24,6 +24,10 @@ module ELFTools
         @patches ||= {}
       end
 
+      def to_h
+        field_names.map { |f| [f, send(f)] }.to_h
+      end
+
       class << self
         # Hooks the constructor.
         #
