@@ -199,6 +199,7 @@ module ELFTools
       choice :r_offset, **CHOICE_SIZE_T['uint']
       choice :r_info, **CHOICE_SIZE_T['uint']
 
+      # Compatibility with ELF_Rela, both can be used interchangeably
       def r_addend
         nil
       end
