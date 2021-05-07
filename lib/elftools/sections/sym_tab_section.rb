@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'elftools/sections/section'
 require 'elftools/enums'
+require 'elftools/sections/section'
 
 module ELFTools
   module Sections

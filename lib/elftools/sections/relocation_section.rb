@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/enums'
 require 'elftools/sections/section'
 require 'elftools/structs'
-require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -159,12 +159,13 @@ module ELFTools
     end
 
     # Update relocation type.
-    # @param [String, Relocation64, RElocation32, Integer] type Relocation type
-    def type=(type)
+    # @param [String, Relocation64, Relocation32, Integer] type Relocation type
+    def r_info_type=(type)
       type = RELOCATION_ARCH[header.elf_class].new(type) if type.is_a? String
       mask = (1 << mask_bit) - 1
       header.r_info = (header.r_info & (~mask)) | (type.to_i & mask)
     end
+    alias type= r_info_type=
 
     # Update relocation symbol index.
     # @param [Integer] ind symbol index.

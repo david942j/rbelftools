@@ -7,7 +7,7 @@ class Enum
     name = name.to_s
 
     define_method("#{name}?") do
-      @attrs == num
+      @value == num
     end
 
     define_singleton_method(name.upcase.to_sym) do
@@ -27,26 +27,26 @@ class Enum
   # @return [Enum]
   #   Throws ArgumentError if enum name or value is invalid.
   def initialize(value = 0)
-    @attrs =
+    @value =
       if self.class.values.keys.include?(value)
         value
       else
         self.class.values.key(value.to_s.downcase)
       end
-    throw ArgumentError.new("Uknown enum #{value}") unless @attrs
+    raise ArgumentError.new("Unknown enum #{value}") unless @value
   end
 
   def to_i
-    @attrs
+    @value
   end
 
   def to_s
-    self.class.values[@attrs] || @attrs.to_s
+    self.class.values[@value] || @value.to_s
   end
 
   def inspect
-    v = self.class.values[@attrs]
-    v ? "#{self.class.name}.#{v.upcase}" : @attrs
+    v = self.class.values[@value]
+    v ? "#{self.class.name}.#{v.upcase}" : @value
   end
 
   def ==(other)
