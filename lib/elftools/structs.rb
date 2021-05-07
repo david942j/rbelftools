@@ -40,14 +40,9 @@ module ELFTools
               old_method = obj.singleton_method(m)
               obj.singleton_class.send(:undef_method, m)
               obj.define_singleton_method(m) do |val|
-                begin
-                  old_method.call(val)
-                  updated = obj.send(f)
-                  obj.patches[updated.abs_offset] = updated.to_binary_s
-                rescue StandardError => e
-                  puts "Error at capturing patch changes: #{$ERROR_INFO}"
-                  puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
-                end
+                old_method.call(val)
+                updated = obj.send(f)
+                obj.patches[updated.abs_offset] = updated.to_binary_s
               end
             end
           end
