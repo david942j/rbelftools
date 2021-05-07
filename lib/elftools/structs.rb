@@ -24,7 +24,7 @@ module ELFTools
         @patches ||= {}
       end
 
-      # More like HashWithIndifferentAccess
+      # BinData hash(Snapshot) that behaves like HashWithIndifferentAccess
       alias to_h snapshot
 
       class << self
