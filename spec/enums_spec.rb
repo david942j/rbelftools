@@ -10,18 +10,23 @@ end
 
 describe Enum do
   it 'constructs' do
-    n = Numbers
-    expect(n::FIRST).to eq 1
-    expect(n.SECOND).to eq 2
-    expect(n[:third]).to eq 3
-    expect(n.new('third')).to eq 3
+    expect(Numbers::FIRST).to eq 1
+    expect(Numbers[1]).to eq 1
+    expect(Numbers.SECOND).to eq 2
+    expect(Numbers[:third]).to eq 3
+    expect(Numbers.new('third')).to eq 3
+    expect { Numbers[:fourth] }.to raise_error(ArgumentError)
+    expect { Numbers.new('fifth') }.to raise_error(ArgumentError)
+    expect { Numbers.new(6) }.to raise_error(ArgumentError)
+    expect { Numbers[7] }.to raise_error(ArgumentError)
   end
 
   it 'compares' do
-    n = Numbers
-    expect(n::FIRST).to eq n::FIRST
-    expect(n.SECOND).to eq 2
-    expect(n[:third]).to eq 'third'
-    expect(n.new('third')).to eq :third
+    expect(Numbers::FIRST).to eq Numbers::FIRST
+    expect(Numbers::FIRST).not_to eq 2
+    expect(Numbers.SECOND).to eq 2
+    expect(Numbers[:third]).to eq 'third'
+    expect(Numbers[:third]).not_to eq 'first'
+    expect(Numbers.new('third')).to eq :third
   end
 end
