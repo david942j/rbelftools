@@ -30,26 +30,32 @@ class Enum
     @values[num] = name
   end
 
-  def self.exclusive(enabled)
-    @exclusive = enabled
-  end
-
-  def self.exclusive?
-    @exclusive
-  end
-
   class << self
     attr_reader :values
+
+    def exclusive?
+      @exclusive
+    end
+
+    private
+
+    def exclusive(enabled)
+      @exclusive = enabled
+    end
   end
 
-  def initialize(attrs = 0)
+  # Initialize enum with value or name
+  # @param [Integer, Symbol] n Value or name.
+  # @return [Enum]
+  #   Throws ArgumentError if enum name or value is invalid.
+  def initialize(value = 0)
     @attrs =
-      if self.class.values.keys.include?(attrs)
-        attrs
+      if self.class.values.keys.include?(value)
+        value
       else
-        self.class.values.key(attrs.to_s.downcase)
+        self.class.values.key(value.to_s.downcase)
       end
-    throw ArgumentError.new("Uknown enum #{attrs}") unless @attrs
+    throw ArgumentError.new("Uknown enum #{value}") unless @attrs
   end
 
   def to_i

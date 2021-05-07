@@ -176,6 +176,7 @@ module ELFTools
     end
 
     private
+
     def mask_bit
       header.elf_class == 32 ? 8 : 32
     end
