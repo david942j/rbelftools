@@ -6,20 +6,32 @@ class Enum
   def self.enum_attr(name, num)
     name = name.to_s
 
+    @values ||= {}
+    @values[num] = name
+
     define_method("#{name}?") do
       @value == num
     end
 
-    define_singleton_method(name.upcase.to_sym) do
-      new(num)
-    end
+    instance = new(num)
 
-    @values ||= {}
-    @values[num] = name
+    @instances ||= {}
+    @instances[num] = instance
+    @instances[name] = instance
+    @instances[name.to_s.upcase] = instance
+
+    define_singleton_method(name.upcase.to_sym) { instance }
+    const_set(name.upcase.to_sym, instance) if name.match?(/^[[:alpha:]]/)
   end
 
   class << self
     attr_reader :values
+
+    def [](value)
+      value = value.to_i if value.is_a? self.class
+      key = value.is_a?(Numeric) ? value : value.to_s.upcase
+      @instances[key]
+    end
   end
 
   # Initialize enum with value or name
@@ -28,12 +40,14 @@ class Enum
   #   Throws ArgumentError if enum name or value is invalid.
   def initialize(value = 0)
     @value =
-      if self.class.values.keys.include?(value)
+      if value.is_a? self.class
+        value.to_i
+      elsif self.class.values.keys.include?(value)
         value
       else
         self.class.values.key(value.to_s.downcase)
       end
-    raise ArgumentError.new("Unknown enum #{value}") unless @value
+    raise ArgumentError, "Unknown enum #{value}" unless @value
   end
 
   def to_i
@@ -50,6 +64,6 @@ class Enum
   end
 
   def ==(other)
-    to_i == other.to_i
+    to_i == self.class[other].to_i
   end
 end
