@@ -1,14 +1,13 @@
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+# frozen_string_literal: true
 
-require 'date'
+lib = File.expand_path('lib', __dir__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'elftools/version'
 
 Gem::Specification.new do |s|
   s.name        = 'elftools'
   s.version     = ::ELFTools::VERSION
-  s.date        = Date.today.to_s
   s.summary     = 'ELFTools - Pure ruby library for parsing and patching ELF files'
   s.description = <<-EOS
   A light weight ELF parser. elftools is designed to be a low-level ELF parser.
@@ -16,10 +15,10 @@ Gem::Specification.new do |s|
   EOS
   s.authors     = ['david942j']
   s.email       = ['david942j@gmail.com']
-  s.files       = Dir['lib/**/*.rb'] + %w(README.md)
+  s.files       = Dir['lib/**/*.rb'] + %w[README.md]
   s.homepage    = 'https://github.com/david942j/rbelftools'
   s.license     = 'MIT'
-  s.required_ruby_version = '>= 2.4'
+  s.required_ruby_version = '>= 2.6'
 
   s.add_runtime_dependency 'bindata', '~> 2'
 
