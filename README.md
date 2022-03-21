@@ -4,18 +4,21 @@
 [![Issue Count](https://codeclimate.com/github/david942j/rbelftools/badges/issue_count.svg)](https://codeclimate.com/github/david942j/rbelftools)
 [![Test Coverage](https://codeclimate.com/github/david942j/rbelftools/badges/coverage.svg)](https://codeclimate.com/github/david942j/rbelftools/coverage)
 [![Inline docs](https://inch-ci.org/github/david942j/rbelftools.svg?branch=master)](https://inch-ci.org/github/david942j/rbelftools)
+[![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](https://www.rubydoc.info/github/david942j/rbelftools/)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 # rbelftools
-Pure ruby library for parsing and patching ELF files.
+Pure Ruby library for parsing and patching ELF files.
 
 # Introduction
 
-ELF parser in pure ruby implementation. This work is inspired by [pyelftools](https://github.com/eliben/pyelftools) by [Eli Bendersky](https://github.com/eliben).
+An ELF parser implemented in pure Ruby. This work is inspired by [pyelftools](https://github.com/eliben/pyelftools) by [Eli Bendersky](https://github.com/eliben).
 
-The motivation to create this repository is want to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since ELF parser is a big work, it should not be implemented directly in pwntools.
+The original motivation to create this gem is to be a dependency of [pwntools-ruby](https://github.com/peter50216/pwntools-ruby). Since ELF parser is not an easy work, it should not be implemented directly in pwntools.
 
-**rbelftools**'s target is to create a nice ELF parsing library in ruby. More features remain a work in progress.
+Now rbelftools is also used by the [Homebrew](https://github.com/Homebrew/brew) project: https://github.com/Homebrew/brew/tree/master/Library/Homebrew/vendor/bundle/ruby/2.6.0/gems/elftools-1.1.3/lib
+
+**rbelftools**'s target is to create a nice ELF parsing library in Ruby. More features remain a work in progress.
 
 # Install
 
@@ -34,9 +37,10 @@ See example usage for more details.
 
 # Example Usage
 
-## Start from file object
+## Start from a file object
 ```ruby
 require 'elftools'
+
 elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
 #=> #<ELFTools::ELFFile:0x00560b147f8328 @elf_class=64, @endian=:little, @stream=#<File:spec/files/amd64>>
 
@@ -48,6 +52,7 @@ elf.build_id
 ```
 
 ## Sections
+
 ```ruby
 elf.section_by_name('.dynstr')
 #=>
@@ -75,6 +80,7 @@ elf.section_by_name('.note.gnu.build-id').data
 ```
 
 ## Symbols
+
 ```ruby
 symtab_section = elf.section_by_name('.symtab')
 symtab_section.num_symbols
@@ -92,6 +98,7 @@ symbols.map(&:name).reject(&:empty?).first(5).join(' ')
 ```
 
 ## Segments
+
 ```ruby
 elf.segment_by_type(:note)
 #=>
@@ -165,14 +172,14 @@ elf.save('elf.patched')
 2. Fully tested   
    Of course.
 3. Lazy loading on everything   
-   To use **rbelftools**, only need to pass the stream object of ELF file.
+   To use **rbelftools**, passing the stream object of an ELF file.
    **rbelftools** will read the stream object **as least times as possible** when parsing
    the file. Most information will not be fetched until you need it, which makes
    **rbelftools** efficient.
 4. To be a library   
    **rbelftools** is designed to be a library for further usage.
    It will _not_ add any too trivial features.
-   For example, to check if NX disabled, you can use
+   For example, to check whether NX is disabled, **rbelftools** provides
    `!elf.segment_by_type(:gnu_stack).executable?` but not `elf.nx?`
 5. Section and segment parser   
    Providing common sections and segments parser. For example, `.symtab`, `.shstrtab`
