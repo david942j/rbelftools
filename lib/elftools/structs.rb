@@ -54,7 +54,7 @@ module ELFTools
         # Gets the endianness of current class.
         # @return [:little, :big] The endianness.
         def self_endian
-          bindata_name[-2..-1] == 'be' ? :big : :little
+          bindata_name[-2..] == 'be' ? :big : :little
         end
 
         # Packs an integer to string.

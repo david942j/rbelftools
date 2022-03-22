@@ -134,7 +134,7 @@ describe ELFTools::ELFFile do
       out.close
       @elf.save(out.path)
       out.reopen(out.path, 'rb')
-      expect(out.read.force_encoding('ascii-8bit')).to eq IO.binread(@filepath)
+      expect(out.read.force_encoding('ascii-8bit')).to eq File.binread(@filepath)
       out.close!
     end
 
