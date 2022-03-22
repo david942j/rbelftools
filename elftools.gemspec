@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'bindata', '~> 2'
 
+  s.add_development_dependency 'os', '~> 1'
   s.add_development_dependency 'pry', '~> 0.10'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'rspec', '~> 3.7'
