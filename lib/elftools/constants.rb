@@ -191,7 +191,7 @@ module ELFTools
     end
     include EM
 
-    # This module defines elf file types.
+    # This module defines ELF file types.
     module ET
       ET_NONE = 0 # no file type
       ET_REL  = 1 # relocatable file
@@ -215,9 +215,9 @@ module ELFTools
 
     # Program header permission flags, records bitwise OR value in +p_flags+.
     module PF
-      PF_X = 1
-      PF_W = 2
-      PF_R = 4
+      PF_X = 1 # executable
+      PF_W = 2 # writable
+      PF_R = 4 # readable
     end
     include PF
 
