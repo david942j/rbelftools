@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [ubuntu, macos]
+        os: [ubuntu, macos, windows]
         ruby-version: ['2.6', '2.7', head]
 
     steps:
