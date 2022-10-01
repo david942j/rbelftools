@@ -19,6 +19,10 @@ Metrics/AbcSize:
 Metrics/ClassLength:
   Enabled: false
 
+Naming/ModuleLength:
+  Exclude:
+    - lib/elftools/constants.rb
+
 Metrics/MethodLength:
   Enabled: false
 
