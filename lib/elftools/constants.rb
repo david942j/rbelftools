@@ -376,6 +376,7 @@ module ELFTools
       EM_FT32            = 222    # FTDI Chip FT32 high performance 32-bit RISC architecture
       EM_MOXIE           = 223    # Moxie processor family
       EM_AMDGPU          = 224    # AMD GPU architecture
+      EM_RISCV           = 243    # RISC-V
       EM_LANAI           = 244    # Lanai 32-bit processor
       EM_CEVA            = 245    # CEVA Processor Architecture Family
       EM_CEVA_X2         = 246    # CEVA X2 Processor Family
@@ -436,6 +437,7 @@ module ELFTools
         when EM_IA_64 then 'Intel IA-64'
         when EM_AARCH64 then 'AArch64'
         when EM_X86_64 then 'Advanced Micro Devices X86-64'
+        when EM_RISCV then 'RISC-V'
         else format('<unknown>: 0x%x', val)
         end
       end
