@@ -237,7 +237,7 @@ module ELFTools
     #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     #
     #   # this is ok
-    #   elf.segment_by_type('note') # will be tranformed into `PT_NOTE`
+    #   elf.segment_by_type('note') # will be transformed into `PT_NOTE`
     #   #=>  #<ELFTools::Segments::NoteSegment:0x005629dda1e4f8>
     # @example
     #   elf.segment_by_type(1337)
