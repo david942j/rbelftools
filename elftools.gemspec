@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.files       = Dir['lib/**/*.rb'] + %w[README.md]
   s.homepage    = 'https://github.com/david942j/rbelftools'
   s.license     = 'MIT'
-  s.required_ruby_version = '>= 2.6'
+  s.required_ruby_version = '>= 3.1'
 
   s.add_runtime_dependency 'bindata', '~> 2'
 
