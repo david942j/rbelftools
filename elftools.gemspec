@@ -18,6 +18,10 @@ Gem::Specification.new do |s|
   s.files       = Dir['lib/**/*.rb'] + %w[README.md]
   s.homepage    = 'https://github.com/david942j/rbelftools'
   s.license     = 'MIT'
+
+  s.metadata['rubygems_mfa_required'] = 'true'
+  s.metadata['changelog_uri'] = "#{spec.homepage}/releases/tag/v#{spec.version}",
+
   s.required_ruby_version = '>= 3.1'
 
   s.add_runtime_dependency 'bindata', '~> 2'
@@ -29,5 +33,4 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rubocop', '~> 1'
   s.add_development_dependency 'simplecov', '~> 0.21'
   s.add_development_dependency 'yard', '~> 0.9'
-  s.metadata['rubygems_mfa_required'] = 'true'
 end
