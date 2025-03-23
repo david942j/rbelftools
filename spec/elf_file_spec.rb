@@ -128,6 +128,26 @@ describe ELFTools::ELFFile do
     end
   end
 
+  describe 'offset_from_vma' do
+    it 'converts' do
+      expect(@elf.offset_from_vma(0x400042)).to eq(0x42)
+    end
+
+    it 'when invalid address' do
+      expect(@elf.offset_from_vma(0)).to eq(nil)
+    end
+  end
+
+  describe 'vma_from_offset' do
+    it 'converts' do
+      expect(@elf.vma_from_offset(0x42)).to eq(0x400042)
+    end
+
+    it 'when invalid address' do
+      expect(@elf.vma_from_offset(0x12345678)).to eq(nil)
+    end
+  end
+
   describe 'patches' do
     it 'dup' do
       out = Tempfile.new('elftools')

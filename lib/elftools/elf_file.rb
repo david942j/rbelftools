@@ -285,7 +285,7 @@ module ELFTools
     # This method should work no matter ELF is a PIE or not.
     # This method refers from (actually equals to) binutils/readelf.c#offset_from_vma.
     # @param [Integer] vma The virtual address to be queried.
-    # @return [Integer] Related file offset.
+    # @return [Integer?] Related file offset. +nil+ if non-valid vma or size overlaps segments.
     # @example
     #   elf = ELFTools::ELFFile.new(File.open('/bin/cat'))
     #   elf.offset_from_vma(0x401337)
@@ -294,6 +294,25 @@ module ELFTools
       segments_by_type(:load) do |seg|
         return seg.vma_to_offset(vma) if seg.vma_in?(vma, size)
       end
+
+      nil
+    end
+
+    # Get virtual address given offset in file
+    #
+    # @param [Integer] offset The file offset to be queried.
+    # @return [Integer?] Related virtual address. Note this is raw address, not always adjusted for base address.
+    #                    +nil+ if offset is invalid.
+    # @example
+    #   elf = ELFTools::ELFFile.new(File.open('/bin/cat'))
+    #   elf.vma_from_offset(0x1337)
+    #   #=> 0x401337
+    def vma_from_offset(offset, size = 1)
+      segments_by_type(:load) do |seg|
+        return seg.offset_to_vma(offset) if seg.offset_in?(offset, size)
+      end
+
+      nil
     end
 
     # The patch status.
