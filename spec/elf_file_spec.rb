@@ -166,12 +166,14 @@ describe ELFTools::ELFFile do
       expect(elf.machine).to eq 'Advanced Micro Devices X86-64'
       expect(elf.section_by_name('.text').header.sh_addr).to eq 0x4005b0
       elf.header.e_machine = 40
+      elf.header.e_ident.ei_abiversion = 41
       elf.section_by_name('.text').header.sh_addr = 0xdeadbeef
       expect(elf.machine).to eq 'ARM'
       elf.save(out.path)
       out.reopen(out.path, 'rb')
       patched_elf = described_class.new(out)
       expect(patched_elf.machine).to eq 'ARM'
+      expect(patched_elf.header.e_ident.ei_abiversion).to eq 41
       expect(patched_elf.section_by_name('.text').header.sh_addr).to eq 0xdeadbeef
       out.close!
     end
