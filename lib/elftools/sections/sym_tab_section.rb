@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/sections/section'
+require 'elftools/enums'
 
 module ELFTools
   module Sections
@@ -8,22 +9,6 @@ module ELFTools
     # Usually for section .symtab and .dynsym,
     # which will refer to symbols in ELF file.
     class SymTabSection < Section
-      # Instantiate a {SymTabSection} object.
-      # There's a +section_at+ lambda for {SymTabSection}
-      # to easily fetch other sections.
-      # @param [ELFTools::Structs::ELF_Shdr] header
-      #   See {Section#initialize} for more information.
-      # @param [#pos=, #read] stream
-      #   See {Section#initialize} for more information.
-      # @param [Proc] section_at
-      #   The method for fetching other sections by index.
-      #   This lambda should be {ELFTools::ELFFile#section_at}.
-      def initialize(header, stream, section_at: nil, **_kwargs)
-        @section_at = section_at
-        # For faster #symbol_by_name
-        super
-      end
-
       # Number of symbols.
       # @return [Integer] The number.
       # @example
@@ -42,7 +27,7 @@ module ELFTools
       #   If +n+ is out of bound, +nil+ is returned.
       def symbol_at(n)
         @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
-        @symbols[n]
+        @symbols[n]&.tap { |sym| sym.index = n }
       end
 
       # Iterate all symbols.
@@ -83,7 +68,48 @@ module ELFTools
       # Lazy loaded.
       # @return [ELFTools::Sections::StrTabSection] The string table section.
       def symstr
-        @symstr ||= @section_at.call(header.sh_link)
+        @symstr ||= elf.section_at(header.sh_link)
+      end
+
+      # Regenereates section's data to be saved in a rebuilt file.
+      # @return [String] Binary representation of section data
+      def rebuild
+        @data = ''
+        each_symbols do |s|
+          @data += s.header.to_binary_s
+        end
+
+        header.sh_info = symbols.index { |s| s.st_bind == Symbol::Bind.GLOBAL } || num_symbols
+
+        super
+      end
+
+      # Appends new symbol to the section.
+      # Requires ELFFile rebuild to save changes.
+      #
+      # @param [Symbol::Type] type Symbol type, stored in header's st_info
+      # @param [String] name Symbol name, added to ".strtab" section if needed
+      # @param [Symbol::Visibility] vis Symbol visibility, stored in header's st_other
+      # @param [Symbol::Bind] vis Symbol scope, stored in header's st_info
+      # @return [Symbol]
+      def append(type:, name: '', vis: Symbol::Visibility.DEFAULT, bind: Symbol::Bind.LOCAL)
+        hdr = Structs::ELF_sym[elf_class].new(endian: header.class.self_endian)
+        hdr.elf_class = elf_class
+        hdr.st_name = elf.strtab.find_or_insert(name)
+
+        sym = Symbol.new(hdr, stream, self)
+
+        sym.st_bind = bind
+        sym.st_type = type
+        sym.st_vis = vis
+        sym.index = num_symbols
+
+        @symbols ||= LazyArray.new(num_symbols, &method(:create_symbol))
+        @symbols.push(sym)
+        self.data += sym.header.to_binary_s
+        header.sh_size += header.sh_entsize
+
+        sym
       end
 
       private
@@ -92,7 +118,7 @@ module ELFTools
         stream.pos = header.sh_offset + n * header.sh_entsize
         sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian, offset: stream.pos)
         sym.read(stream)
-        Symbol.new(sym, stream, symstr: method(:symstr))
+        Symbol.new(sym, stream, self)
       end
     end
 
@@ -102,25 +128,39 @@ module ELFTools
     class Symbol
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
+      attr_accessor :index # @return [ELFTools::Sections::SymTabSection] Section containing the symbol.
 
       # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
       # @param [#pos=, #read] stream The streaming object.
-      # @param [ELFTools::Sections::StrTabSection, Proc] symstr
-      #   The symbol string section.
-      #   If +Proc+ is given, it will be called at the first time
-      #   access {Symbol#name}.
-      def initialize(header, stream, symstr: nil)
+      # @param [ELFTools::Sections::SymTabSection, Proc] section
+      #   The section containing this symbol, available for later access with {Symbol#section}.
+      def initialize(header, stream, section)
+        raise ArgumentError, 'Invalid section' unless section.is_a? Section
+
         @header = header
         @stream = stream
-        @symstr = symstr
+        # Proc wrapper used for {ELFFile#loaded_headers} to work
+        @section = section && -> { section }
+      end
+
+      # Returns section containing the symbol.
+      # @return [ELFTools::Sections::SymTabSection] section
+      def section
+        @section.call
       end
 
       # Return the symbol name.
       # @return [String] The name.
       def name
         @name ||= @symstr.call.name_at(header.st_name)
+      end
+
+      # Reads the symbol data from text section at st_shndx.
+      # @return [String] symbol data
+      def data
+        @data ||= section.elf.section_at(header.st_shndx).data[header.st_value, header.st_size]
       end
     end
   end
