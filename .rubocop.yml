@@ -3,6 +3,9 @@ AllCops:
   DisplayCopNames: true
   DisplayStyleGuide: true
 
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
 Layout/EndOfLine:
   EnforcedStyle: lf
 

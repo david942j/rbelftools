@@ -37,19 +37,19 @@ module ELFTools
       # Is this segment readable?
       # @return [Boolean] True or false.
       def readable?
-        (header.p_flags & 4) == 4
+        header.p_flags.allbits?(4)
       end
 
       # Is this segment writable?
       # @return [Boolean] True or false.
       def writable?
-        (header.p_flags & 2) == 2
+        header.p_flags.allbits?(2)
       end
 
       # Is this segment executable?
       # @return [Boolean] True or false.
       def executable?
-        (header.p_flags & 1) == 1
+        header.p_flags.allbits?(1)
       end
     end
   end

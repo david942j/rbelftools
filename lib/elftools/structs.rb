@@ -39,7 +39,7 @@ module ELFTools
           super.tap do |obj|
             obj.offset = offset
             obj.field_names.each do |f|
-              m = "#{f}=".to_sym
+              m = :"#{f}="
               old_method = obj.singleton_method(m)
               obj.singleton_class.send(:undef_method, m)
               obj.define_singleton_method(m) do |val|

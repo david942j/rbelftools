@@ -10,6 +10,7 @@ module ELFTools
     # This class knows how to get the list of dynamic tags.
     class DynamicSegment < Segment
       include Dynamic # rock!
+
       # Get the start address of tags.
       # @return [Integer] Start address of tags.
       def tag_start

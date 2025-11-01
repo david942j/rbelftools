@@ -7,7 +7,7 @@ require 'elftools/version'
 
 Gem::Specification.new do |s|
   s.name        = 'elftools'
-  s.version     = ::ELFTools::VERSION
+  s.version     = ELFTools::VERSION
   s.summary     = 'ELFTools - Pure ruby library for parsing and patching ELF files'
   s.description = <<-DESC
   A light weight ELF parser. elftools is designed to be a low-level ELF parser.
@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 3.1'
 
-  s.add_runtime_dependency 'bindata', '~> 2'
+  s.add_dependency 'bindata', '~> 2'
 
   s.add_development_dependency 'os', '~> 1'
   s.add_development_dependency 'pry', '~> 0.10'
