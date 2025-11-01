@@ -160,9 +160,9 @@ module ELFTools
     #   elf.sections_by_type(:rela)
     #   #=> [#<ELFTools::Sections::RelocationSection:0x00563cd3219970>,
     #   #    #<ELFTools::Sections::RelocationSection:0x00563cd3b89d70>]
-    def sections_by_type(type, &block)
+    def sections_by_type(type, &)
       type = Util.to_constant(Constants::SHT, type)
-      Util.select_by_type(each_sections, type, &block)
+      Util.select_by_type(each_sections, type, &)
     end
 
     # Get the string table section.
@@ -263,9 +263,9 @@ module ELFTools
     # @yieldparam [ELFTools::Segments::Segment] segment A segment in specific type.
     # @yieldreturn [void]
     # @return [Array<ELFTools::Segments::Segment>] The target segments.
-    def segments_by_type(type, &block)
+    def segments_by_type(type, &)
       type = Util.to_constant(Constants::PT, type)
-      Util.select_by_type(each_segments, type, &block)
+      Util.select_by_type(each_segments, type, &)
     end
 
     # Acquire the +n+-th segment, 0-based.
