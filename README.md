@@ -1,9 +1,10 @@
+[![Downloads](https://img.shields.io/endpoint?url=https://gem-badge-h3lg.onrender.com/downloads/elftools)](https://rubygems.org/gems/elftools)
+
+[![Gem Version](https://badge.fury.io/rb/elftools.svg)](https://badge.fury.io/rb/elftools)
 [![Build Status](https://github.com/david942j/rbelftools/workflows/build/badge.svg)](https://github.com/david942j/rbelftools/actions)
-[![Code Climate](https://codeclimate.com/github/david942j/rbelftools/badges/gpa.svg)](https://codeclimate.com/github/david942j/rbelftools)
-[![Issue Count](https://codeclimate.com/github/david942j/rbelftools/badges/issue_count.svg)](https://codeclimate.com/github/david942j/rbelftools)
-[![Test Coverage](https://codeclimate.com/github/david942j/rbelftools/badges/coverage.svg)](https://codeclimate.com/github/david942j/rbelftools/coverage)
-[![Inline docs](https://inch-ci.org/github/david942j/rbelftools.svg?branch=master)](https://inch-ci.org/github/david942j/rbelftools)
-[![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](https://www.rubydoc.info/github/david942j/rbelftools/)
+[![Maintainability](https://qlty.sh/gh/david942j/projects/rbelftools/maintainability.svg)](https://qlty.sh/gh/david942j/projects/rbelftools)
+[![Code Coverage](https://qlty.sh/gh/david942j/projects/rbelftools/coverage.svg)](https://qlty.sh/gh/david942j/projects/rbelftools)
+[![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](https://www.rubydoc.info/github/david942j/rbelftools/master)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 # rbelftools
