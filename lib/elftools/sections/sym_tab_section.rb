@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'elftools/enums'
 require 'elftools/sections/section'
 
 module ELFTools
@@ -103,6 +104,42 @@ module ELFTools
       attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
 
+      # based on https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-79797.html
+      class Bind < Enum
+        enum_attr :local, 0
+        enum_attr :global, 1
+        enum_attr :weak, 2
+        enum_attr :loos, 10
+        enum_attr :hios, 12
+        enum_attr :loproc, 13
+        enum_attr :hiproc, 15
+      end
+
+      class Type < Enum
+        enum_attr :notype, 0
+        enum_attr :object, 1
+        enum_attr :func, 2
+        enum_attr :section, 3
+        enum_attr :file, 4
+        enum_attr :common, 5
+        enum_attr :tls, 6
+        enum_attr :loos, 10
+        enum_attr :hios, 12
+        enum_attr :sparc_register, 13
+        enum_attr :loproc, 13
+        enum_attr :hiproc, 15
+      end
+
+      class Visibility < Enum
+        enum_attr :default, 0
+        enum_attr :internal, 1
+        enum_attr :hidden, 2
+        enum_attr :protected, 3
+        enum_attr :exported, 4
+        enum_attr :singleton, 5
+        enum_attr :eliminate, 6
+      end
+
       # Instantiate a {ELFTools::Sections::Symbol} object.
       # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
       #   The symbol header.
@@ -121,6 +158,42 @@ module ELFTools
       # @return [String] The name.
       def name
         @name ||= @symstr.call.name_at(header.st_name)
+      end
+
+      # Return the symbol bind property.
+      # @return [Symbol::Bind] Bind property.
+      def st_bind
+        Bind.new(header.st_info >> 4)
+      end
+
+      # Updates the symbol bind property. Stored in header's st_info high bits.
+      # @param [Symbol::Bind, Integer] bind Bind property.
+      def st_bind=(bind)
+        header.st_info = (header.st_info & 0xf) | (bind.to_i << 4)
+      end
+
+      # Return the symbol type property.
+      # @return [Symbol::Type] type Type property.
+      def st_type
+        Type.new(header.st_info & 0xf)
+      end
+
+      # Updates the symbol type property. Stored in header's st_info low bits.
+      # @param [Symbol::Type, Integer] type Type property.
+      def st_type=(type)
+        header.st_info = (header.st_info & (~0xf)) | (type.to_i & 0xf)
+      end
+
+      # Return the symbol visibility property.
+      # @return [Symbol::Visibility] vis Visibility property.
+      def st_vis
+        Visibility.new(header.st_other & 0x7)
+      end
+
+      # Updates the symbol visibility property. Stored in header's st_other.
+      # @param [Symbol::Visibility, Integer] vis Visibility property.
+      def st_vis=(vis)
+        header.st_other = vis.to_i & 0x7
       end
     end
   end
