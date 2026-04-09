@@ -30,7 +30,7 @@ jobs:
     - name: Run tests
       run: bundle exec rake
     - name: Publish code coverage
-      if: ${{ success() && runner.os == 'Linux' }}
+      if: ${{ success() && runner.os == 'Linux' && github.event.pull_request.head.repo.fork == false }}
       uses: qltysh/qlty-action/coverage@v1
       with:
         oidc: true
