@@ -43,9 +43,9 @@ module ELFTools
               old_method = obj.singleton_method(m)
               obj.singleton_class.send(:undef_method, m)
               obj.define_singleton_method(m) do |val|
-                org = obj.send(f)
-                obj.patches[org.abs_offset] = ELFStruct.pack(val, org.num_bytes)
                 old_method.call(val)
+                updated = obj.send(f)
+                obj.patches[updated.abs_offset] = updated.to_binary_s
               end
             end
           end
@@ -55,23 +55,6 @@ module ELFTools
         # @return [:little, :big] The endianness.
         def self_endian
           bindata_name[-2..] == 'be' ? :big : :little
-        end
-
-        # Packs an integer to string.
-        # @param [Integer] val
-        # @param [Integer] bytes
-        # @return [String]
-        def pack(val, bytes)
-          raise ArgumentError, "Not supported assign type #{val.class}" unless val.is_a?(Integer)
-
-          number = val & ((1 << (8 * bytes)) - 1)
-          out = []
-          bytes.times do
-            out << (number & 0xff)
-            number >>= 8
-          end
-          out = out.pack('C*')
-          self_endian == :little ? out : out.reverse
         end
       end
     end
