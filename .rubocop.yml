@@ -51,3 +51,6 @@ Style/AccessorGrouping:
 
 Style/FormatStringToken:
   Enabled: false
+
+Style/TrivialAccessors:
+  AllowDSLWriters: true
