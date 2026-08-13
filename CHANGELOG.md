@@ -22,6 +22,17 @@ entries here are collected from those announcements and from the commit history.
 - A dynamic section or segment whose `DT_STRTAB` is missing, or points to an address
   that is not loaded, raises `ELFError` instead of failing with `NoMethodError`
   ([#82](https://github.com/david942j/rbelftools/pull/82))
+- `ELFFile#machine` returns the name binutils records for a machine, which reads
+  differently than the name returned before. `EM_X86_64` is
+  `'Advanced Micro Devices X86-64 processor'` rather than
+  `'Advanced Micro Devices X86-64'`, `EM_AARCH64` is `'ARM 64-bit architecture'`
+  rather than `'AArch64'`, and `EM_PPC64` is `'64-bit PowerPC'` rather than
+  `'PowerPC64'` ([#92](https://github.com/david942j/rbelftools/pull/92))
+- Eight `Constants::EM` constants are gone. `EM_486`, `EM_FRV`, `EM_MIPS_RS4_BE`,
+  `EM_OPENRISC`, `EM_SHARC`, `EM_TI_ARP32`, and `EM_VPP500` name machines binutils
+  spells `EM_IAMCU`, `EM_CYGNUS_FRV`, `EM_MIPS_RS3_LE`, `EM_OR1K`, `EM_res133`,
+  `EM_res143`, and `EM_VPP550`. `EM_C116` was a misspelling of `EM_C166`
+  ([#92](https://github.com/david942j/rbelftools/pull/92))
 
 ### Added
 
@@ -30,6 +41,11 @@ entries here are collected from those announcements and from the commit history.
 - `Sections::Symbol#type`, `#bind`, `#visibility`, and `#section_index`, which decode
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
+- 42 more `Constants::EM` constants, `EM_RISCV`, `EM_LOONGARCH`, and `EM_IAMCU` among
+  them ([#92](https://github.com/david942j/rbelftools/pull/92))
+- `ELFFile#machine` names 229 machines, where it used to name 11 and answer
+  `'<unknown>: 0x...'` for every other one, RISC-V included
+  ([#92](https://github.com/david942j/rbelftools/pull/92))
 
 ### Fixed
 
@@ -41,6 +57,10 @@ entries here are collected from those announcements and from the commit history.
 
 - The `bindata` requirement is relaxed to `>= 2, < 4`
   ([#81](https://github.com/david942j/rbelftools/pull/81))
+- `Constants::EM` and the names behind `ELFFile#machine` are generated from binutils
+  by `bundle exec rake gen:constants`, instead of being maintained by hand. The names
+  are only loaded once one is asked for
+  ([#92](https://github.com/david942j/rbelftools/pull/92))
 
 ## 1.3.1 - 2024-04-22
 
