@@ -209,10 +209,10 @@ module ELFTools
       # @example
       #   mapping(3)
       #   #=> 'Intel 80386'
-      #   mapping(6)
-      #   #=> 'Intel 80386'
       #   mapping(62)
-      #   #=> 'Advanced Micro Devices X86-64'
+      #   #=> 'Advanced Micro Devices X86-64 processor'
+      #   mapping(243)
+      #   #=> 'RISC-V'
       #   mapping(1337)
       #   #=> '<unknown>: 0x539'
       def self.mapping(val)

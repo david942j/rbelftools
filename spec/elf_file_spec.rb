@@ -14,7 +14,7 @@ describe ELFTools::ELFFile do
   it 'basic' do
     expect(@elf.elf_class).to be 64
     expect(@elf.endian).to be :little
-    expect(@elf.machine).to eq 'Advanced Micro Devices X86-64'
+    expect(@elf.machine).to eq 'Advanced Micro Devices X86-64 processor'
   end
 
   it 'file header' do
@@ -163,7 +163,7 @@ describe ELFTools::ELFFile do
       out.close
       # prevent affect other tests
       elf = described_class.new(File.open(@filepath))
-      expect(elf.machine).to eq 'Advanced Micro Devices X86-64'
+      expect(elf.machine).to eq 'Advanced Micro Devices X86-64 processor'
       expect(elf.section_by_name('.text').header.sh_addr).to eq 0x4005b0
       elf.header.e_machine = 40
       elf.section_by_name('.text').header.sh_addr = 0xdeadbeef

@@ -13,16 +13,13 @@ module ELFTools
       EM_386               = 3      # Intel 80386
       EM_68K               = 4      # Motorola m68k family
       EM_88K               = 5      # Motorola m88k family
-      EM_486               = 6      # Intel 80486
       EM_IAMCU             = 6      # Intel MCU
       EM_860               = 7      # Intel 80860
       EM_MIPS              = 8      # MIPS R3000 (officially, big-endian only)
       EM_S370              = 9      # IBM System/370
       EM_MIPS_RS3_LE       = 10     # MIPS R3000 little-endian (Oct 4 1999 Draft). Deprecated
-      EM_MIPS_RS4_BE       = 10     # MIPS R4000 big-endian
       EM_PARISC            = 15     # HPPA
       EM_PPC_OLD           = 17     # Old version of PowerPC. Deprecated
-      EM_VPP500            = 17     # Fujitsu VPP500
       EM_VPP550            = 17     # Fujitsu VPP500
       EM_SPARC32PLUS       = 18     # Sun's "v8plus"
       EM_960               = 19     # Intel 80960
@@ -87,7 +84,6 @@ module ELFTools
       EM_MN10300           = 89     # Matsushita MN10300
       EM_MN10200           = 90     # Matsushita MN10200
       EM_PJ                = 91     # picoJava
-      EM_OPENRISC          = 92     # OpenRISC 1000 32-bit embedded processor
       EM_OR1K              = 92     # OpenRISC 1000 32-bit embedded processor
       EM_ARC_COMPACT       = 93     # ARC International ARCompact processor
       EM_XTENSA            = 94     # Tensilica Xtensa Architecture
@@ -122,7 +118,6 @@ module ELFTools
       EM_M32C              = 120    # Renesas M32C series microprocessors
       EM_TSK3000           = 131    # Altium TSK3000 core
       EM_RS08              = 132    # Freescale RS08 embedded processor
-      EM_SHARC             = 133    # Analog Devices SHARC family
       EM_ECOG2             = 134    # Cyan Technology eCOG2 microprocessor
       EM_SCORE             = 135    # Sunplus Score
       EM_SCORE7            = 135    # Sunplus S+core7 RISC processor
@@ -133,7 +128,6 @@ module ELFTools
       EM_TI_C6000          = 140    # Texas Instruments TMS320C6000 DSP family
       EM_TI_C2000          = 141    # Texas Instruments TMS320C2000 DSP family
       EM_TI_C5500          = 142    # Texas Instruments TMS320C55x DSP family
-      EM_TI_ARP32          = 143    # Texas Instruments App. Specific RISC
       EM_TI_PRU            = 144    # Texas Instruments Programmable Realtime Unit
       EM_MMDSP_PLUS        = 160    # STMicroelectronics 64bit VLIW Data Signal Processor
       EM_CYPRESS_M8C       = 161    # Cypress M8C microprocessor
@@ -230,7 +224,6 @@ module ELFTools
       EM_XC16X             = 18_056 # Infineon Technologies 16-bit microcontroller with C166-V2 core
       EM_S12Z              = 19_951 # Freescale S12Z. The Freescale toolchain generates elf files with this value
       EM_CYGNUS_FRV        = 21_569 # FRV magic number - no EABI available??
-      EM_FRV               = 21_569 # Fujitsu FR-V
       EM_DLX               = 23_205 # DLX magic number. Written in the absense of an ABI
       EM_CYGNUS_D10V       = 30_288 # D10V backend magic number. Written in the absence of an ABI
       EM_CYGNUS_D30V       = 30_326 # D30V backend magic number. Written in the absence of an ABI
@@ -243,8 +236,8 @@ module ELFTools
       EM_XTENSA_OLD        = 43_975 # Old, unofficial value for Xtensa
       EM_XSTORMY16         = 44_357 # Sanyo XStormy16 CPU core
       EM_MICROBLAZE_OLD    = 47_787 # Old MicroBlaze
-      EM_CYGNUS_MN10300    = 48_879 # Matsushita MN10300 backend magic number
-      EM_CYGNUS_MN10200    = 57_005 # Matsushita MN10200 backend magic number
+      EM_CYGNUS_MN10300    = 48_879 # mn10200 and mn10300 backend magic numbers. Written in the absense of an ABI
+      EM_CYGNUS_MN10200    = 57_005 # mn10200 and mn10300 backend magic numbers. Written in the absense of an ABI
       EM_CYGNUS_MEP        = 61_453 # Toshiba MeP
       EM_M32C_OLD          = 65_200 # Renesas M32C and M16C
       EM_IQ2000            = 65_210 # Vitesse IQ2000
