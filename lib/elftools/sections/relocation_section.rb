@@ -7,8 +7,9 @@ require 'elftools/structs'
 
 module ELFTools
   module Sections
-    # Class of note section.
-    # Note section records notes
+    # Class of relocation section.
+    # Usually for sections .rel.* and .rela.*,
+    # which record relocations in ELF file.
     class RelocationSection < Section
       # Is this relocation a RELA or REL type.
       # @return [Boolean] If is RELA.

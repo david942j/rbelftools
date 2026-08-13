@@ -9,6 +9,9 @@ module ELFTools
     attr_reader :stream # @return [#pos=, #read] Streaming object.
 
     # Instantiate a {Relocation} object.
+    # @param [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] header
+    #   The relocation header.
+    # @param [#pos=, #read] stream The streaming object.
     def initialize(header, stream)
       @header = header
       @stream = stream
@@ -16,7 +19,7 @@ module ELFTools
 
     # +r_info+ contains sym and type, use two methods
     # to access them easier.
-    # @return [Integer] sym infor.
+    # @return [Integer] The symbol index.
     def r_info_sym
       header.r_info >> mask_bit
     end
@@ -24,7 +27,7 @@ module ELFTools
 
     # +r_info+ contains sym and type, use two methods
     # to access them easier.
-    # @return [Integer] type infor.
+    # @return [Integer] The relocation type.
     def r_info_type
       header.r_info & ((1 << mask_bit) - 1)
     end
