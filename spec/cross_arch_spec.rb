@@ -9,19 +9,20 @@ describe 'cross architecture files' do
   end
 
   {
-    'aarch64.elf' => [64, :little, 'DYN'],
-    'arm.elf' => [32, :little, 'DYN'],
-    'arm.thumb.o' => [32, :little, 'REL'],
-    'riscv64.elf' => [64, :little, 'DYN'],
-    'ppc64.elf' => [64, :big, 'DYN'],
-    'mips.o' => [32, :big, 'REL'],
-    'mips64.o' => [64, :big, 'REL']
-  }.each do |name, (elf_class, endian, type)|
+    'aarch64.elf' => [64, :little, 'DYN', 'AArch64'],
+    'arm.elf' => [32, :little, 'DYN', 'ARM'],
+    'arm.thumb.o' => [32, :little, 'REL', 'ARM'],
+    'riscv64.elf' => [64, :little, 'DYN', 'RISC-V'],
+    'ppc64.elf' => [64, :big, 'DYN', 'PowerPC64'],
+    'mips.o' => [32, :big, 'REL', 'MIPS R3000'],
+    'mips64.o' => [64, :big, 'REL', 'MIPS R3000']
+  }.each do |name, (elf_class, endian, type, machine)|
     it name do
       file = elf(name)
       expect(file.elf_class).to be elf_class
       expect(file.endian).to be endian
       expect(file.elf_type).to eq type
+      expect(file.machine).to eq machine
     end
   end
 

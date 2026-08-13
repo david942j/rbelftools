@@ -208,6 +208,13 @@ cd rbelftools
 bundle
 bundle exec rake
 ```
+
+Constant tables are generated from [binutils](https://sourceware.org/cgit/binutils-gdb/tree/include/elf/common.h),
+regenerate them against the latest revision by
+```bash
+bundle exec rake gen:constants
+```
+
 Any comments or suggestions are welcome!
 
 # Cross Platform

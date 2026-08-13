@@ -6,6 +6,8 @@ require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 require 'yard'
 
+Dir['tasks/*.rake'].sort.each { |f| load f }
+
 task default: OS.linux? ? %i[rubocop spec] : %i[spec]
 
 RuboCop::RakeTask.new(:rubocop) do |task|

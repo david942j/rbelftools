@@ -408,10 +408,11 @@ module ELFTools
       # Also Panasonic/MEI MN10300, AM33
       EM_CYGNUS_MN10300  = 0xbeef
 
+      # Names are only loaded when a name is asked for.
+      autoload :NAMES, 'elftools/constants/machine_names'
+
       # Return the architecture name according to +val+.
       # Used by {ELFTools::ELFFile#machine}.
-      #
-      # Only supports famous archs.
       # @param [Integer] val Value of +e_machine+.
       # @return [String]
       #   Name of architecture.
@@ -425,19 +426,7 @@ module ELFTools
       #   mapping(1337)
       #   #=> '<unknown>: 0x539'
       def self.mapping(val)
-        case val
-        when EM_NONE then 'None'
-        when EM_386, EM_486 then 'Intel 80386'
-        when EM_860 then 'Intel 80860'
-        when EM_MIPS then 'MIPS R3000'
-        when EM_PPC then 'PowerPC'
-        when EM_PPC64 then 'PowerPC64'
-        when EM_ARM then 'ARM'
-        when EM_IA_64 then 'Intel IA-64'
-        when EM_AARCH64 then 'AArch64'
-        when EM_X86_64 then 'Advanced Micro Devices X86-64'
-        else format('<unknown>: 0x%x', val)
-        end
+        NAMES.fetch(val) { format('<unknown>: 0x%x', val) }
       end
     end
     include EM

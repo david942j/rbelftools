@@ -21,6 +21,12 @@ describe ELFTools::Constants do
     expect(em.mapping(50)).to eq 'Intel IA-64'
     expect(em.mapping(62)).to eq 'Advanced Micro Devices X86-64'
     expect(em.mapping(183)).to eq 'AArch64'
+
+    # Machines named by elf.h only.
+    expect(em.mapping(2)).to eq 'SUN SPARC'
+    expect(em.mapping(22)).to eq 'IBM S/390'
+    expect(em.mapping(243)).to eq 'RISC-V'
+    expect(em.mapping(258)).to eq 'LoongArch'
   end
 
   it ELFTools::Constants::ET do
