@@ -26,6 +26,52 @@ module ELFTools
       def name
         @name ||= @symstr.call.name_at(header.st_name)
       end
+
+      # What kind of entity this symbol refers to.
+      #
+      # The available types are listed in {ELFTools::Constants::STT}.
+      # @return [Integer] The type.
+      # @example
+      #   symbol.type == ELFTools::Constants::STT_FUNC
+      #   #=> true
+      def type
+        header.st_info & 0xf
+      end
+
+      # How this symbol is linked against others with the same name.
+      #
+      # The available bindings are listed in {ELFTools::Constants::STB}.
+      # @return [Integer] The binding.
+      # @example
+      #   symbol.bind == ELFTools::Constants::STB_GLOBAL
+      #   #=> true
+      def bind
+        header.st_info >> 4
+      end
+
+      # How this symbol is accessed once it becomes part of an executable or
+      # shared object.
+      #
+      # The available visibilities are listed in {ELFTools::Constants::STV}.
+      # @return [Integer] The visibility.
+      # @example
+      #   symbol.visibility == ELFTools::Constants::STV_HIDDEN
+      #   #=> true
+      def visibility
+        header.st_other & 0x3
+      end
+
+      # The index of the section this symbol is defined in.
+      #
+      # Values in {ELFTools::Constants::SHN} have special meanings instead of
+      # being an index.
+      # @return [Integer] The section index.
+      # @example
+      #   symbol.section_index == ELFTools::Constants::SHN_UNDEF
+      #   #=> true # the symbol is undefined and to be resolved at runtime
+      def section_index
+        header.st_shndx.to_i
+      end
     end
   end
 end

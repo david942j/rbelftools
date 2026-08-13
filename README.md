@@ -97,6 +97,22 @@ symbols.map(&:name).reject(&:empty?).first(5).join(' ')
 #=> "crtstuff.c __JCR_LIST__ deregister_tm_clones register_tm_clones __do_global_dtors_aux"
 ```
 
+What a symbol refers to and how it is linked are recorded in `st_info` and `st_other`,
+values are defined in `ELFTools::Constants::STT`, `STB`, and `STV` respectively.
+```ruby
+main = symtab_section.symbol_by_name('main')
+main.type == ELFTools::Constants::STT_FUNC
+#=> true
+main.bind == ELFTools::Constants::STB_GLOBAL
+#=> true
+main.visibility == ELFTools::Constants::STV_DEFAULT
+#=> true
+
+# Symbols to be resolved at runtime are not defined in any section.
+symtab_section.symbol_by_name('puts@@GLIBC_2.2.5').section_index == ELFTools::Constants::SHN_UNDEF
+#=> true
+```
+
 ## Segments
 
 ```ruby
