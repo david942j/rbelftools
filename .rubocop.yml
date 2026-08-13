@@ -40,6 +40,11 @@ Naming/ClassAndModuleCamelCase:
   Exclude:
     - lib/elftools/structs.rb
     - lib/elftools/constants.rb
+    - lib/elftools/constants/**/*.rb
+
+Naming/VariableNumber:
+  Exclude:
+    - lib/elftools/constants/**/*.rb
 
 Naming/ConstantName:
   Enabled: false

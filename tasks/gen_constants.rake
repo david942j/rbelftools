@@ -6,7 +6,8 @@ require 'uri'
 # Generates constant tables from binutils, which tracks the ELF registry more
 # closely than the other headers defining the same constants.
 namespace :gen do
-  HEADER_URL = 'https://sourceware.org/cgit/binutils-gdb/plain/include/elf/common.h'
+  BASE_URL = 'https://sourceware.org/cgit/binutils-gdb/tree/include/elf'
+  HEADER_URL = 'https://sourceware.org/cgit/binutils-gdb/plain/include/elf/%s'
   COMMAND = 'bundle exec rake gen:constants'
 
   # +EM_NUM+ is the number of machines defined, +EM_res*+ are values the
@@ -24,24 +25,102 @@ namespace :gen do
   # machine is named after the definition that doesn't.
   SUPERSEDED = /\bold\b|deprecat/i
 
+  # Headers of the +include/elf+ directory that describe no architecture.
+  NOT_ARCHITECTURES = %w[common.h dwarf.h external.h internal.h reloc-macros.h].freeze
+
   desc 'Generate constant tables from binutils'
   task :constants do
-    definitions = parse(fetch_header)
+    definitions = parse(header('common.h'))
     write_machines(definitions)
     write_machine_names(definitions)
+    write_relocations(parse_relocations)
   end
 
-  # Reads the header from +HEADER+ when given, downloads it otherwise.
-  def fetch_header
-    local = ENV.fetch('HEADER', nil)
-    return File.read(local) if local
+  # Reads every architecture header, which is where relocation types live.
+  # @return [Hash{String => Array}] Architecture names and their relocations.
+  def parse_relocations
+    architectures = {}
+    headers.each do |name|
+      relocation_blocks(header(name)).each do |block, relocations|
+        raise "#{block} is defined by #{name} and by another header" if architectures.key?(block)
 
-    puts "Fetching #{HEADER_URL}"
-    Net::HTTP.get_response(URI(HEADER_URL)) do |res|
-      raise "Failed to fetch the header: #{res.code} #{res.message}" unless res.is_a?(Net::HTTPSuccess)
+        architectures[block] = relocations
+      end
+    end
+    architectures.sort.to_h
+  end
 
-      # A downloaded body is binary, while the file it stands for is text.
-      return res.body.dup.force_encoding(Encoding::UTF_8)
+  # @return [Array<String>] Name of every header describing an architecture.
+  def headers
+    local = ENV.fetch('ELF_INCLUDE', nil)
+    names = if local
+              Dir[File.join(local, '*.h')].map { |path| File.basename(path) }
+            else
+              fetch(BASE_URL).scan(%r{include/elf/([\w.+-]+\.h)}).flatten
+            end
+    names = names.uniq.sort - NOT_ARCHITECTURES
+    raise 'Found no architecture header, the listing must have changed' if names.empty?
+
+    names
+  end
+
+  # Extracts the relocations each +START_RELOC_NUMBERS+ block of a header holds.
+  #
+  # +RELOC_NUMBER+ records a relocation the linker emits, while +FAKE_RELOC+
+  # only marks where a range of them begins or ends.
+  # @return [Hash{String => Array<Array(String, Integer, String?)>}]
+  def relocation_blocks(text)
+    blocks = {}
+    current = nil
+    text.each_line do |line|
+      if (m = line.match(/START_RELOC_NUMBERS\s*\(\s*(\w+)\s*\)/))
+        current = architecture_of(m[1])
+        blocks[current] = []
+      elsif line.match?(/END_RELOC_NUMBERS/)
+        current = nil
+      elsif current && (m = line.match(%r{RELOC_NUMBER\s*\(\s*(\w+)\s*,\s*(0x\h+|\d+)\s*\)\s*(?:/\*\s*(.+?)\s*\*/)?}))
+        blocks[current] << [m[1], parse_int(m[2]), m[3] && normalize(m[3])]
+      end
+    end
+    blocks.reject { |_, relocations| relocations.empty? }
+  end
+
+  # Names the architecture a +START_RELOC_NUMBERS+ block stands for.
+  # @example
+  #   architecture_of('elf_x86_64_reloc_type') #=> 'X86_64'
+  # @return [String] The name.
+  def architecture_of(block)
+    name = block.sub(/\Aelf(32|64)?_/, '').sub(/_reloc_types?\z/, '').upcase
+    raise "#{block} does not name an architecture" if name.empty? || !name.match?(/\A[A-Z][A-Z0-9_]*\z/)
+
+    name
+  end
+
+  # Reads a header of the +include/elf+ directory, from +ELF_INCLUDE+ when it
+  # points at a copy of that directory, downloading it otherwise.
+  # @param [String] name Name of the header, +common.h+ for instance.
+  # @return [String] The header.
+  def header(name)
+    local = ENV.fetch('ELF_INCLUDE', nil)
+    return File.read(File.join(local, name)) if local
+
+    fetch(format(HEADER_URL, name))
+  end
+
+  # Downloads +url+, retrying because the server rejects requests that come in
+  # too quickly and gives no hint of how long to hold off.
+  # @return [String] The body.
+  def fetch(url, attempts: 8)
+    delay = 1
+    attempts.times do |attempt|
+      Net::HTTP.get_response(URI(url)) do |res|
+        # A downloaded body is binary, while the file it stands for is text.
+        return res.body.dup.force_encoding(Encoding::UTF_8) if res.is_a?(Net::HTTPSuccess)
+        raise "Failed to fetch #{url}: #{res.code} #{res.message}" unless res.is_a?(Net::HTTPTooManyRequests)
+        raise "Gave up fetching #{url}, still being rate limited" if attempt == attempts - 1
+      end
+      sleep(delay)
+      delay = [delay * 2, 30].min
     end
   end
 
@@ -174,6 +253,73 @@ namespace :gen do
     puts "Wrote #{path} (#{names.size} machines)"
   end
 
+  # Writes one file per architecture, plus the index that loads them on demand.
+  def write_relocations(architectures)
+    architectures.each do |architecture, relocations|
+      path = "lib/elftools/constants/relocation/#{architecture.downcase}.rb"
+      sorted = relocations.sort_by { |name, value, _| [value, name] }
+      width = sorted.map { |name, _, _| name.size }.max
+      # Only the names are aligned, an architecture may describe some of its
+      # relocations and leave the rest without a comment to align with.
+      entries = sorted.map do |name, value, description|
+        # Most architectures describe none of their relocations, and a bare
+        # number is nothing to document.
+        format('        %-*s = %s # %s', width, name, number(value), description || ':nodoc:')
+      end
+      write_relocation(path, architecture, entries)
+    end
+    write_relocation_index(architectures.keys)
+    puts "Wrote lib/elftools/constants/relocation (#{architectures.size} architectures, " \
+         "#{architectures.values.sum(&:size)} relocations)"
+  end
+
+  def write_relocation(path, architecture, entries)
+    File.write(path, <<~RUBY)
+      # frozen_string_literal: true
+
+      # This file is generated by `#{COMMAND}`, do not edit it.
+      # Source: #{BASE_URL}
+
+      module ELFTools
+        module Constants
+          module R
+            # Relocation types of #{architecture}.
+            module #{architecture}
+      #{entries.join("\n")}
+            end
+          end
+        end
+      end
+    RUBY
+  end
+
+  def write_relocation_index(architectures)
+    path = 'lib/elftools/constants/relocation.rb'
+    width = architectures.map(&:size).max
+    entries = architectures.map do |architecture|
+      format("      autoload %-*s 'elftools/constants/relocation/%s'", width + 2, ":#{architecture},",
+             architecture.downcase)
+    end
+    File.write(path, <<~RUBY)
+      # frozen_string_literal: true
+
+      # This file is generated by `#{COMMAND}`, do not edit it.
+      # Source: #{BASE_URL}
+
+      module ELFTools
+        module Constants
+          # Relocation types, recorded in the +r_info+ of a relocation.
+          #
+          # Every architecture numbers them on its own, so they are grouped by
+          # architecture and only loaded once one of the groups is asked for.
+          module R
+      #{entries.join("\n")}
+          end
+        end
+      end
+    RUBY
+  end
+
   # Writes a generated file defining +ELFTools::Constants::EM+.
   # @param [String?] requires What the file needs to be loaded on its own.
   def write(path, doc, entries, requires: nil)
@@ -181,7 +327,7 @@ namespace :gen do
       # frozen_string_literal: true
       #{requires ? "\nrequire '#{requires}'\n" : ''}
       # This file is generated by `#{COMMAND}`, do not edit it.
-      # Source: #{HEADER_URL}
+      # Source: #{BASE_URL}
 
       module ELFTools
         module Constants

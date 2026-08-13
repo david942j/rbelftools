@@ -46,6 +46,11 @@ entries here are collected from those announcements and from the commit history.
 - `ELFFile#machine` names 229 machines, where it used to name 11 and answer
   `'<unknown>: 0x...'` for every other one, RISC-V included
   ([#92](https://github.com/david942j/rbelftools/pull/92))
+- `Constants::R`, the relocation types of 77 architectures, 3579 of them. A relocation
+  type only means something together with the architecture that recorded it, the same
+  number being `R_X86_64_JUMP_SLOT`, `R_386_JUMP_SLOT`, and `R_ARM_THM_ABS5`, so they
+  are grouped as `Constants::R::X86_64`, `Constants::R::I386`, and so on. Each group is
+  loaded once it is asked for ([#93](https://github.com/david942j/rbelftools/pull/93))
 
 ### Fixed
 
