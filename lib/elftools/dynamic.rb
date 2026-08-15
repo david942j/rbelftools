@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'elftools/exceptions'
+
 module ELFTools
   # Define common methods for dynamic sections and dynamic segments.
   #
@@ -110,9 +112,17 @@ module ELFTools
     end
 
     # Get the DT_STRTAB's +d_val+ offset related to file.
+    # @return [Integer] The file offset.
+    # @raise [ELFTools::ELFError]
+    #   If DT_STRTAB is absent, or its address is not in any loadable segment.
     def str_offset
-      # TODO: handle DT_STRTAB not exitsts.
-      @str_offset ||= @offset_from_vma.call(tag_by_type(:strtab).header.d_val.to_i)
+      @str_offset ||= begin
+        strtab = tag_by_type(:strtab)
+        raise ELFError, 'DT_STRTAB not found' if strtab.nil?
+
+        vma = strtab.header.d_val.to_i
+        @offset_from_vma.call(vma) || raise(ELFError, format('Invalid DT_STRTAB address 0x%x', vma))
+      end
     end
 
     # A tag class.
