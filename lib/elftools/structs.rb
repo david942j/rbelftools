@@ -31,9 +31,14 @@ module ELFTools
         # Hooks the constructor.
         #
         # +BinData::Record+ doesn't allow us to override +#initialize+, so we hack +new+ here.
+        #
+        # Keyword arguments have to be taken as a trailing +Hash+ instead of +**kwargs+: bindata
+        # defines +new+ on each record class taking +*args+ only, then re-dispatches it to the
+        # endian-specific subclass this method actually runs on, which collapses the caller's
+        # keywords into a positional +Hash+ on the way. See +override_new_in_class+ in
+        # https://github.com/dmendel/bindata/blob/master/lib/bindata/dsl.rb, which is the same in
+        # 2.5.1, 3.0.0, and master.
         def new(*args)
-          # XXX: The better implementation is +new(*args, **kwargs)+, but we can't do this unless bindata changed
-          # lib/bindata/dsl.rb#override_new_in_class to invoke +new+ with both +args+ and +kwargs+.
           kwargs = args.last.is_a?(Hash) ? args.last : {}
           offset = kwargs.delete(:offset)
           super.tap do |obj|
