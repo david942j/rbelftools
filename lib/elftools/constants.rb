@@ -718,5 +718,14 @@ module ELFTools
       STT_ARM_16BIT      = 15 # ARM: a THUMB label.
     end
     include STT
+
+    # Symbol visibility from Sym st_other field.
+    module STV
+      STV_DEFAULT   = 0 # Visibility is specified by binding type
+      STV_INTERNAL  = 1 # OS specific version of {STV_HIDDEN}
+      STV_HIDDEN    = 2 # Can only be seen inside currently compilation unit
+      STV_PROTECTED = 3 # Symbol is visible but cannot be preempted
+    end
+    include STV
   end
 end
