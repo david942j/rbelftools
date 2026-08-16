@@ -17,8 +17,19 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [ubuntu, macos, windows]
-        ruby-version: ['3.2', '3.3', '3.4', head]
+        # Every supported Ruby is covered on Linux, the other platforms are
+        # only tested against the latest LTS Ruby and head.
+        os: [ubuntu]
+        ruby-version: ['3.3', '3.4', '4.0', head]
+        include:
+          - os: macos
+            ruby-version: '4.0'
+          - os: macos
+            ruby-version: head
+          - os: windows
+            ruby-version: '4.0'
+          - os: windows
+            ruby-version: head
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

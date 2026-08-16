@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.metadata['rubygems_mfa_required'] = 'true'
   s.metadata['changelog_uri'] = "#{s.homepage}/releases/tag/v#{s.version}"
 
-  s.required_ruby_version = '>= 3.1'
+  s.required_ruby_version = '>= 3.3'
 
   s.add_dependency 'bindata', '>= 2', '< 4'
 
