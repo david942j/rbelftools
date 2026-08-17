@@ -53,7 +53,7 @@ entries here are collected from those announcements and from the commit history.
   loaded once it is asked for ([#93](https://github.com/david942j/rbelftools/pull/93))
 - `Relocation#type_name`, which names a relocation type after the machine of the file
   it was read from, and `Constants::R.mapping` behind it
-  ([#94](https://github.com/david942j/rbelftools/pull/94))
+  ([#95](https://github.com/david942j/rbelftools/pull/95))
 
 ### Fixed
 

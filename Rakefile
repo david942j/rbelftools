@@ -11,7 +11,7 @@ Dir['tasks/*.rake'].sort.each { |f| load f }
 task default: OS.linux? ? %i[rubocop spec] : %i[spec]
 
 RuboCop::RakeTask.new(:rubocop) do |task|
-  task.patterns = ['lib/**/*.rb', 'spec/**/*.rb']
+  task.patterns = ['lib/**/*.rb', 'spec/**/*.rb', 'tasks/**/*.rake']
 end
 
 RSpec::Core::RakeTask.new(:spec)

@@ -3,9 +3,8 @@
 require 'net/http'
 require 'uri'
 
-# Generates constant tables from binutils, which tracks the ELF registry more
-# closely than the other headers defining the same constants.
-namespace :gen do
+# What the generator reads from, and the data binutils doesn't record itself.
+module Gen
   BASE_URL = 'https://sourceware.org/cgit/binutils-gdb/tree/include/elf'
   HEADER_URL = 'https://sourceware.org/cgit/binutils-gdb/plain/include/elf/%s'
   COMMAND = 'bundle exec rake gen:constants'
@@ -60,7 +59,11 @@ namespace :gen do
     'EM_TI_PRU' => :PRU,
     'EM_WEBASSEMBLY' => :WASM32
   }.freeze
+end
 
+# Generates constant tables from binutils, which tracks the ELF registry more
+# closely than the other headers defining the same constants.
+namespace :gen do
   desc 'Generate constant tables from binutils'
   task :constants do
     definitions = parse(header('common.h'))
@@ -72,12 +75,12 @@ namespace :gen do
   end
 
   # Pairs each machine with the architecture that relocates it, by name where
-  # the two agree and by {RELOCATES} where they don't.
+  # the two agree and by {Gen::RELOCATES} where they don't.
   # @return [Array<Array(String, String)>] Machine constants and architectures.
   def relocates(definitions, architectures)
     machines = definitions.to_h { |name, _, _| [name, name.sub(/\AEM_/, '')] }
     pairs = machines.filter_map { |name, arch| [name, arch] if architectures.include?(arch) }.to_h
-    RELOCATES.each do |name, architecture|
+    Gen::RELOCATES.each do |name, architecture|
       raise "#{name} is not a machine, drop it from RELOCATES" unless machines.key?(name)
       raise "#{architecture} relocates nothing, drop it from RELOCATES" unless architectures.include?(architecture.to_s)
       raise "#{name} is paired with #{architecture} by name, drop it from RELOCATES" if pairs[name]
@@ -107,9 +110,9 @@ namespace :gen do
     names = if local
               Dir[File.join(local, '*.h')].map { |path| File.basename(path) }
             else
-              fetch(BASE_URL).scan(%r{include/elf/([\w.+-]+\.h)}).flatten
+              fetch(Gen::BASE_URL).scan(%r{include/elf/([\w.+-]+\.h)}).flatten
             end
-    names = names.uniq.sort - NOT_ARCHITECTURES
+    names = names.uniq.sort - Gen::NOT_ARCHITECTURES
     raise 'Found no architecture header, the listing must have changed' if names.empty?
 
     names
@@ -155,7 +158,7 @@ namespace :gen do
     local = ENV.fetch('ELF_INCLUDE', nil)
     return File.read(File.join(local, name)) if local
 
-    fetch(format(HEADER_URL, name))
+    fetch(format(Gen::HEADER_URL, name))
   end
 
   # Downloads +url+, retrying because the server rejects requests that come in
@@ -192,7 +195,7 @@ namespace :gen do
       when :other then comment = nil
       when :define
         name, value, trailing = text
-        definitions[name] = [value, trailing ? normalize(trailing) : comment] unless MACHINE_IGNORED.match?(name)
+        definitions[name] = [value, trailing ? normalize(trailing) : comment] unless Gen::MACHINE_IGNORED.match?(name)
       end
     end
     describe(definitions)
@@ -228,7 +231,7 @@ namespace :gen do
 
   # Fills in the descriptions binutils doesn't carry.
   def describe(definitions)
-    MACHINE_DESCRIPTIONS.each do |name, description|
+    Gen::MACHINE_DESCRIPTIONS.each do |name, description|
       value, text = definitions[name]
       raise "#{name} is not defined anymore, drop it from MACHINE_DESCRIPTIONS" if value.nil?
       raise "#{name} is described as #{text.inspect} now, drop it from MACHINE_DESCRIPTIONS" if text
@@ -249,17 +252,25 @@ namespace :gen do
   # Chooses the definition that names the machine of +value+.
   # @return [Array?] The definition, +nil+ if none of them describes it.
   def name_of(value, defs)
-    described = defs.reject { |_, _, text| text.nil? }
-    return described.first if described.size <= 1
+    candidates = candidates_of(defs)
+    return candidates.first if candidates.size <= 1
 
-    current = described.reject { |_, _, text| text.match?(SUPERSEDED) }
-    current = described if current.empty?
-    longest = current.max_by { |_, _, text| text.size }[2].size
-    rivals = current.select { |_, _, text| text.size == longest }
+    longest = candidates.max_by { |_, _, text| text.size }[2].size
+    rivals = candidates.select { |_, _, text| text.size == longest }
     texts = rivals.map { |_, _, text| text }.uniq
     raise "#{value} is described as #{texts.join(' and ')}, they need telling apart" if texts.size > 1
 
     rivals.first
+  end
+
+  # Narrows the definitions of a machine down to those that could name it, i.e.
+  # the ones that are described, and among them the ones that are still current
+  # unless every one of them has been superseded.
+  # @return [Array<Array(String, Integer, String)>] The definitions.
+  def candidates_of(defs)
+    described = defs.reject { |_, _, text| text.nil? }
+    current = described.reject { |_, _, text| text.match?(Gen::SUPERSEDED) }
+    current.empty? ? described : current
   end
 
   # Turns a comment into a name, i.e. plain ASCII without the spacing and the
@@ -327,8 +338,8 @@ namespace :gen do
     File.write(path, <<~RUBY)
       # frozen_string_literal: true
 
-      # This file is generated by `#{COMMAND}`, do not edit it.
-      # Source: #{BASE_URL}
+      # This file is generated by `#{Gen::COMMAND}`, do not edit it.
+      # Source: #{Gen::BASE_URL}
 
       module ELFTools
         module Constants
@@ -364,8 +375,8 @@ namespace :gen do
 
       require 'elftools/constants/machine'
 
-      # This file is generated by `#{COMMAND}`, do not edit it.
-      # Source: #{BASE_URL}
+      # This file is generated by `#{Gen::COMMAND}`, do not edit it.
+      # Source: #{Gen::BASE_URL}
 
       module ELFTools
         module Constants
@@ -387,8 +398,8 @@ namespace :gen do
     File.write(path, <<~RUBY)
       # frozen_string_literal: true
       #{requires ? "\nrequire '#{requires}'\n" : ''}
-      # This file is generated by `#{COMMAND}`, do not edit it.
-      # Source: #{BASE_URL}
+      # This file is generated by `#{Gen::COMMAND}`, do not edit it.
+      # Source: #{Gen::BASE_URL}
 
       module ELFTools
         module Constants
