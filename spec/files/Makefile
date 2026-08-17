@@ -36,10 +36,13 @@ riscv64: ${source}
 	${CROSS} --target=riscv64-linux-gnu ${LLD} ${source} -o riscv64.elf ${FLAGS}
 ppc64: ${source}
 	${CROSS} --target=powerpc64-linux-gnu ${PPC64_LD} ${source} -o ppc64.elf ${FLAGS}
-# No MIPS libc is available to link against, object files are used instead.
+# No MIPS libc is available to link against, object files are used instead. The
+# 64-bit ABI orders the fields of r_info the way the file is ordered, so both
+# endiannesses are kept.
 mips: ${freestanding}
 	${CROSS} --target=mips-linux-gnu -c ${freestanding} -o mips.o ${FLAGS}
 	${CROSS} --target=mips64-linux-gnuabi64 -c ${freestanding} -o mips64.o ${FLAGS}
+	${CROSS} --target=mips64el-linux-gnuabi64 -c ${freestanding} -o mips64el.o ${FLAGS}
 
 clean:
 	rm -f *.elf *.o

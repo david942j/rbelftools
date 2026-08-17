@@ -60,6 +60,11 @@ entries here are collected from those announcements and from the commit history.
 - Every `LazyArray` method but `#[]` used to operate on elements that had not been
   loaded, so `#to_a`, `#map`, and friends returned `nil`s
   ([#84](https://github.com/david942j/rbelftools/pull/84))
+- `Relocation#type` and `Relocation#symbol_index` of a 64-bit MIPS file. The ABI packs
+  three types and a second symbol index into `r_info` where every other machine leaves
+  the halves of it to a type and a symbol index, and orders them the way the file is
+  ordered, so both used to return a mix of those fields
+  ([#97](https://github.com/david942j/rbelftools/pull/97))
 
 ### Changed
 

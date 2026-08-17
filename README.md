@@ -161,6 +161,18 @@ ELFTools::Constants::R::ARM::R_ARM_THM_ABS5
 #=> 7
 ```
 
+A machine may also lay `r_info` out its own way. Knowing the machine is what tells
+those layouts apart, so such a file reads like any other.
+```ruby
+mips = ELFTools::ELFFile.new(File.open('spec/files/mips64.o'))
+relocation = mips.sections_by_type(:rela).first.relocations.first
+# The 64-bit MIPS ABI packs three types and a second symbol index in there.
+'%x' % relocation.header.r_info
+#=> "800051807"
+[relocation.symbol_index, relocation.type_name]
+#=> [8, "R_MIPS_GPREL16"]
+```
+
 ## Patch
 
 Patch ELF is so easy!
