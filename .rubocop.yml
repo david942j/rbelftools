@@ -25,6 +25,7 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Exclude:
     - lib/elftools/constants.rb
+    - lib/elftools/constants/**/*.rb
 
 Metrics/MethodLength:
   Enabled: false

@@ -45,7 +45,7 @@ elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
 #=> #<ELFTools::ELFFile:0x00560b147f8328 @elf_class=64, @endian=:little, @stream=#<File:spec/files/amd64>>
 
 elf.machine
-#=> 'Advanced Micro Devices X86-64'
+#=> 'Advanced Micro Devices X86-64 processor'
 
 elf.build_id
 #=> '73ab62cb7bc9959ce053c2b711322158708cdc07'
@@ -159,7 +159,7 @@ Invoke `elf.save(filename)` to save the patched ELF into `filename`.
 ```ruby
 elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
 elf.machine
-#=> "Advanced Micro Devices X86-64"
+#=> "Advanced Micro Devices X86-64 processor"
 elf.header.e_machine = 40
 elf.machine
 #=> "ARM"
@@ -208,6 +208,13 @@ cd rbelftools
 bundle
 bundle exec rake
 ```
+
+Constant tables are generated from [binutils](https://sourceware.org/cgit/binutils-gdb/tree/include/elf/common.h),
+regenerate them against the latest revision by
+```bash
+bundle exec rake gen:constants
+```
+
 Any comments or suggestions are welcome!
 
 # Cross Platform

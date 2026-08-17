@@ -67,7 +67,7 @@ module ELFTools
     #   Name of architecture.
     # @example
     #   elf.machine
-    #   #=> 'Advanced Micro Devices X86-64'
+    #   #=> 'Advanced Micro Devices X86-64 processor'
     def machine
       ELFTools::Constants::EM.mapping(header.e_machine)
     end
