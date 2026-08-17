@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/constants/machine'
+require 'elftools/constants/relocation'
 
 module ELFTools
   # Define constants from elf.h.

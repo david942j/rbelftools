@@ -148,6 +148,19 @@ relocations.map { |r| symtab.symbol_at(r.symbol_index).name }
 #=> ["puts", "__stack_chk_fail", "printf", "__libc_start_main", "fgets", "scanf"]
 ```
 
+Each architecture numbers relocation types on its own, so the types are defined per
+architecture in `ELFTools::Constants::R`.
+```ruby
+relocations.map(&:type).uniq
+#=> [7]
+ELFTools::Constants::R::X86_64::R_X86_64_JUMP_SLOT
+#=> 7
+
+# The very same number means something else elsewhere.
+ELFTools::Constants::R::ARM::R_ARM_THM_ABS5
+#=> 7
+```
+
 ## Patch
 
 Patch ELF is so easy!
