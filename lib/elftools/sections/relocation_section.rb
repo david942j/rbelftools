@@ -11,6 +11,19 @@ module ELFTools
     # Usually for sections .rel.* and .rela.*,
     # which record relocations in ELF file.
     class RelocationSection < Section
+      # Instantiate a {RelocationSection} object.
+      # @param [ELFTools::Structs::ELF_Shdr] header
+      #   See {Section#initialize} for more information.
+      # @param [#pos=, #read] stream
+      #   See {Section#initialize} for more information.
+      # @param [Integer] machine
+      #   The machine of the ELF file, which decides what a relocation type
+      #   means. This should be +e_machine+ of the ELF header.
+      def initialize(header, stream, machine: nil, **_kwargs)
+        @machine = machine
+        super
+      end
+
       # Is this relocation a RELA or REL type.
       # @return [Boolean] If is RELA.
       def rela?
@@ -67,7 +80,7 @@ module ELFTools
         rel = klass.new(endian: header.class.self_endian, offset: stream.pos)
         rel.elf_class = header.elf_class
         rel.read(stream)
-        Relocation.new(rel, stream)
+        Relocation.new(rel, stream, machine: @machine)
       end
     end
   end

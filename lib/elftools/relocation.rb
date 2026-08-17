@@ -12,9 +12,12 @@ module ELFTools
     # @param [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] header
     #   The relocation header.
     # @param [#pos=, #read] stream The streaming object.
-    def initialize(header, stream)
+    # @param [Integer] machine
+    #   The machine of the ELF file, which decides what {#type} means.
+    def initialize(header, stream, machine: nil)
       @header = header
       @stream = stream
+      @machine = machine
     end
 
     # +r_info+ contains sym and type, use two methods
@@ -32,6 +35,18 @@ module ELFTools
       header.r_info & ((1 << mask_bit) - 1)
     end
     alias type r_info_type
+
+    # The name of {#type}.
+    #
+    # Every architecture numbers relocation types on its own, so the name is
+    # only known when the machine of the file is.
+    # @return [String] The name.
+    # @example
+    #   relocation.type_name
+    #   #=> 'R_X86_64_JUMP_SLOT'
+    def type_name
+      Constants::R.mapping(@machine, type)
+    end
 
     private
 

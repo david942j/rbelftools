@@ -383,7 +383,8 @@ module ELFTools
       Sections::Section.create(shdr, stream,
                                offset_from_vma: method(:offset_from_vma),
                                strtab: method(:strtab_section),
-                               section_at: method(:section_at))
+                               section_at: method(:section_at),
+                               machine: header.e_machine.to_i)
     end
 
     def create_segment(n)

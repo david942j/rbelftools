@@ -222,6 +222,36 @@ module ELFTools
     end
     include EM
 
+    # Relocation types, see +elftools/constants/relocation+ for the constants.
+    module R
+      # Return the name of a relocation type.
+      #
+      # A type only means something together with the machine that recorded it,
+      # both of them are needed to name it.
+      # @param [Integer?] machine Value of +e_machine+.
+      # @param [Integer] type The relocation type.
+      # @return [String] Name of the relocation type.
+      # @example
+      #   mapping(Constants::EM_X86_64, 7)
+      #   #=> 'R_X86_64_JUMP_SLOT'
+      #   mapping(Constants::EM_ARM, 7)
+      #   #=> 'R_ARM_THM_ABS5'
+      #   mapping(Constants::EM_X86_64, 1337)
+      #   #=> '<unknown>: 0x539'
+      def self.mapping(machine, type)
+        architecture = MACHINES[machine]
+        names = architecture && names_of(const_get(architecture))
+        names&.fetch(type, nil) || format('<unknown>: 0x%x', type)
+      end
+
+      # Names of every relocation type an architecture defines.
+      # @return [Hash{Integer => String}]
+      def self.names_of(architecture)
+        @names_of ||= {}
+        @names_of[architecture] ||= architecture.constants.to_h { |name| [architecture.const_get(name), name.to_s] }
+      end
+    end
+
     # This module defines ELF file types.
     module ET
       ET_NONE = 0 # no file type

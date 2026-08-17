@@ -51,6 +51,9 @@ entries here are collected from those announcements and from the commit history.
   number being `R_X86_64_JUMP_SLOT`, `R_386_JUMP_SLOT`, and `R_ARM_THM_ABS5`, so they
   are grouped as `Constants::R::X86_64`, `Constants::R::I386`, and so on. Each group is
   loaded once it is asked for ([#93](https://github.com/david942j/rbelftools/pull/93))
+- `Relocation#type_name`, which names a relocation type after the machine of the file
+  it was read from, and `Constants::R.mapping` behind it
+  ([#94](https://github.com/david942j/rbelftools/pull/94))
 
 ### Fixed
 
