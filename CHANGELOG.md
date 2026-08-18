@@ -41,6 +41,11 @@ entries here are collected from those announcements and from the commit history.
 - `Sections::Symbol#type`, `#bind`, `#visibility`, and `#section_index`, which decode
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
+- `Dynamic#relocations`, the relocations the tags of a file point at, which is where a
+  file that has been stripped of its sections still records them. They are read from
+  `DT_REL` or `DT_RELA` and from `DT_JMPREL`, and are the same relocations the
+  `.rel(a).dyn` and `.rel(a).plt` sections record
+  ([#103](https://github.com/david942j/rbelftools/pull/103))
 - `ELFFile#dynamic`, the dynamic tags of a file read from the view its type makes
   authoritative. An executable or a shared object is loaded by its segments, so the
   segment answers and the section recording the same tags is metadata; a relocatable

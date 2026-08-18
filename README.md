@@ -186,6 +186,15 @@ relocation = mips.sections_by_type(:rela).first.relocations.first
 #=> [8, "R_MIPS_GPREL16"]
 ```
 
+A relocation is recorded twice in a file that is loaded, and the tags are the copy the
+loader reads, so they answer even when the sections have been stripped away.
+```ruby
+elf.dynamic.relocations.size
+#=> 8
+elf.dynamic.relocations.map(&:type_name).uniq
+#=> ["R_X86_64_GLOB_DAT", "R_X86_64_COPY", "R_X86_64_JUMP_SLOT"]
+```
+
 ## Patch
 
 Patch ELF is so easy!

@@ -410,7 +410,9 @@ module ELFTools
       stream.pos = header.e_phoff + n * header.e_phentsize
       phdr = Structs::ELF_Phdr[elf_class].new(endian:, offset: stream.pos)
       phdr.elf_class = elf_class
-      Segments::Segment.create(phdr.read(stream), stream, offset_from_vma: method(:offset_from_vma))
+      Segments::Segment.create(phdr.read(stream), stream,
+                               offset_from_vma: method(:offset_from_vma),
+                               machine: header.e_machine.to_i)
     end
   end
 end
