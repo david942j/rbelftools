@@ -14,7 +14,7 @@ describe ELFTools::Constants do
     expect(em.mapping(0)).to eq 'No machine'
     expect(em.mapping(3)).to eq 'Intel 80386'
     expect(em.mapping(7)).to eq 'Intel 80860'
-    expect(em.mapping(8)).to eq 'MIPS R3000 (officially, big-endian only)'
+    expect(em.mapping(8)).to eq 'MIPS R3000'
     expect(em.mapping(20)).to eq 'PowerPC'
     expect(em.mapping(21)).to eq '64-bit PowerPC'
     expect(em.mapping(40)).to eq 'ARM'

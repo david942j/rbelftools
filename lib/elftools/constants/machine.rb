@@ -15,7 +15,7 @@ module ELFTools
       EM_88K               = 5      # Motorola m88k family
       EM_IAMCU             = 6      # Intel MCU
       EM_860               = 7      # Intel 80860
-      EM_MIPS              = 8      # MIPS R3000 (officially, big-endian only)
+      EM_MIPS              = 8      # MIPS R3000
       EM_S370              = 9      # IBM System/370
       EM_MIPS_RS3_LE       = 10     # MIPS R3000 little-endian (Oct 4 1999 Draft). Deprecated
       EM_PARISC            = 15     # HPPA

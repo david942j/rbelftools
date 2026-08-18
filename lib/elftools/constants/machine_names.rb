@@ -19,7 +19,7 @@ module ELFTools
         EM_88K => 'Motorola m88k family',
         EM_IAMCU => 'Intel MCU',
         EM_860 => 'Intel 80860',
-        EM_MIPS => 'MIPS R3000 (officially, big-endian only)',
+        EM_MIPS => 'MIPS R3000',
         EM_S370 => 'IBM System/370',
         EM_MIPS_RS3_LE => 'MIPS R3000 little-endian (Oct 4 1999 Draft). Deprecated',
         EM_PARISC => 'HPPA',
