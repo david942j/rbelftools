@@ -1,4 +1,4 @@
-[![Downloads](https://img.shields.io/endpoint?url=https://gem-badge-h3lg.onrender.com/downloads/elftools)](https://rubygems.org/gems/elftools)
+[![Downloads](https://img.shields.io/gem/dt/elftools)](https://rubygems.org/gems/elftools)
 
 [![Gem Version](https://badge.fury.io/rb/elftools.svg)](https://badge.fury.io/rb/elftools)
 [![Build Status](https://github.com/david942j/rbelftools/workflows/build/badge.svg)](https://github.com/david942j/rbelftools/actions)
