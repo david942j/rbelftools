@@ -41,6 +41,11 @@ entries here are collected from those announcements and from the commit history.
 - `Sections::Symbol#type`, `#bind`, `#visibility`, and `#section_index`, which decode
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
+- `ELFFile#dynamic`, the dynamic tags of a file read from the view its type makes
+  authoritative. An executable or a shared object is loaded by its segments, so the
+  segment answers and the section recording the same tags is metadata; a relocatable
+  file has no segments, so its sections do
+  ([#102](https://github.com/david942j/rbelftools/pull/102))
 - `Sections::Symbol#type_name`, `#bind_name`, and `#visibility_name`, and
   `Constants::Naming` behind them, which names a value after the constants defining it.
   Several may define one, a machine naming a value for itself and a name marking where a
