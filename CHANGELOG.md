@@ -41,6 +41,14 @@ entries here are collected from those announcements and from the commit history.
 - `Sections::Symbol#type`, `#bind`, `#visibility`, and `#section_index`, which decode
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
+- `Dynamic#symbols`, `#symbol_at`, `#symbol_by_name`, and `#num_symbols`, the symbols the
+  tags of a file point at, which is where a file that has been stripped of its sections
+  still records them. Nothing a file is loaded by records how large that table is, because
+  the loader looks a name up through a hash table and jumps straight to an index rather
+  than ever enumerating it, so the count is how far `DT_HASH`, `DT_GNU_HASH`, and the
+  relocations reach between them, and is a lower bound where only the latter two answer.
+  `#symbol_at` needs no count and is exact for any index
+  ([#104](https://github.com/david942j/rbelftools/pull/104))
 - `Dynamic#relocations`, the relocations the tags of a file point at, which is where a
   file that has been stripped of its sections still records them. They are read from
   `DT_REL` or `DT_RELA` and from `DT_JMPREL`, and are the same relocations the

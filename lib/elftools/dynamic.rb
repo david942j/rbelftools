@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/dynamic/string_table'
+require 'elftools/dynamic/symbols'
+require 'elftools/dynamic/tag'
 require 'elftools/exceptions'
 require 'elftools/relocation'
 require 'elftools/structs'
@@ -13,6 +16,8 @@ module ELFTools
   #   and {ELFTools::Segments::DynamicSegment} because methods here assume some
   #   attributes exist.
   module Dynamic
+    include Symbols
+
     # Iterate all tags.
     #
     # @note
@@ -105,7 +110,7 @@ module ELFTools
       dyn.elf_class = header.elf_class
       stream.pos = tag_start + n * dyn.num_bytes
       dyn.offset = stream.pos
-      @tag_at_map[n] = Tag.new(dyn.read(stream), stream, method(:str_offset))
+      @tag_at_map[n] = Tag.new(dyn.read(stream), stream, string_table)
     end
 
     # The relocations the tags point at.
@@ -151,22 +156,30 @@ module ELFTools
       # An entry takes what its structure takes. DT_RELAENT and DT_RELENT
       # record the same number, which a file has no way of disagreeing with
       # and every file here agrees with.
-      entsize = entry(klass).num_bytes
+      entsize = struct(klass).num_bytes
       Array.new(size.header.d_val.to_i / entsize) do |i|
-        rel = entry(klass)
-        rel.offset = offset + (i * entsize)
-        stream.pos = rel.offset
-        rel.read(stream)
-        Relocation.new(rel, stream, machine: @machine)
+        Relocation.new(read_struct(klass, offset + (i * entsize)), stream, machine: @machine)
       end
     end
 
-    # An entry of a table, of the structure and the class the file records it in.
-    # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] The entry.
-    def entry(klass)
-      entry = klass.new(endian:)
-      entry.elf_class = header.elf_class
-      entry
+    # A structure of the endianness and the class the file records it in.
+    # @param [Class] klass The structure class.
+    # @return [ELFTools::Structs::ELFStruct] The structure, before it is read.
+    def struct(klass)
+      struct = klass.new(endian:)
+      struct.elf_class = header.elf_class
+      struct
+    end
+
+    # Reads a structure the file records at a file offset.
+    # @param [Class] klass The structure class.
+    # @param [Integer] offset The file offset.
+    # @return [ELFTools::Structs::ELFStruct] The structure.
+    def read_struct(klass, offset)
+      struct = struct(klass)
+      struct.offset = offset
+      stream.pos = offset
+      struct.read(stream)
     end
 
     # The file offset the address a tag records points at.
@@ -180,6 +193,12 @@ module ELFTools
         raise(ELFError, format('Invalid %s address 0x%x', Constants::DT.mapping(@machine, tag.header.d_tag.to_i), vma))
     end
 
+    # The names the tags and the symbols point at.
+    # @return [ELFTools::Dynamic::StringTable] The string table.
+    def string_table
+      @string_table ||= StringTable.new(stream, method(:str_offset))
+    end
+
     # Get the DT_STRTAB's +d_val+ offset related to file.
     # @return [Integer] The file offset.
     # @raise [ELFTools::ELFError]
@@ -190,66 +209,6 @@ module ELFTools
         raise ELFError, 'DT_STRTAB not found' if strtab.nil?
 
         offset_of(strtab)
-      end
-    end
-
-    # A tag class.
-    class Tag
-      attr_reader :header # @return [ELFTools::Structs::ELF_Dyn] The dynamic tag header.
-      attr_reader :stream # @return [#pos=, #read] Streaming object.
-
-      # Instantiate a {ELFTools::Dynamic::Tag} object.
-      # @param [ELF_Dyn] header The dynamic tag header.
-      # @param [#pos=, #read] stream Streaming object.
-      # @param [Method] str_offset
-      #   Call this method to get the string offset related
-      #   to file.
-      def initialize(header, stream, str_offset)
-        @header = header
-        @stream = stream
-        @str_offset = str_offset
-      end
-
-      # Some dynamic have name.
-      TYPE_WITH_NAME = [Constants::DT_NEEDED,
-                        Constants::DT_SONAME,
-                        Constants::DT_RPATH,
-                        Constants::DT_RUNPATH].freeze
-      # Return the content of this tag records.
-      #
-      # For normal tags, this method just return
-      # +header.d_val+. For tags with +header.d_val+
-      # in meaning of string offset (e.g. DT_NEEDED), this method would
-      # return the string it specified.
-      # Tags with type in {TYPE_WITH_NAME} are those tags with name.
-      # @return [Integer, String] The content this tag records.
-      # @example
-      #   dynamic = elf.segment_by_type(:dynamic)
-      #   dynamic.tag_by_type(:init).value
-      #   #=> 4195600 # 0x400510
-      #   dynamic.tag_by_type(:needed).value
-      #   #=> 'libc.so.6'
-      def value
-        name || header.d_val.to_i
-      end
-
-      # Is this tag has a name?
-      #
-      # The criteria here is if this tag's type is in {TYPE_WITH_NAME}.
-      # @return [Boolean] Is this tag has a name.
-      def name?
-        TYPE_WITH_NAME.include?(header.d_tag)
-      end
-
-      # Return the name of this tag.
-      #
-      # Only tags with name would return a name.
-      # Others would return +nil+.
-      # @return [String, nil] The name.
-      def name
-        return nil unless name?
-
-        Util.cstring(stream, @str_offset.call + header.d_val.to_i)
       end
     end
   end

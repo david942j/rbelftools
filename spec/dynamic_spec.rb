@@ -5,6 +5,22 @@ require 'stringio'
 require 'elftools/elf_file'
 
 describe ELFTools::Dynamic do
+  def elf(name)
+    ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
+  end
+
+  # Reads +name+ with its section headers taken away, as a packer or a dumper
+  # leaves a file that still runs.
+  def elf_without_sections(name)
+    data = File.binread(File.join(__dir__, 'files', name))
+    header = ELFTools::ELFFile.new(StringIO.new(data)).header
+    header.e_shoff = 0
+    header.e_shnum = 0
+    header.e_shstrndx = 0
+    data[0, header.num_bytes] = header.to_binary_s
+    ELFTools::ELFFile.new(StringIO.new(data))
+  end
+
   before(:all) do
     filepath = File.join(__dir__, 'files', 'amd64.elf')
     @elf = ELFTools::ELFFile.new(File.open(filepath))
@@ -45,10 +61,6 @@ describe ELFTools::Dynamic do
   end
 
   describe 'relocations' do
-    def elf(name)
-      ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
-    end
-
     def from_sections(file)
       file.sections.select { |sec| sec.is_a?(ELFTools::Sections::RelocationSection) }.flat_map(&:relocations)
     end
@@ -67,13 +79,7 @@ describe ELFTools::Dynamic do
     end
 
     it 'reads them from a file that has no sections left' do
-      data = File.binread(File.join(__dir__, 'files', 'amd64.elf'))
-      header = ELFTools::ELFFile.new(StringIO.new(data)).header
-      header.e_shoff = 0
-      header.e_shnum = 0
-      header.e_shstrndx = 0
-      data[0, header.num_bytes] = header.to_binary_s
-      file = ELFTools::ELFFile.new(StringIO.new(data))
+      file = elf_without_sections('amd64.elf')
       expect(file.sections).to be_empty
       expect(summarize(file.dynamic.relocations)).to eq summarize(from_sections(elf('amd64.elf')))
     end
@@ -86,6 +92,92 @@ describe ELFTools::Dynamic do
       file = ELFTools::ELFFile.new(StringIO.new(data))
       expect { file.dynamic.relocations }
         .to raise_error(ELFTools::ELFError, 'Invalid DT_JMPREL address 0xdeadbeef000')
+    end
+  end
+
+  describe 'symbols' do
+    it 'reads what .dynsym records' do
+      # .dynsym describes the very bytes the tags point at, so it answers for
+      # them, name for name and index for index. Every file here that is
+      # loaded is checked, i.e. every one with dynamic tags.
+      loaded = %w[aarch64.elf amd64.elf amd64.frelro.elf amd64.nrelro.elf amd64.strip.elf arm.elf
+                  i386.elf i386.pie.elf i386.so.elf libc.so.6 ppc64.elf riscv64.elf]
+      loaded.each do |name|
+        file = elf(name)
+        dynsym = file.section_by_name('.dynsym')
+        expect(file.dynamic.num_symbols).to eq dynsym.num_symbols
+        expect(file.dynamic.symbols.map(&:name)).to eq dynsym.symbols.map(&:name)
+        expect(file.dynamic.symbols.map(&:header)).to eq dynsym.symbols.map(&:header)
+      end
+    end
+
+    it 'counts what no single source of a count can' do
+      # Neither source sees the whole table. A hash table only indexes the
+      # defined symbols a file exports under a name, so ppc64.elf's reaches 1
+      # of its 13; relocations only name the symbols something refers to, so
+      # i386.so.elf's reach 16 of its 20. Together they have covered every
+      # file here.
+      expect(elf('ppc64.elf').dynamic.num_symbols).to eq 13
+      expect(elf('i386.so.elf').dynamic.num_symbols).to eq 20
+      # DT_HASH is the one tag that records the number outright.
+      expect(elf('libc.so.6').dynamic.tag_by_type(:hash)).not_to be nil
+      expect(elf('libc.so.6').dynamic.num_symbols).to eq 2245
+    end
+
+    it 'names the symbol a relocation points at' do
+      dynamic = elf('amd64.elf').dynamic
+      expect(dynamic.relocations.map { |rel| dynamic.symbol_at(rel.symbol_index).name }).to eq \
+        %w[__gmon_start__ stdin puts __stack_chk_fail printf __libc_start_main fgets scanf]
+    end
+
+    it 'symbol_at' do
+      dynamic = elf('amd64.elf').dynamic
+      expect(dynamic.symbol_at(0).name).to eq ''
+      expect(dynamic.symbol_at(1).name).to eq 'puts'
+      expect(dynamic.symbol_at(1)).to be dynamic.symbol_at(1)
+      expect(dynamic.symbol_at(-1)).to be nil
+    end
+
+    it 'symbol_by_name' do
+      dynamic = elf('amd64.elf').dynamic
+      expect(dynamic.symbol_by_name('printf').type_name).to eq 'STT_FUNC'
+      expect(dynamic.symbol_by_name('no such symbol')).to be nil
+    end
+
+    it 'each_symbols' do
+      dynamic = elf('amd64.elf').dynamic
+      expect(dynamic.each_symbols).to be_a Enumerator
+      expect(dynamic.each_symbols.map(&:name)).to eq dynamic.symbols.map(&:name)
+    end
+
+    it 'reads them from a file that has no sections left' do
+      file = elf_without_sections('amd64.elf')
+      expect(file.sections).to be_empty
+      expect(file.dynamic.symbols.map(&:name)).to eq elf('amd64.elf').section_by_name('.dynsym').symbols.map(&:name)
+    end
+
+    it 'reports a table that is not there' do
+      # Change the tag type so that DT_SYMTAB no longer exists.
+      file = elf_with_patched_symtab { |header| header.d_tag = ELFTools::Constants::DT_DEBUG }
+      expect { file.dynamic.symbol_at(0) }.to raise_error(ELFTools::ELFError, 'DT_SYMTAB not found')
+    end
+
+    it 'reports a table that is not loaded' do
+      file = elf_with_patched_symtab { |header| header.d_val = 0xdeadbeef000 }
+      expect { file.dynamic.symbol_at(0) }.to \
+        raise_error(ELFTools::ELFError, 'Invalid DT_SYMTAB address 0xdeadbeef000')
+    end
+
+    # Returns an ELF file whose DT_SYMTAB tag has been modified by +block+.
+    # @yieldparam [ELFTools::Structs::ELF_Dyn] header The DT_SYMTAB header.
+    # @yieldreturn [void]
+    # @return [ELFTools::ELFFile]
+    def elf_with_patched_symtab
+      data = File.binread(File.join(__dir__, 'files', 'amd64.elf'))
+      header = ELFTools::ELFFile.new(StringIO.new(data)).dynamic.tag_by_type(:symtab).header
+      yield header
+      data[header.offset, header.num_bytes] = header.to_binary_s
+      ELFTools::ELFFile.new(StringIO.new(data))
     end
   end
 
