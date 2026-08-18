@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'elftools/constants'
 require 'elftools/exceptions'
+require 'elftools/relocation'
+require 'elftools/structs'
 
 module ELFTools
   # Define common methods for dynamic sections and dynamic segments.
@@ -105,10 +108,76 @@ module ELFTools
       @tag_at_map[n] = Tag.new(dyn.read(stream), stream, method(:str_offset))
     end
 
+    # The relocations the tags point at.
+    #
+    # Two tables record them: the one +DT_REL+ or +DT_RELA+ names, and the one
+    # +DT_JMPREL+ names, whose entries are of the kind +DT_PLTREL+ names.
+    # @return [Array<ELFTools::Relocation>] The relocations, in the order the
+    #   tags record them.
+    # @raise [ELFTools::ELFError]
+    #   If a table is not in any loadable segment.
+    # @example
+    #   elf.dynamic.relocations.map(&:type_name).uniq
+    #   #=> ['R_X86_64_GLOB_DAT', 'R_X86_64_JUMP_SLOT']
+    def relocations
+      relocation_tables.flat_map { |start, size, rela| read_relocations(start, size, rela) }
+    end
+
     private
 
     def endian
       header.class.self_endian
+    end
+
+    # Where each table of relocations starts, the tag recording how many bytes
+    # it takes, and whether its entries record an addend.
+    # @return [Array<Array(ELFTools::Dynamic::Tag, ELFTools::Dynamic::Tag, Boolean)>] The tables.
+    def relocation_tables
+      tables = %i[rel rela].filter_map do |type|
+        tag = tag_by_type(type)
+        [tag, tag_by_type(:"#{type}sz"), type == :rela] if tag
+      end
+      jmprel = tag_by_type(:jmprel)
+      return tables if jmprel.nil?
+
+      tables << [jmprel, tag_by_type(:pltrelsz), tag_by_type(:pltrel).header.d_val.to_i == Constants::DT_RELA]
+    end
+
+    # Reads one table of relocations.
+    # @return [Array<ELFTools::Relocation>] The relocations.
+    def read_relocations(start, size, rela)
+      klass = rela ? Structs::ELF_Rela : Structs::ELF_Rel
+      offset = offset_of(start)
+      # An entry takes what its structure takes. DT_RELAENT and DT_RELENT
+      # record the same number, which a file has no way of disagreeing with
+      # and every file here agrees with.
+      entsize = entry(klass).num_bytes
+      Array.new(size.header.d_val.to_i / entsize) do |i|
+        rel = entry(klass)
+        rel.offset = offset + (i * entsize)
+        stream.pos = rel.offset
+        rel.read(stream)
+        Relocation.new(rel, stream, machine: @machine)
+      end
+    end
+
+    # An entry of a table, of the structure and the class the file records it in.
+    # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] The entry.
+    def entry(klass)
+      entry = klass.new(endian:)
+      entry.elf_class = header.elf_class
+      entry
+    end
+
+    # The file offset the address a tag records points at.
+    # @param [ELFTools::Dynamic::Tag] tag The tag.
+    # @return [Integer] The file offset.
+    # @raise [ELFTools::ELFError]
+    #   If the address is not in any loadable segment.
+    def offset_of(tag)
+      vma = tag.header.d_val.to_i
+      @offset_from_vma.call(vma) ||
+        raise(ELFError, format('Invalid %s address 0x%x', Constants::DT.mapping(@machine, tag.header.d_tag.to_i), vma))
     end
 
     # Get the DT_STRTAB's +d_val+ offset related to file.
@@ -120,8 +189,7 @@ module ELFTools
         strtab = tag_by_type(:strtab)
         raise ELFError, 'DT_STRTAB not found' if strtab.nil?
 
-        vma = strtab.header.d_val.to_i
-        @offset_from_vma.call(vma) || raise(ELFError, format('Invalid DT_STRTAB address 0x%x', vma))
+        offset_of(strtab)
       end
     end
 

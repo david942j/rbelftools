@@ -14,10 +14,14 @@ module ELFTools
       #   Streaming object.
       # @param [Method] offset_from_vma
       #   The method to get offset of file, given virtual memory address.
-      def initialize(header, stream, offset_from_vma: nil)
+      # @param [Integer] machine
+      #   The machine of the ELF file, which decides what the entries a
+      #   segment points at mean. This should be +e_machine+ of the ELF header.
+      def initialize(header, stream, offset_from_vma: nil, machine: nil, **_kwargs)
         @header = header
         @stream = stream
         @offset_from_vma = offset_from_vma
+        @machine = machine
       end
 
       # Return +header.p_type+ in a simpler way.

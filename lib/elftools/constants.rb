@@ -119,6 +119,8 @@ module ELFTools
 
     # Dynamic table types, records in +d_tag+.
     module DT
+      extend Naming
+
       DT_NULL                       = 0 # marks the end of the _DYNAMIC array
       DT_NEEDED                     = 1 # libraries need to be linked by loader
       DT_PLTRELSZ                   = 2 # total size of relocation entries
