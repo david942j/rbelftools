@@ -1,6 +1,7 @@
 # encoding: ascii-8bit
 # frozen_string_literal: true
 
+require 'stringio'
 require 'tempfile'
 
 require 'elftools/elf_file'
@@ -145,6 +146,57 @@ describe ELFTools::ELFFile do
 
     it 'when invalid address' do
       expect(@elf.vma_from_offset(0x12345678)).to eq(nil)
+    end
+  end
+
+  describe 'dynamic' do
+    def elf(name)
+      described_class.new(File.open(File.join(__dir__, 'files', name)))
+    end
+
+    # Returns an ELF file whose header has been modified by +block+.
+    # @yieldparam [ELFTools::Structs::ELF_Ehdr] header The ELF header.
+    # @yieldreturn [void]
+    # @return [ELFTools::ELFFile]
+    def elf_with_patched_header(name)
+      data = File.binread(File.join(__dir__, 'files', name))
+      header = described_class.new(StringIO.new(data)).header
+      yield header
+      data[0, header.num_bytes] = header.to_binary_s
+      described_class.new(StringIO.new(data))
+    end
+
+    it 'reads the tags a loaded file is loaded by' do
+      # An executable and a shared object record the same tags twice, and the
+      # segment is the one the kernel and the loader read.
+      %w[amd64.elf libc.so.6].each do |name|
+        file = elf(name)
+        expect(file.dynamic).to be_a ELFTools::Segments::DynamicSegment
+        expect(file.dynamic.tags.size).to eq file.section_by_name('.dynamic').tags.size
+      end
+    end
+
+    it 'reads none from a file that records none' do
+      # A relocatable file is linked by its sections and has no segments.
+      expect(elf('mips64.o').segments).to be_empty
+      expect(elf('mips64.o').dynamic).to be nil
+    end
+
+    it 'disregards the segments of a file that says it is relocatable' do
+      # Segments on an object file are something no linker reads, forged or
+      # left over, and the sections are what governs it either way.
+      file = elf_with_patched_header('amd64.elf') { |header| header.e_type = ELFTools::Constants::ET_REL }
+      expect(file.segment_by_type(:dynamic)).not_to be nil
+      expect(file.dynamic).to be_a ELFTools::Sections::DynamicSection
+    end
+
+    it 'falls back to the section of a file that has no segments' do
+      file = elf_with_patched_header('amd64.elf') { |header| header.e_phnum = 0 }
+      expect(file.segments).to be_empty
+      expect(file.dynamic).to be_a ELFTools::Sections::DynamicSection
+      expect(file.dynamic.tags.size).to eq elf('amd64.elf').dynamic.tags.size
+      # A tag names a string by address, which only the segments resolve.
+      expect { file.dynamic.tag_by_type(:needed).name }.to raise_error ELFTools::ELFError
     end
   end
 

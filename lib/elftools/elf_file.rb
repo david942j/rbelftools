@@ -59,6 +59,25 @@ module ELFTools
       note.desc.unpack1('H*')
     end
 
+    # The dynamic tags of this file, read from the view that its type makes
+    # authoritative.
+    #
+    # A relocatable file is linked by its sections, so its sections answer and
+    # any segment it carries is disregarded, being something no linker reads.
+    # An executable or a shared object is loaded by its segments alone, so the
+    # segment answers and the section recording the same tags is metadata a
+    # tool may have stripped or rewritten.
+    # @return [ELFTools::Segments::DynamicSegment, ELFTools::Sections::DynamicSection, nil]
+    #   The tags, +nil+ if the view that decides records none.
+    # @example
+    #   elf.dynamic.tag_by_type(:needed).name
+    #   #=> 'libc.so.6'
+    def dynamic
+      return sections_by_type(:dynamic).first if header.e_type.to_i == Constants::ET_REL
+
+      segment_by_type(:dynamic) || sections_by_type(:dynamic).first
+    end
+
     # Get machine architecture.
     #
     # Mappings of architecture can be found
