@@ -15,7 +15,8 @@ describe 'cross architecture files' do
     'riscv64.elf' => [64, :little, 'DYN', 'RISC-V'],
     'ppc64.elf' => [64, :big, 'DYN', '64-bit PowerPC'],
     'mips.o' => [32, :big, 'REL', 'MIPS R3000'],
-    'mips64.o' => [64, :big, 'REL', 'MIPS R3000']
+    'mips64.o' => [64, :big, 'REL', 'MIPS R3000'],
+    'mips64el.o' => [64, :little, 'REL', 'MIPS R3000']
   }.each do |name, (elf_class, endian, type, machine)|
     it name do
       file = elf(name)
@@ -40,10 +41,29 @@ describe 'cross architecture files' do
     it 'relocations' do
       rel = elf('ppc64.elf').sections_by_type(:rela).first.relocations.first
       expect(rel.header.r_offset.to_i).to be_positive
+    end
+  end
 
-      # The symbol index is the high half of r_info on every 64-bit target.
-      rels = elf('mips64.o').sections_by_type(:rela).first.relocations
-      expect(rels.map(&:symbol_index)).to all(be < elf('mips64.o').section_by_name('.symtab').num_symbols)
+  describe 'the 64-bit MIPS ABI' do
+    def relocations(name)
+      elf(name).sections_by_type(:rela).flat_map do |sec|
+        sec.relocations.map { |rel| [rel.symbol_index, rel.type_name] }
+      end
+    end
+
+    # The ABI records more in r_info than the symbol index and the type every
+    # machine records, and orders it all the way the file is ordered, so the
+    # two ends of the field swap with the endianness.
+    it 'reads a relocation the same whichever end the file starts from' do
+      expect(relocations('mips64.o')).to eq relocations('mips64el.o')
+    end
+
+    %w[mips64.o mips64el.o].each do |name|
+      it name do
+        expect(relocations(name)).to include([8, 'R_MIPS_GPREL16'], [10, 'R_MIPS_CALL16'])
+        num_symbols = elf(name).section_by_name('.symtab').num_symbols
+        expect(relocations(name).map(&:first)).to all(be < num_symbols)
+      end
     end
   end
 

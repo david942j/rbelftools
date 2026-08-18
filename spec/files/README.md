@@ -32,6 +32,7 @@ used for the object files.
 | `ppc64.elf` | 64 | **big** | DYN | PowerPC64 |
 | `mips.o` | 32 | **big** | REL | MIPS |
 | `mips64.o` | 64 | **big** | REL | MIPS |
+| `mips64el.o` | 64 | little | REL | MIPS |
 
 `libc.so.6` is not generated, it is a copy of the system library of some Ubuntu release.
 
@@ -39,7 +40,9 @@ Object files are ELF files as well, and they record the relocations a linker has
 resolve. Those relocations are far more diverse than the ones left in a linked file,
 which is why some architectures are kept as objects:
 
-- MIPS, because no MIPS libc is available to link against, see below.
+- MIPS, because no MIPS libc is available to link against, see below. Both endiannesses
+  are kept for the 64-bit ABI, which orders the fields of `r_info` the way the file is
+  ordered and so reads differently in each.
 - ARM Thumb, because Thumb only shows in relocations such as `R_ARM_THM_CALL`, which a
   linker resolves and does not record.
 
