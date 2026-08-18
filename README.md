@@ -113,6 +113,19 @@ symtab_section.symbol_by_name('puts@@GLIBC_2.2.5').section_index == ELFTools::Co
 #=> true
 ```
 
+Each of those has a name. Several constants may define one value, so naming it takes
+the machine of the file, which names some of them for itself.
+```ruby
+[main.type_name, main.bind_name, main.visibility_name]
+#=> ["STT_FUNC", "STB_GLOBAL", "STV_DEFAULT"]
+
+# 13 is a symbol type ARM and SPARC each define, and no one else names.
+ELFTools::Constants::STT.mapping(ELFTools::Constants::EM_ARM, 13)
+#=> "STT_ARM_TFUNC"
+ELFTools::Constants::STT.mapping(ELFTools::Constants::EM_X86_64, 13)
+#=> "<unknown>: 0xd"
+```
+
 ## Segments
 
 ```ruby

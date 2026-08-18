@@ -38,4 +38,40 @@ describe ELFTools::Constants do
     expect(et.mapping(3)).to eq 'DYN'
     expect(et.mapping(4)).to eq 'CORE'
   end
+
+  describe ELFTools::Constants::Naming do
+    let(:c) { ELFTools::Constants }
+
+    it 'names a value after the machine that defines it' do
+      # 13 is a type each of these machines defines for itself.
+      expect(c::STT.mapping(c::EM_ARM, 13)).to eq 'STT_ARM_TFUNC'
+      expect(c::STT.mapping(c::EM_SPARC, 13)).to eq 'STT_SPARC_REGISTER'
+      expect(c::SHN.mapping(c::EM_MIPS, 0xff02)).to eq 'SHN_MIPS_DATA'
+      expect(c::SHN.mapping(c::EM_X86_64, 0xff02)).to eq 'SHN_X86_64_LCOMMON'
+    end
+
+    it 'passes over the names of another machine' do
+      expect(c::STT.mapping(c::EM_X86_64, 13)).to eq '<unknown>: 0xd'
+      expect(c::SHN.mapping(c::EM_ARM, 0xff02)).to eq '<unknown>: 0xff02'
+      # Nothing names a value when the machine is unknown either.
+      expect(c::STT.mapping(nil, 13)).to eq '<unknown>: 0xd'
+    end
+
+    it 'passes over a name marking a range or a count' do
+      # STT_LOOS and STB_LOOS mark where a range begins, the value is named
+      # after what defines it. STT_NUM and SHN_LORESERVE only ever mark.
+      expect(c::STT.mapping(c::EM_X86_64, 10)).to eq 'STT_GNU_IFUNC'
+      expect(c::STB.mapping(c::EM_X86_64, 10)).to eq 'STB_GNU_UNIQUE'
+      expect(c::SHN.mapping(c::EM_X86_64, 0xffff)).to eq 'SHN_XINDEX'
+      expect(c::STT.mapping(c::EM_X86_64, 7)).to eq '<unknown>: 0x7'
+      expect(c::SHN.mapping(c::EM_X86_64, 0xff00)).to eq '<unknown>: 0xff00'
+    end
+
+    it 'names what only one constant defines' do
+      expect(c::STT.mapping(c::EM_X86_64, 2)).to eq 'STT_FUNC'
+      expect(c::STB.mapping(c::EM_X86_64, 0)).to eq 'STB_LOCAL'
+      expect(c::STV.mapping(c::EM_X86_64, 2)).to eq 'STV_HIDDEN'
+      expect(c::SHN.mapping(c::EM_X86_64, 0xfff1)).to eq 'SHN_ABS'
+    end
+  end
 end
