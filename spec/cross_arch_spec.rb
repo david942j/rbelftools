@@ -14,9 +14,9 @@ describe 'cross architecture files' do
     'arm.thumb.o' => [32, :little, 'REL', 'ARM'],
     'riscv64.elf' => [64, :little, 'DYN', 'RISC-V'],
     'ppc64.elf' => [64, :big, 'DYN', '64-bit PowerPC'],
-    'mips.o' => [32, :big, 'REL', 'MIPS R3000 (officially, big-endian only)'],
-    'mips64.o' => [64, :big, 'REL', 'MIPS R3000 (officially, big-endian only)'],
-    'mips64el.o' => [64, :little, 'REL', 'MIPS R3000 (officially, big-endian only)']
+    'mips.o' => [32, :big, 'REL', 'MIPS R3000'],
+    'mips64.o' => [64, :big, 'REL', 'MIPS R3000'],
+    'mips64el.o' => [64, :little, 'REL', 'MIPS R3000']
   }.each do |name, (elf_class, endian, type, machine)|
     it name do
       file = elf(name)

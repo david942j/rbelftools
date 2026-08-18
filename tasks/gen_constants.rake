@@ -14,9 +14,14 @@ module Gen
   # is a value that predates the ABI and that the registry reserves as well.
   MACHINE_IGNORED = /\AEM_(NUM|res\d+|OLD_SPARCV9)\z/
 
-  # Constants binutils defines without describing them anywhere. A constant
-  # binutils describes is reported so that the entry can be dropped.
+  # Descriptions recorded here instead of by binutils, which describes some
+  # constants nowhere and describes others as more than the name of a machine.
+  # An entry binutils has come to describe the same way is reported so that it
+  # can be dropped.
   MACHINE_DESCRIPTIONS = {
+    # binutils appends a note that the machine is officially big endian only,
+    # which the little endian files recording it contradict.
+    'EM_MIPS' => 'MIPS R3000',
     'EM_XSTORMY16' => 'Sanyo XStormy16 CPU core'
   }.freeze
 
@@ -229,12 +234,13 @@ namespace :gen do
     end
   end
 
-  # Fills in the descriptions binutils doesn't carry.
+  # Records the descriptions binutils doesn't carry, and the ones it carries
+  # differently.
   def describe(definitions)
     Gen::MACHINE_DESCRIPTIONS.each do |name, description|
       value, text = definitions[name]
       raise "#{name} is not defined anymore, drop it from MACHINE_DESCRIPTIONS" if value.nil?
-      raise "#{name} is described as #{text.inspect} now, drop it from MACHINE_DESCRIPTIONS" if text
+      raise "#{name} is described as #{text.inspect} now, drop it from MACHINE_DESCRIPTIONS" if text == description
 
       definitions[name] = [value, description]
     end
