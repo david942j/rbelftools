@@ -11,6 +11,70 @@ module ELFTools
     # ELF magic header
     ELFMAG = "\x7FELF"
 
+    # Names a value after the constants that define it, for the modules where
+    # several of them may define one value.
+    #
+    # A machine defines names of its own, and a name may mark where a range of
+    # values begins or ends, or how many of them are defined, rather than name
+    # one of them.
+    module Naming
+      # Architectures a constant can be named after, the longest first so that
+      # a name is read as the architecture it spells out in full.
+      ARCHITECTURES = (R.constants - [:MACHINES]).sort_by { |name| -name.length }.freeze
+
+      # Return the name of +value+.
+      #
+      # Names of a machine other than +machine+ are passed over, as are the
+      # ones that mark a range or a count instead of naming a value.
+      # @param [Integer?] machine Value of +e_machine+.
+      # @param [Integer] value The value to name.
+      # @return [String] The name.
+      # @example
+      #   Constants::STT.mapping(Constants::EM_ARM, 13)
+      #   #=> 'STT_ARM_TFUNC'
+      #   Constants::STT.mapping(Constants::EM_X86_64, 13)
+      #   #=> '<unknown>: 0xd'
+      def mapping(machine, value)
+        architecture = R::MACHINES[machine]
+        name = names_by_value.fetch(value, []).find do |constant|
+          !marker?(constant) && [nil, architecture].include?(architecture_of(constant))
+        end
+        name ? name.to_s : format('<unknown>: 0x%x', value)
+      end
+
+      private
+
+      # The constants defining each value, in the order they are defined.
+      # @return [Hash{Integer => Array<Symbol>}] The constants.
+      def names_by_value
+        @names_by_value ||= constants.group_by { |constant| const_get(constant) }
+      end
+
+      # The architecture a constant is named after.
+      # @example
+      #   architecture_of(:SHN_MIPS_ACOMMON)
+      #   #=> :MIPS
+      #   architecture_of(:SHN_ABS)
+      #   #=> nil
+      # @return [Symbol?] The architecture, +nil+ if the name spells out none.
+      def architecture_of(constant)
+        rest = constant.to_s.sub(/\A#{name.split('::').last}_/, '')
+        ARCHITECTURES.find { |architecture| rest.start_with?("#{architecture}_") }
+      end
+
+      # Whether a constant marks where a range of values begins or ends, or
+      # how many of them are defined, rather than naming one of them.
+      # @example
+      #   marker?(:STT_LOPROC)
+      #   #=> true
+      #   marker?(:STT_FUNC)
+      #   #=> false
+      # @return [Boolean] The answer.
+      def marker?(constant)
+        constant.to_s.match?(/_((LO|HI)(OS|PROC|RESERVE)|NUM)\z/)
+      end
+    end
+
     # Values of `d_un.d_val' in the DT_FLAGS and DT_FLAGS_1 entry.
     module DF
       DF_ORIGIN       = 0x00000001 # Object may use DF_ORIGIN
@@ -328,6 +392,8 @@ module ELFTools
     # Special indices to section. These are used when there is no valid index to section header.
     # The meaning of these values is left upto the embedding header.
     module SHN
+      extend Naming
+
       SHN_UNDEF           = 0      # undefined section
       SHN_LORESERVE       = 0xff00 # start of reserved indices
 
@@ -484,6 +550,8 @@ module ELFTools
 
     # Symbol binding from Sym st_info field.
     module STB
+      extend Naming
+
       STB_LOCAL      = 0 # Local symbol
       STB_GLOBAL     = 1 # Global symbol
       STB_WEAK       = 2 # Weak symbol
@@ -498,6 +566,8 @@ module ELFTools
 
     # Symbol types from Sym st_info field.
     module STT
+      extend Naming
+
       STT_NOTYPE         = 0 # Symbol type is unspecified
       STT_OBJECT         = 1 # Symbol is a data object
       STT_FUNC           = 2 # Symbol is a code object
@@ -531,6 +601,8 @@ module ELFTools
 
     # Symbol visibility from Sym st_other field.
     module STV
+      extend Naming
+
       STV_DEFAULT   = 0 # Visibility is specified by binding type
       STV_INTERNAL  = 1 # OS specific version of {STV_HIDDEN}
       STV_HIDDEN    = 2 # Can only be seen inside currently compilation unit

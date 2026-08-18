@@ -41,6 +41,12 @@ entries here are collected from those announcements and from the commit history.
 - `Sections::Symbol#type`, `#bind`, `#visibility`, and `#section_index`, which decode
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
+- `Sections::Symbol#type_name`, `#bind_name`, and `#visibility_name`, and
+  `Constants::Naming` behind them, which names a value after the constants defining it.
+  Several may define one, a machine naming a value for itself and a name marking where a
+  range begins rather than naming anything, so `STT_ARM_TFUNC` and `STT_SPARC_REGISTER`
+  are told apart and `STT_GNU_IFUNC` is named over the `STT_LOOS` it shares a value with
+  ([#101](https://github.com/david942j/rbelftools/pull/101))
 - 42 more `Constants::EM` constants, `EM_RISCV`, `EM_LOONGARCH`, and `EM_IAMCU` among
   them ([#92](https://github.com/david942j/rbelftools/pull/92))
 - `ELFFile#machine` names 229 machines, where it used to name 11 and answer

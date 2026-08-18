@@ -19,8 +19,12 @@ module ELFTools
       # @param [Proc] section_at
       #   The method for fetching other sections by index.
       #   This lambda should be {ELFTools::ELFFile#section_at}.
-      def initialize(header, stream, section_at: nil, **_kwargs)
+      # @param [Integer] machine
+      #   The machine of the ELF file, which decides what the fields of a
+      #   symbol mean. This should be +e_machine+ of the ELF header.
+      def initialize(header, stream, section_at: nil, machine: nil, **_kwargs)
         @section_at = section_at
+        @machine = machine
         # For faster #symbol_by_name
         super
       end
@@ -93,7 +97,7 @@ module ELFTools
         stream.pos = header.sh_offset + n * header.sh_entsize
         sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian, offset: stream.pos)
         sym.read(stream)
-        Symbol.new(sym, stream, symstr: method(:symstr))
+        Symbol.new(sym, stream, symstr: method(:symstr), machine: @machine)
       end
     end
   end
