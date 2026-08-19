@@ -126,6 +126,28 @@ ELFTools::Constants::STT.mapping(ELFTools::Constants::EM_X86_64, 13)
 #=> "<unknown>: 0xd"
 ```
 
+The symbols a file is loaded by are recorded twice, and the tags are the copy the loader
+reads, so they answer even when the sections have been stripped away. Naming the symbol a
+relocation points at takes nothing but the tags.
+```ruby
+dynamic = elf.dynamic
+dynamic.symbols.map(&:name).reject(&:empty?).first(4).join(' ')
+#=> "puts __stack_chk_fail printf __libc_start_main"
+dynamic.symbol_by_name('printf').type_name
+#=> "STT_FUNC"
+dynamic.relocations.map { |rel| dynamic.symbol_at(rel.symbol_index).name }.first(3)
+#=> ["__gmon_start__", "stdin", "puts"]
+```
+
+Nothing a file is loaded by records how large its symbol table is, because the loader
+looks a name up through a hash table and jumps straight to an index rather than ever
+enumerating it. `num_symbols` is therefore how far the hash table and the relocations
+reach between them, which is a lower bound, while `symbol_at` is exact for any index.
+```ruby
+dynamic.num_symbols
+#=> 9
+```
+
 ## Segments
 
 ```ruby

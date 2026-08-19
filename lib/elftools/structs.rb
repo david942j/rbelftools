@@ -184,6 +184,22 @@ module ELFTools
       64 => ELF64_sym
     }.freeze
 
+    # Header of the symbol hash table +DT_HASH+ points at.
+    class ELF_Hash < ELFStruct
+      endian :big_and_little
+      uint32 :nbucket # Number of buckets
+      uint32 :nchain  # Number of chains, which is how many symbols there are
+    end
+
+    # Header of the symbol hash table +DT_GNU_HASH+ points at.
+    class ELF_GnuHash < ELFStruct
+      endian :big_and_little
+      uint32 :nbuckets  # Number of buckets
+      uint32 :symndx    # The first symbol index the table indexes
+      uint32 :maskwords # Number of words the bloom filter takes
+      uint32 :shift2    # The second shift the bloom filter is built with
+    end
+
     # Note header.
     class ELF_Nhdr < ELFStruct
       endian :big_and_little
