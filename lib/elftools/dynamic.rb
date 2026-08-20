@@ -125,7 +125,7 @@ module ELFTools
     #   elf.dynamic.relocations.map(&:type_name).uniq
     #   #=> ['R_X86_64_GLOB_DAT', 'R_X86_64_JUMP_SLOT']
     def relocations
-      relocation_tables.flat_map { |start, size, rela| read_relocations(start, size, rela) }
+      @relocations ||= relocation_tables.flat_map { |start, size, rela| read_relocations(start, size, rela) }
     end
 
     private
