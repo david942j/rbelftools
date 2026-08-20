@@ -8,5 +8,5 @@ SimpleCov.start do
                                                        SimpleCov::Formatter::JSONFormatter,
                                                        SimpleCov::Formatter::HTMLFormatter
                                                      ])
-  add_filter '/spec/'
+  skip '/spec/'
 end

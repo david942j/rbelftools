@@ -97,6 +97,11 @@ describe ELFTools::Dynamic do
       expect(summarize(file.dynamic.relocations)).to eq summarize(from_sections(elf('amd64.elf')))
     end
 
+    it 'reads a table once' do
+      dynamic = elf('libc.so.6').dynamic
+      expect(dynamic.relocations).to be dynamic.relocations
+    end
+
     it 'reports a table that is not loaded' do
       data = File.binread(File.join(__dir__, 'files', 'amd64.elf'))
       tag = ELFTools::ELFFile.new(StringIO.new(data)).dynamic.tag_by_type(:jmprel)
