@@ -14,6 +14,11 @@ entries here are collected from those announcements and from the commit history.
 
 ### Breaking
 
+- `ELFFile#strtab_section` is `ELFFile#section_name_table`. It answers with the section the
+  names of the sections are recorded in, `.shstrtab`, and not with `.strtab`, which records
+  the names of the symbols and which `Sections::SymTabSection#symstr` answers with. The
+  keyword `Sections::Section` takes for it is `section_name_table:` rather than `strtab:`
+  ([#109](https://github.com/david942j/rbelftools/pull/109))
 - Ruby 3.3 or later is required ([#85](https://github.com/david942j/rbelftools/pull/85))
 - Addresses that occupy memory but have no content in file, `.bss` for instance, are
   not converted into a file offset anymore. This affects `ELFFile#offset_from_vma` and
