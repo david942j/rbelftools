@@ -97,6 +97,12 @@ entries here are collected from those announcements and from the commit history.
 
 ### Changed
 
+- Every iterator is named in the singular, `ELFFile#each_section` and `#each_segment`,
+  `Dynamic#each_tag`, `Note#each_note`, `Sections::RelocationSection#each_relocation`, and
+  `#each_symbol` of both `Sections::SymTabSection` and `Dynamic`, which is how Ruby names
+  the ones it defines itself and agrees with the one thing each of them yields. The plural
+  name each used to go by is an alias of it, so nothing that calls one has to change
+  ([#108](https://github.com/david942j/rbelftools/pull/108))
 - The `bindata` requirement is relaxed to `>= 2, < 4`
   ([#81](https://github.com/david942j/rbelftools/pull/81))
 - `Constants::EM` and the names behind `ELFFile#machine` are generated from binutils

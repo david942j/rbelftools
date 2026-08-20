@@ -61,19 +61,22 @@ module ELFTools
       # @return [Enumerator<ELFTools::Sections::Symbol>, Array<ELFTools::Sections::Symbol>]
       #   If block is not given, an enumerator will be returned.
       #   Otherwise return array of symbols.
-      def each_symbols(&block)
-        return enum_for(:each_symbols) unless block_given?
+      def each_symbol(&block)
+        return enum_for(:each_symbol) unless block_given?
 
         Array.new(num_symbols) do |i|
           symbol_at(i).tap(&block)
         end
       end
 
+      # The name this used to go by, kept so that it keeps working.
+      alias each_symbols each_symbol
+
       # Simply use {#symbols} to get all symbols.
       # @return [Array<ELFTools::Sections::Symbol>]
       #   The whole symbols.
       def symbols
-        each_symbols.to_a
+        each_symbol.to_a
       end
 
       # Get symbol by its name.
@@ -81,7 +84,7 @@ module ELFTools
       #   The name of symbol.
       # @return [ELFTools::Sections::Symbol] Desired symbol.
       def symbol_by_name(name)
-        each_symbols.find { |symbol| symbol.name == name }
+        each_symbol.find { |symbol| symbol.name == name }
       end
 
       # Return the symbol string section.

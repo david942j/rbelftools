@@ -157,10 +157,10 @@ describe ELFTools::Dynamic do
       expect(dynamic.symbol_by_name('no such symbol')).to be nil
     end
 
-    it 'each_symbols' do
+    it 'each_symbol' do
       dynamic = elf('amd64.elf').dynamic
-      expect(dynamic.each_symbols).to be_a Enumerator
-      expect(dynamic.each_symbols.map(&:name)).to eq dynamic.symbols.map(&:name)
+      expect(dynamic.each_symbol).to be_a Enumerator
+      expect(dynamic.each_symbol.map(&:name)).to eq dynamic.symbols.map(&:name)
     end
 
     it 'reads them from a file that has no sections left' do
@@ -207,7 +207,7 @@ describe ELFTools::Dynamic do
     it 'looks a name up instead of searching for it' do
       dynamic = elf('libc.so.6').dynamic
       # Searching would mean reading all 2245 symbols to reach this one.
-      expect(dynamic).not_to receive(:each_symbols)
+      expect(dynamic).not_to receive(:each_symbol)
       expect(dynamic.symbol_by_name('malloc').name).to eq 'malloc'
     end
 

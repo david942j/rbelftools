@@ -124,7 +124,7 @@ module ELFTools
     #   elf.section_by_name('no such section')
     #   #=> nil
     def section_by_name(name)
-      each_sections.find { |sec| sec.name == name }
+      each_section.find { |sec| sec.name == name }
     end
 
     # Iterate all sections.
@@ -138,19 +138,22 @@ module ELFTools
     # @return [Enumerator<ELFTools::Sections::Section>, Array<ELFTools::Sections::Section>]
     #   As +Array#each+, if block is not given, a enumerator will be returned,
     #   otherwise, the whole sections will be returned.
-    def each_sections(&block)
-      return enum_for(:each_sections) unless block_given?
+    def each_section(&block)
+      return enum_for(:each_section) unless block_given?
 
       Array.new(num_sections) do |i|
         section_at(i).tap(&block)
       end
     end
 
+    # The name this used to go by, kept so that it keeps working.
+    alias each_sections each_section
+
     # Simply use {#sections} to get all sections.
     # @return [Array<ELFTools::Sections::Section>]
     #   Whole sections.
     def sections
-      each_sections.to_a
+      each_section.to_a
     end
 
     # Acquire the +n+-th section, 0-based.
@@ -181,7 +184,7 @@ module ELFTools
     #   #    #<ELFTools::Sections::RelocationSection:0x00563cd3b89d70>]
     def sections_by_type(type, &)
       type = Util.to_constant(Constants::SHT, type)
-      Util.select_by_type(each_sections, type, &)
+      Util.select_by_type(each_section, type, &)
     end
 
     # Get the string table section.
@@ -211,19 +214,22 @@ module ELFTools
     # @yieldreturn [void]
     # @return [Array<ELFTools::Segments::Segment>]
     #   Whole segments will be returned.
-    def each_segments(&block)
-      return enum_for(:each_segments) unless block_given?
+    def each_segment(&block)
+      return enum_for(:each_segment) unless block_given?
 
       Array.new(num_segments) do |i|
         segment_at(i).tap(&block)
       end
     end
 
+    # The name this used to go by, kept so that it keeps working.
+    alias each_segments each_segment
+
     # Simply use {#segments} to get all segments.
     # @return [Array<ELFTools::Segments::Segment>]
     #   Whole segments.
     def segments
-      each_segments.to_a
+      each_segment.to_a
     end
 
     # Get the first segment with +p_type=type+.
@@ -269,7 +275,7 @@ module ELFTools
     #   #=> nil # no such segment exists
     def segment_by_type(type)
       type = Util.to_constant(Constants::PT, type)
-      each_segments.find { |seg| seg.header.p_type == type }
+      each_segment.find { |seg| seg.header.p_type == type }
     end
 
     # Fetch all segments with specific type.
@@ -284,7 +290,7 @@ module ELFTools
     # @return [Array<ELFTools::Segments::Segment>] The target segments.
     def segments_by_type(type, &)
       type = Util.to_constant(Constants::PT, type)
-      Util.select_by_type(each_segments, type, &)
+      Util.select_by_type(each_segment, type, &)
     end
 
     # Acquire the +n+-th segment, 0-based.
