@@ -9,6 +9,19 @@ describe ELFTools::Dynamic do
     ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
   end
 
+  # Returns an ELF file whose tag of +type+ has been modified by +block+.
+  # @param [Symbol] type The type of the tag.
+  # @yieldparam [ELFTools::Structs::ELF_Dyn] header The header of the tag.
+  # @yieldreturn [void]
+  # @return [ELFTools::ELFFile]
+  def elf_with_patched_tag(type)
+    data = File.binread(File.join(__dir__, 'files', 'amd64.elf'))
+    header = ELFTools::ELFFile.new(StringIO.new(data)).dynamic.tag_by_type(type).header
+    yield header
+    data[header.offset, header.num_bytes] = header.to_binary_s
+    ELFTools::ELFFile.new(StringIO.new(data))
+  end
+
   # Reads +name+ with its section headers taken away, as a packer or a dumper
   # leaves a file that still runs.
   def elf_without_sections(name)
@@ -158,45 +171,72 @@ describe ELFTools::Dynamic do
 
     it 'reports a table that is not there' do
       # Change the tag type so that DT_SYMTAB no longer exists.
-      file = elf_with_patched_symtab { |header| header.d_tag = ELFTools::Constants::DT_DEBUG }
+      file = elf_with_patched_tag(:symtab) { |header| header.d_tag = ELFTools::Constants::DT_DEBUG }
       expect { file.dynamic.symbol_at(0) }.to raise_error(ELFTools::ELFError, 'DT_SYMTAB not found')
     end
 
     it 'reports a table that is not loaded' do
-      file = elf_with_patched_symtab { |header| header.d_val = 0xdeadbeef000 }
+      file = elf_with_patched_tag(:symtab) { |header| header.d_val = 0xdeadbeef000 }
       expect { file.dynamic.symbol_at(0) }.to \
         raise_error(ELFTools::ELFError, 'Invalid DT_SYMTAB address 0xdeadbeef000')
     end
+  end
 
-    # Returns an ELF file whose DT_SYMTAB tag has been modified by +block+.
-    # @yieldparam [ELFTools::Structs::ELF_Dyn] header The DT_SYMTAB header.
-    # @yieldreturn [void]
-    # @return [ELFTools::ELFFile]
-    def elf_with_patched_symtab
-      data = File.binread(File.join(__dir__, 'files', 'amd64.elf'))
-      header = ELFTools::ELFFile.new(StringIO.new(data)).dynamic.tag_by_type(:symtab).header
-      yield header
-      data[header.offset, header.num_bytes] = header.to_binary_s
-      ELFTools::ELFFile.new(StringIO.new(data))
+  describe 'symbol_by_name' do
+    it 'finds every name a file records' do
+      # Whatever a table leads to and whatever it does not, the answer is the
+      # symbol that bears the name.
+      %w[aarch64.elf amd64.elf arm.elf i386.elf i386.pie.elf i386.so.elf
+         libc.so.6 ppc64.elf riscv64.elf].each do |name|
+        dynamic = elf(name).dynamic
+        names = dynamic.symbols.map(&:name).reject(&:empty?).uniq
+        expect(names).not_to be_empty
+        expect(names.reject { |sym| dynamic.symbol_by_name(sym)&.name == sym }).to be_empty
+      end
+    end
+
+    it 'reads the table of whichever kind a file records' do
+      expect(elf('libc.so.6').dynamic.send(:hash_tables).map(&:class)).to eq \
+        [ELFTools::Dynamic::HashTable::SysV, ELFTools::Dynamic::HashTable::Gnu]
+      # A file built the way the toolchain builds them today records only the
+      # GNU one.
+      expect(elf('amd64.elf').dynamic.send(:hash_tables).map(&:class)).to eq \
+        [ELFTools::Dynamic::HashTable::Gnu]
+    end
+
+    it 'looks a name up instead of searching for it' do
+      dynamic = elf('libc.so.6').dynamic
+      # Searching would mean reading all 2245 symbols to reach this one.
+      expect(dynamic).not_to receive(:each_symbols)
+      expect(dynamic.symbol_by_name('malloc').name).to eq 'malloc'
+    end
+
+    it 'searches for a name no table leads to' do
+      # A table only indexes the symbols a file exports, so the ones an
+      # executable imports are not in it.
+      dynamic = elf('amd64.elf').dynamic
+      expect(dynamic.send(:hash_tables).map { |table| table.index_of('printf') { true } }).to eq [nil]
+      expect(dynamic.symbol_by_name('printf').name).to eq 'printf'
+    end
+
+    it 'searches a file that records no table at all' do
+      # Change the tag type so that DT_GNU_HASH no longer exists.
+      file = elf_with_patched_tag(:gnu_hash) { |header| header.d_tag = ELFTools::Constants::DT_DEBUG }
+      expect(file.dynamic.send(:hash_tables)).to be_empty
+      expect(file.dynamic.symbol_by_name('printf').name).to eq 'printf'
+      expect(file.dynamic.symbol_by_name('no such symbol')).to be nil
+    end
+
+    it 'reports a name that is nowhere' do
+      expect(elf('libc.so.6').dynamic.symbol_by_name('no such symbol')).to be nil
+      expect(elf('amd64.elf').dynamic.symbol_by_name('no such symbol')).to be nil
     end
   end
 
   describe 'broken DT_STRTAB' do
-    # Returns an ELF file whose DT_STRTAB tag has been modified by +block+.
-    # @yieldparam [ELFTools::Structs::ELF_Dyn] header The DT_STRTAB header.
-    # @yieldreturn [void]
-    # @return [ELFTools::ELFFile]
-    def elf_with_patched_strtab
-      data = File.binread(File.join(__dir__, 'files', 'amd64.elf'))
-      header = ELFTools::ELFFile.new(StringIO.new(data)).segment_by_type(:dynamic).tag_by_type(:strtab).header
-      yield header
-      data[header.offset, header.num_bytes] = header.to_binary_s
-      ELFTools::ELFFile.new(StringIO.new(data))
-    end
-
     it 'tag not found' do
       # Change the tag type so that DT_STRTAB no longer exists.
-      elf = elf_with_patched_strtab { |header| header.d_tag = ELFTools::Constants::DT_DEBUG }
+      elf = elf_with_patched_tag(:strtab) { |header| header.d_tag = ELFTools::Constants::DT_DEBUG }
       expect(elf.segment_by_type(:dynamic).tag_by_type(:strtab)).to be nil
       expect { elf.segment_by_type(:dynamic).tag_by_type(:needed).name }.to \
         raise_error(ELFTools::ELFError, 'DT_STRTAB not found')
@@ -205,7 +245,7 @@ describe ELFTools::Dynamic do
     end
 
     it 'address not loadable' do
-      elf = elf_with_patched_strtab { |header| header.d_val = 0xdeadbeef000 }
+      elf = elf_with_patched_tag(:strtab) { |header| header.d_val = 0xdeadbeef000 }
       expect { elf.segment_by_type(:dynamic).tag_by_type(:needed).name }.to \
         raise_error(ELFTools::ELFError, 'Invalid DT_STRTAB address 0xdeadbeef000')
     end

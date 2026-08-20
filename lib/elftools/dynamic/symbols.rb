@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'elftools/dynamic/hash_table'
 require 'elftools/exceptions'
 require 'elftools/sections/symbol'
 require 'elftools/structs'
@@ -55,7 +56,7 @@ module ELFTools
       #   elf.dynamic.num_symbols
       #   #=> 9
       def num_symbols
-        @num_symbols ||= [count_from_hash, count_from_gnu_hash, count_from_relocations].compact.max || 0
+        @num_symbols ||= (hash_tables.map(&:num_symbols) + [count_from_relocations]).compact.max || 0
       end
 
       # Iterate all symbols.
@@ -87,45 +88,34 @@ module ELFTools
 
       # Get symbol by its name.
       #
-      # Only the symbols {#symbols} reaches are searched.
+      # The hash tables answer first, which is the lookup the loader itself
+      # performs and takes no scanning. They do not index every symbol, and a
+      # file need not record one at all, so a name they do not lead to is
+      # searched for among the symbols {#symbols} reaches.
       # @param [String] name The name of symbol.
       # @return [ELFTools::Sections::Symbol, nil] The desired symbol.
+      # @example
+      #   elf.dynamic.symbol_by_name('__libc_start_main').type_name
+      #   #=> 'STT_FUNC'
       def symbol_by_name(name)
+        # Lazily, so that a table is only read when the ones before it have
+        # not led anywhere.
+        index = hash_tables.lazy.filter_map { |table| table.index_of(name) { |i| symbol_at(i).name == name } }.first
+        return symbol_at(index) if index
+
         each_symbols.find { |symbol| symbol.name == name }
       end
 
       private
 
-      # How many symbols +DT_HASH+ records, which is exact: a chain of the table
-      # belongs to every symbol, whether the table indexes it or not.
-      # @return [Integer, nil] The number, +nil+ if the tag is absent.
-      def count_from_hash
-        tag = tag_by_type(:hash)
-        return if tag.nil?
-
-        read_struct(Structs::ELF_Hash, offset_of(tag)).nchain.to_i
-      end
-
-      # How far +DT_GNU_HASH+ reaches, i.e. the highest index it indexes plus
-      # one. It only ever indexes the defined symbols a file exports under a
-      # name, and the symbols before +symndx+ are by construction not among
-      # them.
-      # @return [Integer, nil] The number, +nil+ if the tag is absent.
-      def count_from_gnu_hash
-        tag = tag_by_type(:gnu_hash)
-        return if tag.nil?
-
-        base = offset_of(tag)
-        head = read_struct(Structs::ELF_GnuHash, base)
-        buckets = base + head.num_bytes + (head.maskwords.to_i * header.elf_class / 8)
-        last = Array.new(head.nbuckets.to_i) { |i| read_word(buckets + (i * 4)) }.max || 0
-        return head.symndx.to_i if last < head.symndx.to_i
-
-        chain = buckets + (head.nbuckets.to_i * 4)
-        # The chain of a bucket runs on until an entry has its lowest bit set.
-        n = last - head.symndx.to_i
-        n += 1 while read_word(chain + (n * 4)).even?
-        head.symndx.to_i + n + 1
+      # The tables the file records the names it exports in, of whichever kinds
+      # it records.
+      # @return [Array<ELFTools::Dynamic::HashTable>] The tables.
+      def hash_tables
+        @hash_tables ||= { hash: HashTable::SysV, gnu_hash: HashTable::Gnu }.filter_map do |type, klass|
+          tag = tag_by_type(type)
+          klass.new(stream, offset_of(tag), elf_class: header.elf_class, endian:) if tag
+        end
       end
 
       # How far the relocations reach, i.e. the highest index they name plus one.
@@ -134,14 +124,6 @@ module ELFTools
       def count_from_relocations
         highest = relocations.map(&:symbol_index).max
         highest && highest + 1
-      end
-
-      # Reads a word, the unit a hash table lays its entries out in.
-      # @param [Integer] offset The file offset.
-      # @return [Integer] The word.
-      def read_word(offset)
-        stream.pos = offset
-        stream.read(4).unpack1(endian == :big ? 'N' : 'V')
       end
 
       # Get the +DT_SYMTAB+'s +d_val+ offset related to file.

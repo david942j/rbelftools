@@ -148,6 +148,17 @@ dynamic.num_symbols
 #=> 9
 ```
 
+Looking a name up is what the loader does through a hash table, rather than searching the
+symbol table for it, and `symbol_by_name` does the same wherever the file records one. A
+table only indexes the names a file exports, so a name it does not lead to, and a file
+that records no table at all, are searched for instead.
+```ruby
+libc = ELFTools::ELFFile.new(File.open('spec/files/libc.so.6'))
+# Reached through DT_HASH, without reading any of the other 2244 symbols.
+libc.dynamic.symbol_by_name('malloc').type_name
+#=> "STT_FUNC"
+```
+
 ## Segments
 
 ```ruby

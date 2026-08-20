@@ -41,6 +41,11 @@ entries here are collected from those announcements and from the commit history.
 - `Sections::Symbol#type`, `#bind`, `#visibility`, and `#section_index`, which decode
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
+- `Dynamic#symbol_by_name` looks a name up through `DT_HASH` or `DT_GNU_HASH`, which is what
+  the loader itself does, instead of reading every symbol until it finds the name. Neither
+  table indexes every symbol, and a file need not record either, so a name a table does not
+  lead to is still searched for
+  ([#105](https://github.com/david942j/rbelftools/pull/105))
 - `Dynamic#symbols`, `#symbol_at`, `#symbol_by_name`, and `#num_symbols`, the symbols the
   tags of a file point at, which is where a file that has been stripped of its sections
   still records them. Nothing a file is loaded by records how large that table is, because
