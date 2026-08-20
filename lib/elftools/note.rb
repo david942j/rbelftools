@@ -41,8 +41,8 @@ module ELFTools
     # @return [Enumerator<ELFTools::Note::Note>, Array<ELFTools::Note::Note>]
     #   If block is not given, an enumerator will be returned.
     #   Otherwise, return the array of notes.
-    def each_notes
-      return enum_for(:each_notes) unless block_given?
+    def each_note
+      return enum_for(:each_note) unless block_given?
 
       @notes_offset_map ||= {}
       cur = note_start
@@ -61,11 +61,14 @@ module ELFTools
       notes
     end
 
+    # The name this used to go by, kept so that it keeps working.
+    alias each_notes each_note
+
     # Simply +#notes+ to get all notes.
     # @return [Array<ELFTools::Note::Note>]
     #   Whole notes.
     def notes
-      each_notes.to_a
+      each_note.to_a
     end
 
     private

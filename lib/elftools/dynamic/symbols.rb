@@ -68,11 +68,14 @@ module ELFTools
       # @return [Enumerator<ELFTools::Sections::Symbol>, Array<ELFTools::Sections::Symbol>]
       #   If block is not given, an enumerator will be returned.
       #   Otherwise, return array of symbols.
-      def each_symbols(&block)
-        return enum_for(:each_symbols) unless block_given?
+      def each_symbol(&block)
+        return enum_for(:each_symbol) unless block_given?
 
         Array.new(num_symbols) { |i| symbol_at(i).tap(&block) }
       end
+
+      # The name this used to go by, kept so that it keeps working.
+      alias each_symbols each_symbol
 
       # The symbols the tags point at, which is where a file that has been
       # stripped of its sections still records them.
@@ -83,7 +86,7 @@ module ELFTools
       #   elf.dynamic.symbols.map(&:name)
       #   #=> ['', 'puts', '__stack_chk_fail', 'printf', '__libc_start_main']
       def symbols
-        each_symbols.to_a
+        each_symbol.to_a
       end
 
       # Get symbol by its name.
@@ -103,7 +106,7 @@ module ELFTools
         index = hash_tables.lazy.filter_map { |table| table.index_of(name) { |i| symbol_at(i).name == name } }.first
         return symbol_at(index) if index
 
-        each_symbols.find { |symbol| symbol.name == name }
+        each_symbol.find { |symbol| symbol.name == name }
       end
 
       private

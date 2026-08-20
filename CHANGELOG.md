@@ -97,6 +97,12 @@ entries here are collected from those announcements and from the commit history.
 
 ### Changed
 
+- Every iterator is named in the singular, `ELFFile#each_section` and `#each_segment`,
+  `Dynamic#each_tag`, `Note#each_note`, `Sections::RelocationSection#each_relocation`, and
+  `#each_symbol` of both `Sections::SymTabSection` and `Dynamic`, which is how Ruby names
+  the ones it defines itself and agrees with the one thing each of them yields. The plural
+  name each used to go by is an alias of it, so nothing that calls one has to change
+  ([#108](https://github.com/david942j/rbelftools/pull/108))
 - `Dynamic#relocations` reads a table once instead of re-reading it on every call, so the
   relocations it returns are the same objects each time
   ([#106](https://github.com/david942j/rbelftools/pull/106))
