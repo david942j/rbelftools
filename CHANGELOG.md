@@ -97,6 +97,9 @@ entries here are collected from those announcements and from the commit history.
 
 ### Changed
 
+- `Dynamic#relocations` reads a table once instead of re-reading it on every call, so the
+  relocations it returns are the same objects each time
+  ([#106](https://github.com/david942j/rbelftools/pull/106))
 - The `bindata` requirement is relaxed to `>= 2, < 4`
   ([#81](https://github.com/david942j/rbelftools/pull/81))
 - `Constants::EM` and the names behind `ELFFile#machine` are generated from binutils
