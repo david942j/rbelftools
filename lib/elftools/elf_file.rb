@@ -187,12 +187,16 @@ module ELFTools
       Util.select_by_type(each_section, type, &)
     end
 
-    # Get the string table section.
+    # The section the names of the sections are recorded in, which the ELF
+    # header names by index.
     #
-    # This section is acquired by using the +e_shstrndx+
-    # in ELF header.
-    # @return [ELFTools::Sections::StrTabSection] The desired section.
-    def strtab_section
+    # It is not the section the names of the symbols are recorded in, which
+    # {ELFTools::Sections::SymTabSection#symstr} answers.
+    # @return [ELFTools::Sections::StrTabSection] The section.
+    # @example
+    #   elf.section_name_table.name
+    #   #=> '.shstrtab'
+    def section_name_table
       section_at(header.e_shstrndx)
     end
 
@@ -407,7 +411,7 @@ module ELFTools
       shdr.read(stream)
       Sections::Section.create(shdr, stream,
                                offset_from_vma: method(:offset_from_vma),
-                               strtab: method(:strtab_section),
+                               section_name_table: method(:section_name_table),
                                section_at: method(:section_at),
                                machine: header.e_machine.to_i)
     end
