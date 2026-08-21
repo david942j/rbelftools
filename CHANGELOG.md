@@ -16,9 +16,15 @@ entries here are collected from those announcements and from the commit history.
 
 - `Relocation#r_info_sym` and `#r_info_type` are gone. `#symbol_index` and `#type`, which
   used to be aliases of them, are the names now. They name what the two values mean rather
-  than the field they are read out of, which since [#97](https://github.com/david942j/rbelftools/pull/97) is not even how every file records
+  than the field they are read out of, which since
+  [#97](https://github.com/david942j/rbelftools/pull/97) is not even how every file records
   them: the 64-bit MIPS ABI packs three types and a second symbol index into `r_info`
   instead of halving it ([#110](https://github.com/david942j/rbelftools/pull/110))
+- `ELFFile#strtab_section` is `ELFFile#section_name_table`. It answers with the section the
+  names of the sections are recorded in, `.shstrtab`, and not with `.strtab`, which records
+  the names of the symbols and which `Sections::SymTabSection#symstr` answers with. The
+  keyword `Sections::Section` takes for it is `section_name_table:` rather than `strtab:`
+  ([#109](https://github.com/david942j/rbelftools/pull/109))
 - Ruby 3.3 or later is required ([#85](https://github.com/david942j/rbelftools/pull/85))
 - Addresses that occupy memory but have no content in file, `.bss` for instance, are
   not converted into a file offset anymore. This affects `ELFFile#offset_from_vma` and

@@ -39,7 +39,7 @@ describe ELFTools::ELFFile do
         .comment .shstrtab .symtab .strtab
       ]
 
-      expect(@elf.section_by_name('.shstrtab')).to be @elf.strtab_section
+      expect(@elf.section_by_name('.shstrtab')).to be @elf.section_name_table
       expect(@elf.section_by_name('no such section')).to be nil
     end
 
