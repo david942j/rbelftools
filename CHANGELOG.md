@@ -14,6 +14,12 @@ entries here are collected from those announcements and from the commit history.
 
 ### Breaking
 
+- `Relocation#r_info_sym` and `#r_info_type` are gone. `#symbol_index` and `#type`, which
+  used to be aliases of them, are the names now. They name what the two values mean rather
+  than the field they are read out of, which since
+  [#97](https://github.com/david942j/rbelftools/pull/97) is not even how every file records
+  them: the 64-bit MIPS ABI packs three types and a second symbol index into `r_info`
+  instead of halving it ([#110](https://github.com/david942j/rbelftools/pull/110))
 - `ELFFile#strtab_section` is `ELFFile#section_name_table`. It answers with the section the
   names of the sections are recorded in, `.shstrtab`, and not with `.strtab`, which records
   the names of the symbols and which `Sections::SymTabSection#symstr` answers with. The

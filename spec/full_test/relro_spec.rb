@@ -30,34 +30,34 @@ describe 'Full test for relro types' do
   end
 
   it 'r_info type' do
-    expect(@nrelro.section_by_name('.rela.plt').relocations.map(&:r_info_type).uniq).to eq [7]
-    expect(@partial.section_by_name('.rela.plt').relocations.map(&:r_info_type).uniq).to eq [7]
+    expect(@nrelro.section_by_name('.rela.plt').relocations.map(&:type).uniq).to eq [7]
+    expect(@partial.section_by_name('.rela.plt').relocations.map(&:type).uniq).to eq [7]
 
-    expect(@partial.section_by_name('.rela.dyn').relocations.map(&:r_info_type)).to eq [6, 5]
-    expect(@frelro.section_by_name('.rela.dyn').relocations.map(&:r_info_type)).to eq [6, 6, 6, 6, 6, 6, 6, 5]
+    expect(@partial.section_by_name('.rela.dyn').relocations.map(&:type)).to eq [6, 5]
+    expect(@frelro.section_by_name('.rela.dyn').relocations.map(&:type)).to eq [6, 6, 6, 6, 6, 6, 6, 5]
   end
 
   it 'plt symbols' do
     section = @partial.section_by_name('.rela.plt')
     symtab = @partial.section_at(section.header.sh_link)
-    symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
+    symbols = section.relocations.map(&:symbol_index).map { |c| symtab.symbol_at(c).name }
     expect(symbols).to eq %w[puts __stack_chk_fail printf __libc_start_main fgets scanf]
 
     section = @nrelro.section_by_name('.rela.plt')
     symtab = @nrelro.section_at(section.header.sh_link)
-    nrelro_symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
+    nrelro_symbols = section.relocations.map(&:symbol_index).map { |c| symtab.symbol_at(c).name }
     expect(nrelro_symbols).to eq symbols
   end
 
   it 'dyn symbols' do
     section = @partial.section_by_name('.rela.dyn')
     symtab = @partial.section_at(section.header.sh_link)
-    symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
+    symbols = section.relocations.map(&:symbol_index).map { |c| symtab.symbol_at(c).name }
     expect(symbols).to eq %w[__gmon_start__ stdin]
 
     section = @frelro.section_by_name('.rela.dyn')
     symtab = @frelro.section_at(section.header.sh_link)
-    frelro_symbols = section.relocations.map(&:r_info_sym).map { |c| symtab.symbol_at(c).name }
+    frelro_symbols = section.relocations.map(&:symbol_index).map { |c| symtab.symbol_at(c).name }
     expect(frelro_symbols).to eq %w[puts __stack_chk_fail printf __libc_start_main fgets __gmon_start__ scanf stdin]
   end
 end

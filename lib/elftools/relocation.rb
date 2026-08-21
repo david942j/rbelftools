@@ -23,21 +23,19 @@ module ELFTools
       @machine = machine
     end
 
-    # +r_info+ contains sym and type, use two methods
-    # to access them easier.
+    # Which symbol this relocation is against, as an index into the symbol
+    # table.
     # @return [Integer] The symbol index.
-    def r_info_sym
+    def symbol_index
       sym_and_type.first
     end
-    alias symbol_index r_info_sym
 
-    # +r_info+ contains sym and type, use two methods
-    # to access them easier.
+    # What this relocation does, which only means something together with the
+    # machine of the file. {#type_name} names it.
     # @return [Integer] The relocation type.
-    def r_info_type
+    def type
       sym_and_type.last
     end
-    alias type r_info_type
 
     # The name of {#type}.
     #
