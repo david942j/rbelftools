@@ -10,6 +10,28 @@ Releases up to 1.3.1 were announced on the
 [releases page](https://github.com/david942j/rbelftools/releases) only, their
 entries here are collected from those announcements and from the commit history.
 
+## Unreleased
+
+### Fixed
+
+- Assigning to a field of a structure a header records, `e_ident` and each of the seven
+  fields it holds, used to be dropped without a word. The value read back as assigned and
+  `save` wrote the file out unchanged, because only the fields of the outermost structure
+  were watched ([#111](https://github.com/david942j/rbelftools/pull/111))
+- Patching any field of a big endian file used to write the bytes of that field the wrong
+  way round, because the packing was asked of the base structure class, which is ordered
+  little endian whatever the file is
+  ([#111](https://github.com/david942j/rbelftools/pull/111))
+
+### Changed
+
+- `Structs::ELFStruct#patches` answers with the difference between the bytes a structure
+  was read from and the bytes it holds now, as the runs of bytes that differ, instead of a
+  log of the assignments made to it. Every field is therefore patchable however deeply it
+  is nested, and a field assigned the value it already held leaves nothing behind.
+  `Structs::ELFStruct.pack` is no longer how a patch is made, and is deprecated
+  ([#111](https://github.com/david942j/rbelftools/pull/111))
+
 ## 2.0.0 - 2026-08-24
 
 ### Breaking

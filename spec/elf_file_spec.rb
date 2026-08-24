@@ -227,6 +227,32 @@ describe ELFTools::ELFFile do
       expect(patched_elf.section_by_name('.text').header.sh_addr).to eq 0xdeadbeef
       out.close!
     end
+
+    it 'patches a field of a structure a header records' do
+      out = Tempfile.new('elftools')
+      out.close
+      elf = described_class.new(File.open(@filepath))
+      elf.header.e_ident.ei_abiversion = 41
+      elf.save(out.path)
+      out.reopen(out.path, 'rb')
+      expect(described_class.new(out).header.e_ident.ei_abiversion).to eq 41
+      out.close!
+    end
+
+    it 'patches a file whichever way it is ordered' do
+      # A field is written the way the file records it, which only a big
+      # endian file disagrees with.
+      %w[amd64.elf ppc64.elf].each do |name|
+        out = Tempfile.new('elftools')
+        out.close
+        elf = described_class.new(File.open(File.join(__dir__, 'files', name)))
+        elf.header.e_machine = ELFTools::Constants::EM_ARM
+        elf.save(out.path)
+        out.reopen(out.path, 'rb')
+        expect(described_class.new(out).machine).to eq 'ARM'
+        out.close!
+      end
+    end
   end
 
   describe 'accessibility' do
