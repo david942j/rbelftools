@@ -13,4 +13,15 @@ describe ELFTools::Util do
     expect(ELFTools::Util.align(7, 1)).to be 8
     expect(ELFTools::Util.align(7, 2)).to be 8
   end
+
+  it 'fits!' do
+    expect(ELFTools::Util.fits!(15, 4, 'Thing')).to be 15
+    expect(ELFTools::Util.fits!(0, 1, 'Thing')).to be 0
+    expect { ELFTools::Util.fits!(16, 4, 'Thing') }
+      .to raise_error(ArgumentError, 'Thing must be in 0..15, got 16')
+    expect { ELFTools::Util.fits!(-1, 4, 'Thing') }
+      .to raise_error(ArgumentError, 'Thing must be in 0..15, got -1')
+    expect { ELFTools::Util.fits!(nil, 4, 'Thing') }
+      .to raise_error(ArgumentError, 'Thing must be in 0..15, got nil')
+  end
 end

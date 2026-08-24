@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/util'
 
 module ELFTools
   module Sections
@@ -43,6 +44,15 @@ module ELFTools
         header.st_info & 0xf
       end
 
+      # Sets what kind of entity this symbol refers to.
+      # @param [Integer] type The type.
+      # @raise [ArgumentError] If the four bits recording it cannot hold it.
+      # @example
+      #   symbol.type = ELFTools::Constants::STT_FUNC
+      def type=(type)
+        header.st_info = (bind << 4) | Util.fits!(type, 4, 'Symbol type')
+      end
+
       # The name of {#type}.
       #
       # A machine names types of its own, so the name is only known when the
@@ -66,6 +76,15 @@ module ELFTools
         header.st_info >> 4
       end
 
+      # Sets how this symbol is linked against others with the same name.
+      # @param [Integer] bind The binding.
+      # @raise [ArgumentError] If the four bits recording it cannot hold it.
+      # @example
+      #   symbol.bind = ELFTools::Constants::STB_WEAK
+      def bind=(bind)
+        header.st_info = (Util.fits!(bind, 4, 'Symbol binding') << 4) | type
+      end
+
       # The name of {#bind}.
       # @return [String] The name.
       # @example
@@ -85,6 +104,19 @@ module ELFTools
       #   #=> true
       def visibility
         header.st_other & 0x3
+      end
+
+      # Sets how this symbol is accessed once it becomes part of an executable
+      # or shared object.
+      #
+      # The rest of +st_other+ is left alone, which some machines record their
+      # own thing in.
+      # @param [Integer] visibility The visibility.
+      # @raise [ArgumentError] If the two bits recording it cannot hold it.
+      # @example
+      #   symbol.visibility = ELFTools::Constants::STV_HIDDEN
+      def visibility=(visibility)
+        header.st_other = (header.st_other.to_i & 0xfc) | Util.fits!(visibility, 2, 'Symbol visibility')
       end
 
       # The name of {#visibility}.
