@@ -18,14 +18,57 @@ module ELFTools
       attr_accessor :elf_class # @return [Integer] 32 or 64.
       attr_accessor :offset # @return [Integer] The file offset of this header.
 
-      # Records which fields have been patched.
-      # @return [Hash{Integer => Integer}] Patches.
+      # Reads the structure, remembering the bytes it was read from.
+      # @param [#pos=, #read] io The streaming object.
+      # @return [ELFTools::Structs::ELFStruct] Itself.
+      def read(io)
+        super.tap { @source = to_binary_s }
+      end
+
+      # Which bytes of this structure have been changed since it was read.
+      #
+      # Every field answers alike, however deeply it is nested, because what is
+      # compared is the bytes the structure occupies rather than the
+      # assignments that were made to it. A field assigned the value it
+      # already held leaves nothing behind.
+      # @return [Hash{Integer => String}]
+      #   Where each run of changed bytes starts, as an offset into the
+      #   structure, and the bytes it is to be replaced with.
+      # @example
+      #   header.e_ident.ei_abiversion = 41
+      #   header.patches
+      #   #=> { 8 => "\x29" }
       def patches
-        @patches ||= {}
+        return {} if @source.nil?
+
+        changed_runs(@source, to_binary_s)
       end
 
       # BinData hash(Snapshot) that behaves like HashWithIndifferentAccess
       alias to_h snapshot
+
+      private
+
+      # Where two strings of bytes differ, as the runs of bytes that differ.
+      #
+      # Only as far as +before+ reaches, so that a patch never covers more of
+      # the file than the structure it came from.
+      # @param [String] before The bytes as they were.
+      # @param [String] after The bytes as they are.
+      # @return [Hash{Integer => String}] Where each run starts, and its bytes.
+      def changed_runs(before, after)
+        runs = {}
+        start = nil
+        (0..before.bytesize).each do |i|
+          if i < before.bytesize && before.getbyte(i) != after.getbyte(i)
+            start ||= i
+          elsif start
+            runs[start] = after.byteslice(start, i - start)
+            start = nil
+          end
+        end
+        runs
+      end
 
       class << self
         # Hooks the constructor.
@@ -41,19 +84,7 @@ module ELFTools
         def new(*args)
           kwargs = args.last.is_a?(Hash) ? args.last : {}
           offset = kwargs.delete(:offset)
-          super.tap do |obj|
-            obj.offset = offset
-            obj.field_names.each do |f|
-              m = :"#{f}="
-              old_method = obj.singleton_method(m)
-              obj.singleton_class.send(:undef_method, m)
-              obj.define_singleton_method(m) do |val|
-                org = obj.send(f)
-                obj.patches[org.abs_offset] = ELFStruct.pack(val, org.num_bytes)
-                old_method.call(val)
-              end
-            end
-          end
+          super.tap { |obj| obj.offset = offset }
         end
 
         # Gets the endianness of current class.
@@ -63,6 +94,10 @@ module ELFTools
         end
 
         # Packs an integer to string.
+        #
+        # @deprecated
+        #   Nothing here packs a patch by hand anymore, see {ELFStruct#patches}.
+        #   This is kept for anyone who called it and goes in the next major.
         # @param [Integer] val
         # @param [Integer] bytes
         # @return [String]
