@@ -228,6 +228,19 @@ elf.dynamic.relocations.map(&:type_name).uniq
 #=> ["R_X86_64_GLOB_DAT", "R_X86_64_COPY", "R_X86_64_JUMP_SLOT"]
 ```
 
+Nearly every relocation of a file that is loaded only adds the load bias to a word, so a
+file may pack them into a bitmap instead of spending an entry on each. They are read with
+the rest, from the tags or from the section holding them, and are named after the machine
+because the bitmap records no type of its own.
+```ruby
+packed = ELFTools::ELFFile.new(File.open('spec/files/aarch64.relr.elf'))
+packed.dynamic.relocations.count { |rel| rel.type_name == 'R_AARCH64_RELATIVE' }
+#=> 132
+section = packed.sections_by_type(:relr).first
+[section.name, section.header.sh_size, section.num_relocations]
+#=> [".relr.dyn", 48, 132]
+```
+
 ## Patch
 
 Patch ELF is so easy!

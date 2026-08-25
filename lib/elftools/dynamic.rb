@@ -5,6 +5,7 @@ require 'elftools/dynamic/string_table'
 require 'elftools/dynamic/symbols'
 require 'elftools/dynamic/tag'
 require 'elftools/exceptions'
+require 'elftools/relative_relocations'
 require 'elftools/relocation'
 require 'elftools/structs'
 
@@ -118,17 +119,20 @@ module ELFTools
 
     # The relocations the tags point at.
     #
-    # Two tables record them: the one +DT_REL+ or +DT_RELA+ names, and the one
-    # +DT_JMPREL+ names, whose entries are of the kind +DT_PLTREL+ names.
+    # Three tables record them: the one +DT_REL+ or +DT_RELA+ names, the one
+    # +DT_JMPREL+ names, whose entries are of the kind +DT_PLTREL+ names, and
+    # the one +DT_RELR+ names, which packs the relocations that only add the
+    # load bias into a bitmap and so records no type of its own.
     # @return [Array<ELFTools::Relocation>] The relocations, in the order the
-    #   tags record them.
+    #   tags record them, the packed ones last.
     # @raise [ELFTools::ELFError]
     #   If a table is not in any loadable segment.
     # @example
     #   elf.dynamic.relocations.map(&:type_name).uniq
     #   #=> ['R_X86_64_GLOB_DAT', 'R_X86_64_JUMP_SLOT']
     def relocations
-      @relocations ||= relocation_tables.flat_map { |start, size, rela| read_relocations(start, size, rela) }
+      @relocations ||= relocation_tables.flat_map { |start, size, rela| read_relocations(start, size, rela) } +
+                       packed_relocations
     end
 
     private
@@ -149,6 +153,17 @@ module ELFTools
       return tables if jmprel.nil?
 
       tables << [jmprel, tag_by_type(:pltrelsz), tag_by_type(:pltrel).header.d_val.to_i == Constants::DT_RELA]
+    end
+
+    # Reads the table +DT_RELR+ names, which is absent from most files.
+    # @return [Array<ELFTools::Relocation>] The relocations, empty without it.
+    def packed_relocations
+      start = tag_by_type(:relr)
+      return [] if start.nil?
+
+      offset = offset_of(start)
+      RelativeRelocations.new(stream, offset...(offset + tag_by_type(:relrsz).header.d_val.to_i),
+                              elf_class: header.elf_class, endian:, machine: @machine).to_a
     end
 
     # Reads one table of relocations.

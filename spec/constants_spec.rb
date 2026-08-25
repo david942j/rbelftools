@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/elf_file'
 
 describe ELFTools::Constants do
   it 'check scope' do
@@ -72,6 +73,30 @@ describe ELFTools::Constants do
       expect(c::STB.mapping(c::EM_X86_64, 0)).to eq 'STB_LOCAL'
       expect(c::STV.mapping(c::EM_X86_64, 2)).to eq 'STV_HIDDEN'
       expect(c::SHN.mapping(c::EM_X86_64, 0xfff1)).to eq 'SHN_ABS'
+    end
+  end
+  describe 'R.relative' do
+    it 'names the type each machine calls a relative relocation' do
+      # What every file recording one of them actually records, so the answer
+      # is checked against the files rather than against the constants alone.
+      {
+        'amd64.elf' => 'R_X86_64_RELATIVE', 'i386.pie.elf' => 'R_386_RELATIVE',
+        'aarch64.elf' => 'R_AARCH64_RELATIVE', 'arm.elf' => 'R_ARM_RELATIVE',
+        'riscv64.elf' => 'R_RISCV_RELATIVE', 'ppc64.elf' => 'R_PPC64_RELATIVE'
+      }.each do |name, expected|
+        elf = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
+        machine = elf.header.e_machine.to_i
+        type = ELFTools::Constants::R.relative(machine)
+        expect(ELFTools::Constants::R.mapping(machine, type)).to eq expected
+        recorded = elf.dynamic.relocations.find { |rel| rel.type_name == expected }
+        expect(recorded.type).to eq type unless recorded.nil?
+      end
+    end
+
+    it 'reports nothing for a machine naming no such relocation' do
+      # A machine of its own, and one with no relocation types at all.
+      expect(ELFTools::Constants::R.relative(nil)).to be nil
+      expect(ELFTools::Constants::R.relative(ELFTools::Constants::EM_WEBASSEMBLY)).to be nil
     end
   end
 end
