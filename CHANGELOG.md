@@ -12,9 +12,27 @@ entries here are collected from those announcements and from the commit history.
 
 ## Unreleased
 
+### Fixed
+
+- `Dynamic#relocations` used to pass over the relocations a file packs into a bitmap, the
+  ones `DT_RELR` points at, and answer with only the tables `DT_REL`, `DT_RELA`, and
+  `DT_JMPREL` record. Of the 3780 loaded files of a current system, 557 pack some of
+  theirs that way, and across those 46% of their relocations were missing from the answer,
+  `ldconfig` reporting 11 of its 1503
+  ([#113](https://github.com/david942j/rbelftools/pull/113))
+
 ### Added
 
-- `Sections::Symbol#type=`, `#bind=`, and `#visibility=`, and `Relocation#type=` and
+- `Sections::RelativeRelocationSection`, the `SHT_RELR` section holding the same
+  relocations, and `RelativeRelocations`, which unpacks either of them. An entry is an
+  address, or a bitmap of the words following the last address, and records no type of its
+  own, so the type reported is the one the machine calls relative
+  ([#113](https://github.com/david942j/rbelftools/pull/113))
+- `Constants::R.relative`, the type a machine calls a relocation that only adds the load
+  bias, which every architecture defining one spells `R_<arch>_RELATIVE`
+  ([#113](https://github.com/david942j/rbelftools/pull/113))
+- `Sections::Symbol#type=`
+, `#bind=`, and `#visibility=`, and `Relocation#type=` and
   `#symbol_index=`, which assign what a value means rather than the bits recording it. Each
   leaves the rest of the byte or field it shares alone, the 64-bit MIPS ABI layout and the
   machine's own half of `st_other` included, and reports a value too large for its bits

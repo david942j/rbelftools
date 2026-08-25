@@ -10,6 +10,10 @@ assert on. Only regenerate a file when a spec is going to be updated along with 
 
 [source.cpp](./source.cpp) is linked against libc and is used for the executables.
 
+[pointers.cpp](./pointers.cpp) is a table of pointers, each of which becomes a relative
+relocation, enough of them in a row that the linker packs them into a bitmap rather than
+recording an entry apiece.
+
 [freestanding.cpp](./freestanding.cpp) includes no header and calls into no library, so
 it can be compiled for any target without having that target's libc installed. It is
 used for the object files.
@@ -26,6 +30,7 @@ used for the object files.
 | `i386.pie.elf` | 32 | little | DYN | Intel 80386 |
 | `i386.so.elf` | 32 | little | DYN | Intel 80386 |
 | `aarch64.elf` | 64 | little | DYN | AArch64 |
+| `aarch64.relr.elf` | 64 | little | DYN | AArch64 |
 | `arm.elf` | 32 | little | DYN | ARM |
 | `arm.thumb.o` | 32 | little | REL | ARM |
 | `riscv64.elf` | 64 | little | DYN | RISC-V |

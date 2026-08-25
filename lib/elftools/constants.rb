@@ -310,6 +310,33 @@ module ELFTools
         names&.fetch(type, nil) || format('<unknown>: 0x%x', type)
       end
 
+      # The type a machine calls a relocation that only adds the load bias,
+      # which every architecture defining one spells +R_<arch>_RELATIVE+.
+      #
+      # A table of them recorded as +DT_RELR+ names no type, because the
+      # format holds nothing but addresses and every one of them relocates
+      # this way, so the type is asked of the machine instead.
+      # @param [Integer?] machine Value of +e_machine+.
+      # @return [Integer, nil]
+      #   The type, +nil+ if the machine names no such relocation.
+      # @example
+      #   relative(Constants::EM_X86_64)
+      #   #=> 8 # R_X86_64_RELATIVE
+      #   relative(Constants::EM_AARCH64)
+      #   #=> 1027 # R_AARCH64_RELATIVE, not the R_AARCH64_P32_RELATIVE of ILP32
+      def self.relative(machine)
+        architecture = MACHINES[machine]
+        return if architecture.nil?
+
+        @relative ||= {}
+        @relative.fetch(architecture) do
+          names = const_get(architecture).constants.grep(/_RELATIVE\z/)
+          # An architecture naming more than one names the other for a second
+          # data model, which spells it out in the name and so is longer.
+          @relative[architecture] = names.min_by(&:length)&.then { |name| const_get(architecture).const_get(name) }
+        end
+      end
+
       # Names of every relocation type an architecture defines.
       # @return [Hash{Integer => String}]
       def self.names_of(architecture)

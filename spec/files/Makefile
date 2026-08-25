@@ -1,10 +1,12 @@
 source=source.cpp
 freestanding=freestanding.cpp
+pointers=pointers.cpp
 FLAGS=
 SO_FLAGS=-shared -fPIC
 PIE_FLAGS=-pie
 FULL_RELRO_FLAGS=-Wl,-z,relro,-z,now
 NO_RELRO_FLAGS=-Wl,-z,norelro
+PACKED_FLAGS=-pie -Wl,-z,pack-relative-relocs
 TARGETS=amd64 i386
 # Architectures other than x86 are cross compiled, see README.md.
 CROSS_TARGETS=aarch64 arm riscv64 ppc64 mips
@@ -25,8 +27,11 @@ i386: ${source}
 	g++ -m32 ${source} -o i386.so.elf ${FLAGS} ${SO_FLAGS}
 	g++ -m32 ${source} -o i386.pie.elf ${FLAGS} ${PIE_FLAGS}
 
-aarch64: ${source}
+# The packed flavor holds its relative relocations as a bitmap, which takes a
+# table of pointers to fill.
+aarch64: ${source} ${pointers}
 	${CROSS} --target=aarch64-linux-gnu ${LLD} ${source} -o aarch64.elf ${FLAGS}
+	${CROSS} --target=aarch64-linux-gnu ${LLD} ${pointers} -o aarch64.relr.elf ${FLAGS} ${PACKED_FLAGS}
 # Thumb code only differs in relocations that a linker resolves, so the Thumb
 # flavor is kept as an object file.
 arm: ${source} ${freestanding}
