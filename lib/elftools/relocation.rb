@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/util'
 
 module ELFTools
   # A relocation entry.
@@ -37,6 +38,24 @@ module ELFTools
       sym_and_type.last
     end
 
+    # Sets which symbol this relocation is against.
+    # @param [Integer] index The symbol index.
+    # @raise [ArgumentError] If the bits recording it cannot hold it.
+    # @example
+    #   relocation.symbol_index = 3
+    def symbol_index=(index)
+      header.r_info = info_of(Util.fits!(index, index_bits, 'Symbol index'), type)
+    end
+
+    # Sets what this relocation does.
+    # @param [Integer] type The relocation type.
+    # @raise [ArgumentError] If the bits recording it cannot hold it.
+    # @example
+    #   relocation.type = ELFTools::Constants::R::X86_64::R_X86_64_JUMP_SLOT
+    def type=(type)
+      header.r_info = info_of(symbol_index, Util.fits!(type, type_bits, 'Relocation type'))
+    end
+
     # The name of {#type}.
     #
     # Every architecture numbers relocation types on its own, so the name is
@@ -50,6 +69,37 @@ module ELFTools
     end
 
     private
+
+    # The +r_info+ recording a symbol index and a type, laid out the way this
+    # file lays it out. The inverse of {#sym_and_type}.
+    # @return [Integer] The +r_info+.
+    def info_of(index, type)
+      return mips64_info_of(index, type) if mips64?
+
+      (index << mask_bit) | type
+    end
+
+    # The +r_info+ as the 64-bit MIPS ABI records it, leaving the bytes the
+    # ABI keeps for itself as they were.
+    # @return [Integer] The +r_info+.
+    def mips64_info_of(index, type)
+      info = header.r_info.to_i
+      return (index << 32) | (info & 0xffff_ff00) | type if header.class.self_endian == :big
+
+      (info & 0x00ff_ffff_0000_0000) | (type << 56) | index
+    end
+
+    # How many bits record a symbol index.
+    # @return [Integer] The number.
+    def index_bits
+      mips64? ? 32 : (header.elf_class - mask_bit)
+    end
+
+    # How many bits record a relocation type.
+    # @return [Integer] The number.
+    def type_bits
+      mips64? ? 8 : mask_bit
+    end
 
     # What +r_info+ records, i.e. a symbol index and a relocation type. Most
     # machines split the field in half between the two, one lays it out its

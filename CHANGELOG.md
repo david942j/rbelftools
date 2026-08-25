@@ -12,6 +12,17 @@ entries here are collected from those announcements and from the commit history.
 
 ## Unreleased
 
+### Added
+
+- `Sections::Symbol#type=`, `#bind=`, and `#visibility=`, and `Relocation#type=` and
+  `#symbol_index=`, which assign what a value means rather than the bits recording it. Each
+  leaves the rest of the byte or field it shares alone, the 64-bit MIPS ABI layout and the
+  machine's own half of `st_other` included, and reports a value too large for its bits
+  instead of writing it over its neighbours
+  ([#112](https://github.com/david942j/rbelftools/pull/112))
+- `Util.fits!`, which is what reports it
+  ([#112](https://github.com/david942j/rbelftools/pull/112))
+
 ### Fixed
 
 - Assigning to a field of a structure a header records, `e_ident` and each of the seven

@@ -256,6 +256,26 @@ interp_segment.interp_name
 # save the patched ELF
 elf.save('elf.patched')
 
+Values that share a byte with others, which a symbol and a relocation both record, are
+assigned as what they mean rather than as the bits holding them. A value too large for
+its bits is reported instead of being written over its neighbours.
+```ruby
+elf = ELFTools::ELFFile.new(File.open('spec/files/amd64.elf'))
+symbol = elf.section_by_name('.symtab').symbol_by_name('main')
+symbol.type = ELFTools::Constants::STT_OBJECT
+symbol.bind = ELFTools::Constants::STB_WEAK
+[symbol.type_name, symbol.bind_name]
+#=> ["STT_OBJECT", "STB_WEAK"]
+symbol.bind = 16
+#=> ArgumentError: Symbol binding must be in 0..15, got 16
+
+relocation = elf.dynamic.relocations.first
+relocation.symbol_index = 3
+relocation.type = ELFTools::Constants::R::X86_64::R_X86_64_JUMP_SLOT
+[relocation.symbol_index, relocation.type_name]
+#=> [3, "R_X86_64_JUMP_SLOT"]
+```
+
 # in bash
 # $ file elf.patched
 # elf.patched: ELF 64-bit LSB executable, ARM, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86, for GNU...

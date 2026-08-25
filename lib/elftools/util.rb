@@ -23,6 +23,26 @@ module ELFTools
         (num + n) & ~(n - 1)
       end
 
+      # Checks a value is one the bits recording it can hold.
+      #
+      # Several of the values a file records share a byte with others, so a
+      # value too large for its bits would be written over its neighbours
+      # instead of being rejected.
+      # @param [Integer] value The value.
+      # @param [Integer] bits How many bits record it.
+      # @param [String] name What the value is, for the error to name.
+      # @return [Integer] The value.
+      # @raise [ArgumentError] If the bits cannot hold it.
+      # @example
+      #   Util.fits!(16, 4, 'Symbol binding')
+      #   #=> ArgumentError: Symbol binding must be in 0..15, got 16
+      def fits!(value, bits, name)
+        highest = (1 << bits) - 1
+        return value if value.is_a?(Integer) && value.between?(0, highest)
+
+        raise ArgumentError, format('%s must be in 0..%d, got %p', name, highest, value)
+      end
+
       # Fetch the correct value from module +mod+.
       #
       # See {ELFTools::ELFFile#segment_by_type} for how to
