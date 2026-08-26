@@ -14,6 +14,12 @@ entries here are collected from those announcements and from the commit history.
 
 ### Added
 
+- `Sections::VersionSection`, `VersionNeedSection`, and `VersionDefinitionSection`, the
+  `.gnu.version`, `.gnu.version_r`, and `.gnu.version_d` sections recording the very
+  versions the tags point at, and `VersionTables`, which reads either view. A symbol read
+  from `.dynsym` answers with its version as one read from the tags does
+  ([#115](https://github.com/david942j/rbelftools/pull/115))
+
 - `Sections::Symbol#version` and `#version_hidden?`, the version a symbol binds to, which
   tells `memcpy@GLIBC_2.14` from the `memcpy@GLIBC_2.2.5` of the same name. `#name` is
   left as the file records it, without the version appended
@@ -29,7 +35,12 @@ entries here are collected from those announcements and from the commit history.
 
 ### Fixed
 
-- `Dynamic#relocations` used to pass over the relocations a file packs into a bitmap, the
+- `sections_by_type` and the other lookups taking a symbol or a string could not name the
+  constants keeping the case an ABI wrote them in, so `sections_by_type(:gnu_verneed)`
+  raised where `SHT_GNU_verneed` is what defines it
+  ([#115](https://github.com/david942j/rbelftools/pull/115))
+- `Dynamic#relocations` used to pass over
+ the relocations a file packs into a bitmap, the
   ones `DT_RELR` points at, and answer with only the tables `DT_REL`, `DT_RELA`, and
   `DT_JMPREL` record. Of the 3780 loaded files of a current system, 557 pack some of
   theirs that way, and across those 46% of their relocations were missing from the answer,
