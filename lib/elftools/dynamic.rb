@@ -3,6 +3,7 @@
 require 'elftools/constants'
 require 'elftools/dynamic/string_table'
 require 'elftools/dynamic/symbols'
+require 'elftools/dynamic/versions'
 require 'elftools/dynamic/tag'
 require 'elftools/exceptions'
 require 'elftools/relative_relocations'
@@ -18,6 +19,7 @@ module ELFTools
   #   attributes exist.
   module Dynamic
     include Symbols
+    include Versions
 
     # Iterate all tags.
     #

@@ -20,17 +20,41 @@ module ELFTools
       #   access {Symbol#name}.
       # @param [Integer] machine
       #   The machine of the ELF file, which a name of a value depends on.
-      def initialize(header, stream, symstr: nil, machine: nil)
+      # @param [Proc] version
+      #   Call this to get the version this symbol binds to, which only the
+      #   symbols a file is loaded by have.
+      def initialize(header, stream, symstr: nil, machine: nil, version: nil)
         @header = header
         @stream = stream
         @symstr = symstr
         @machine = machine
+        @version = version
       end
 
       # Return the symbol name.
       # @return [String] The name.
       def name
         @name ||= @symstr.call.name_at(header.st_name)
+      end
+
+      # The version this symbol binds to.
+      #
+      # Only the symbols a file is loaded by have one, and only where the file
+      # records the versions at all. {#name} is left as the file records it,
+      # without the version appended.
+      # @return [String, nil] The name of the version.
+      # @example
+      #   elf.dynamic.symbol_by_name('printf').version
+      #   #=> 'GLIBC_2.2.5'
+      def version
+        binding_version&.name
+      end
+
+      # Whether {#version} is one the symbol asks for by name rather than the
+      # default one of its name.
+      # @return [Boolean] The answer.
+      def version_hidden?
+        binding_version&.hidden? || false
       end
 
       # What kind of entity this symbol refers to.
@@ -127,6 +151,15 @@ module ELFTools
       def visibility_name
         Constants::STV.mapping(@machine, visibility)
       end
+
+      # The version this symbol binds to, whatever is asked of it.
+      # @return [ELFTools::Dynamic::Versions::Version, nil] The version.
+      def binding_version
+        return @binding_version if defined?(@binding_version)
+
+        @binding_version = @version&.call
+      end
+      private :binding_version
 
       # The index of the section this symbol is defined in.
       #

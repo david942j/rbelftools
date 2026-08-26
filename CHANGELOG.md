@@ -12,6 +12,21 @@ entries here are collected from those announcements and from the commit history.
 
 ## Unreleased
 
+### Added
+
+- `Sections::Symbol#version` and `#version_hidden?`, the version a symbol binds to, which
+  tells `memcpy@GLIBC_2.14` from the `memcpy@GLIBC_2.2.5` of the same name. `#name` is
+  left as the file records it, without the version appended
+  ([#114](https://github.com/david942j/rbelftools/pull/114))
+- `Dynamic#version_requirements` and `#version_definitions`, the versions a file needs of
+  the files it is loaded with and the versions it defines for what it exports, which
+  answer what a file needs without walking its symbols. Both are read from the tags, so a
+  file stripped of its sections still records them
+  ([#114](https://github.com/david942j/rbelftools/pull/114))
+- `Constants::VER_FLG` and `VER_NDX`, and the `Structs::ELF_Verneed`, `ELF_Vernaux`,
+  `ELF_Verdef`, and `ELF_Verdaux` structures behind them
+  ([#114](https://github.com/david942j/rbelftools/pull/114))
+
 ### Fixed
 
 - `Dynamic#relocations` used to pass over the relocations a file packs into a bitmap, the

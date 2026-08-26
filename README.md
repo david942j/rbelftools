@@ -139,6 +139,27 @@ dynamic.relocations.map { |rel| dynamic.symbol_at(rel.symbol_index).name }.first
 #=> ["__gmon_start__", "stdin", "puts"]
 ```
 
+A symbol of a file that is loaded binds to a version of the name, which is how one file
+offers `memcpy` twice and each caller keeps the one it was built against. The name is left
+as the file records it.
+```ruby
+dynamic.symbol_by_name('printf').version
+#=> "GLIBC_2.2.5"
+dynamic.symbol_by_name('__stack_chk_fail').version
+#=> "GLIBC_2.4"
+
+# What the file needs, without walking a symbol at all.
+dynamic.version_requirements.map { |need| [need.file, need.versions.map(&:name)] }
+#=> [["libc.so.6", ["GLIBC_2.4", "GLIBC_2.2.5"]]]
+
+# What a library defines, the first naming the library rather than a version of it.
+libc = ELFTools::ELFFile.new(File.open('spec/files/libc.so.6'))
+libc.dynamic.version_definitions.map(&:name).first(3)
+#=> ["libc.so.6", "GLIBC_2.2.5", "GLIBC_2.2.6"]
+libc.dynamic.version_definitions[2].parents
+#=> ["GLIBC_2.2.5"]
+```
+
 Nothing a file is loaded by records how large its symbol table is, because the loader
 looks a name up through a hash table and jumps straight to an index rather than ever
 enumerating it. `num_symbols` is therefore how far the hash table and the relocations

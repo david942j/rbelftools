@@ -34,7 +34,8 @@ module ELFTools
           # An entry takes what its structure takes, which is also what
           # DT_SYMENT records and what a file has no way of disagreeing with.
           sym = read_struct(klass, sym_offset + (n * struct(klass).num_bytes))
-          Sections::Symbol.new(sym, stream, symstr: method(:string_table), machine: @machine)
+          Sections::Symbol.new(sym, stream, symstr: method(:string_table), machine: @machine,
+                                            version: -> { version_at(n) })
         end
       end
 

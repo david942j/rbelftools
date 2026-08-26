@@ -288,6 +288,23 @@ module ELFTools
     end
     include EM
 
+    # Flags of a version, recorded in the +vd_flags+ of a definition and the
+    # +vna_flags+ of a requirement.
+    module VER_FLG
+      VER_FLG_BASE = 0x1 # The version the file itself is, rather than one of the versions it defines
+      VER_FLG_WEAK = 0x2 # A version no symbol is bound to
+      VER_FLG_INFO = 0x4 # A version recorded for information rather than to be matched
+    end
+    include VER_FLG
+
+    # The indices a symbol names a version with that name no version.
+    module VER_NDX
+      VER_NDX_LOCAL = 0 # A symbol of the file itself, which nothing outside it binds to
+      VER_NDX_GLOBAL = 1 # A symbol of no version at all
+      VER_NDX_HIDDEN = 0x8000 # Not an index but a bit of one, marking a version that is not the default
+    end
+    include VER_NDX
+
     # Relocation types, see +elftools/constants/relocation+ for the constants.
     module R
       # Return the name of a relocation type.
