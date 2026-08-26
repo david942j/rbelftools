@@ -235,6 +235,49 @@ module ELFTools
       uint32 :shift2    # The second shift the bloom filter is built with
     end
 
+    # An entry of the table of versions a file needs of another, which the
+    # +vn_next+ of the one before it points at.
+    class ELF_Verneed < ELFStruct
+      endian :big_and_little
+      uint16 :vn_version # Revision of this structure
+      uint16 :vn_cnt     # How many versions of the file are needed
+      uint32 :vn_file    # Name of the file, as an offset into the string table
+      uint32 :vn_aux     # Where the versions start, as an offset from here
+      uint32 :vn_next    # Where the next entry is, as an offset from here
+    end
+
+    # A version an {ELF_Verneed} needs, which the +vna_next+ of the one before
+    # it points at.
+    class ELF_Vernaux < ELFStruct
+      endian :big_and_little
+      uint32 :vna_hash  # Hash of the name
+      uint16 :vna_flags # Flags
+      uint16 :vna_other # The index the symbols name this version with
+      uint32 :vna_name  # The name, as an offset into the string table
+      uint32 :vna_next  # Where the next version is, as an offset from here
+    end
+
+    # An entry of the table of versions a file defines, which the +vd_next+ of
+    # the one before it points at.
+    class ELF_Verdef < ELFStruct
+      endian :big_and_little
+      uint16 :vd_version # Revision of this structure
+      uint16 :vd_flags   # Flags
+      uint16 :vd_ndx     # The index the symbols name this version with
+      uint16 :vd_cnt     # How many names follow, the version and its ancestors
+      uint32 :vd_hash    # Hash of the name
+      uint32 :vd_aux     # Where the names start, as an offset from here
+      uint32 :vd_next    # Where the next entry is, as an offset from here
+    end
+
+    # A name an {ELF_Verdef} records, its own or an ancestor's, which the
+    # +vda_next+ of the one before it points at.
+    class ELF_Verdaux < ELFStruct
+      endian :big_and_little
+      uint32 :vda_name # The name, as an offset into the string table
+      uint32 :vda_next # Where the next name is, as an offset from here
+    end
+
     # Note header.
     class ELF_Nhdr < ELFStruct
       endian :big_and_little
