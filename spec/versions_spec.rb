@@ -106,4 +106,55 @@ describe ELFTools::Dynamic::Versions do
       expect(file.dynamic.version_requirements.first.file).to eq 'libc.so.6'
     end
   end
+  describe 'the sections recording the same' do
+    def elf(name = 'amd64.elf')
+      ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
+    end
+
+    it 'reads each of them as a class of its own' do
+      file = elf('libc.so.6')
+      expect(file.section_by_name('.gnu.version')).to be_a ELFTools::Sections::VersionSection
+      expect(file.section_by_name('.gnu.version_r')).to be_a ELFTools::Sections::VersionNeedSection
+      expect(file.section_by_name('.gnu.version_d')).to be_a ELFTools::Sections::VersionDefinitionSection
+    end
+
+    it 'answers what the tags answer' do
+      # Both views describe the same bytes, so each answers for the other.
+      %w[amd64.elf libc.so.6 aarch64.elf i386.pie.elf].each do |name|
+        file = elf(name)
+        summarize = ->(needs) { needs.map { |need| [need.file, need.versions.map(&:name)] } }
+        expect(summarize.call(file.sections_by_type(:gnu_verneed).flat_map(&:requirements)))
+          .to eq summarize.call(file.dynamic.version_requirements)
+
+        defines = file.sections_by_type(:gnu_verdef).flat_map(&:definitions)
+        expect(defines.map(&:name)).to eq file.dynamic.version_definitions.map(&:name)
+      end
+    end
+
+    it 'records an index for every symbol' do
+      versions = elf('libc.so.6').section_by_name('.gnu.version')
+      expect(versions.num_versions).to be 2245
+      expect(versions.num_versions).to eq elf('libc.so.6').section_by_name('.dynsym').num_symbols
+      # The first symbol is the file's own, which binds to no version.
+      expect(versions.version_at(0)).to be 0
+      expect(versions.version_at(-1)).to be nil
+      expect(versions.version_at(2245)).to be nil
+    end
+
+    it 'names the version of a symbol read from a section' do
+      # The very versions the tags name, for the symbols of the same table.
+      %w[amd64.elf libc.so.6].each do |name|
+        file = elf(name)
+        from_sections = file.section_by_name('.dynsym').symbols
+        from_tags = file.dynamic.symbols
+        expect(from_sections.map(&:version)).to eq from_tags.map(&:version)
+        expect(from_sections.map(&:version_hidden?)).to eq from_tags.map(&:version_hidden?)
+      end
+    end
+
+    it 'names none for a table a file is not loaded by' do
+      # Nothing records a version for .symtab, which no section names.
+      expect(elf.section_by_name('.symtab').symbols.map(&:version)).to all(be nil)
+    end
+  end
 end

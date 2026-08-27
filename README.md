@@ -152,6 +152,12 @@ dynamic.symbol_by_name('__stack_chk_fail').version
 dynamic.version_requirements.map { |need| [need.file, need.versions.map(&:name)] }
 #=> [["libc.so.6", ["GLIBC_2.4", "GLIBC_2.2.5"]]]
 
+# The sections record the same, for a file that still has them.
+elf.sections_by_type(:gnu_verneed).first.requirements.first.file
+#=> "libc.so.6"
+elf.section_by_name('.dynsym').symbol_by_name('printf').version
+#=> "GLIBC_2.2.5"
+
 # What a library defines, the first naming the library rather than a version of it.
 libc = ELFTools::ELFFile.new(File.open('spec/files/libc.so.6'))
 libc.dynamic.version_definitions.map(&:name).first(3)

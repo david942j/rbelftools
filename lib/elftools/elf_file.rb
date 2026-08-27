@@ -413,6 +413,7 @@ module ELFTools
                                offset_from_vma: method(:offset_from_vma),
                                section_name_table: method(:section_name_table),
                                section_at: method(:section_at),
+                               sections: method(:sections),
                                machine: header.e_machine.to_i)
     end
 

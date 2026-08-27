@@ -2,6 +2,7 @@
 
 require 'elftools/sections/section'
 require 'elftools/sections/symbol'
+require 'elftools/version_tables'
 
 module ELFTools
   module Sections
@@ -16,14 +17,15 @@ module ELFTools
       #   See {Section#initialize} for more information.
       # @param [#pos=, #read] stream
       #   See {Section#initialize} for more information.
-      # @param [Proc] section_at
-      #   The method for fetching other sections by index.
-      #   This lambda should be {ELFTools::ELFFile#section_at}.
+      # @param [Proc] sections
+      #   The method for fetching the sections, which is where the names and
+      #   the versions of these symbols are recorded. This lambda should be
+      #   {ELFTools::ELFFile#sections}.
       # @param [Integer] machine
       #   The machine of the ELF file, which decides what the fields of a
       #   symbol mean. This should be +e_machine+ of the ELF header.
-      def initialize(header, stream, section_at: nil, machine: nil, **_kwargs)
-        @section_at = section_at
+      def initialize(header, stream, sections: nil, machine: nil, **_kwargs)
+        @sections = sections
         @machine = machine
         # For faster #symbol_by_name
         super
@@ -91,7 +93,7 @@ module ELFTools
       # Lazy loaded.
       # @return [ELFTools::Sections::StrTabSection] The string table section.
       def symstr
-        @symstr ||= @section_at.call(header.sh_link)
+        @symstr ||= @sections.call[header.sh_link]
       end
 
       private
@@ -100,7 +102,37 @@ module ELFTools
         stream.pos = header.sh_offset + n * header.sh_entsize
         sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian, offset: stream.pos)
         sym.read(stream)
-        Symbol.new(sym, stream, symstr: method(:symstr), machine: @machine)
+        Symbol.new(sym, stream, symstr: method(:symstr), machine: @machine, version: -> { version_at(n) })
+      end
+
+      # The version the +n+-th symbol binds to.
+      # @return [ELFTools::VersionTables::Version, nil]
+      #   The version, +nil+ unless this is the table a file is loaded by and
+      #   the file records versions at all.
+      def version_at(n)
+        return if versions.nil?
+
+        VersionTables.version(versions.version_at(n), versions_by_index)
+      end
+
+      # The section recording which version each of these symbols binds to,
+      # which is the one naming this table.
+      # @return [ELFTools::Sections::VersionSection, nil] The section.
+      def versions
+        return @versions if defined?(@versions)
+
+        @versions = @sections&.call&.find do |sec|
+          sec.is_a?(VersionSection) && @sections.call[sec.header.sh_link].equal?(self)
+        end
+      end
+
+      # The name each index the symbols record names.
+      # @return [Hash{Integer => String}] The names.
+      def versions_by_index
+        @versions_by_index ||= VersionTables.names(
+          @sections.call.grep(VersionNeedSection).flat_map(&:requirements),
+          @sections.call.grep(VersionDefinitionSection).flat_map(&:definitions)
+        )
       end
     end
   end

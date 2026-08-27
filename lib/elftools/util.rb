@@ -66,9 +66,12 @@ module ELFTools
         prefix = module_name.split('::')[-1]
         val = "#{prefix}_#{val}" unless val.start_with?(prefix)
         val = val.to_sym
-        raise ArgumentError, "No constants in #{module_name} named \"#{val}\"" unless mod.const_defined?(val)
+        # Whichever way the constant spells it, some of them keeping the case
+        # the ABI wrote them in, +SHT_GNU_verneed+ for one.
+        name = mod.constants.find { |constant| constant.to_s.upcase == val.to_s }
+        raise ArgumentError, "No constants in #{module_name} named \"#{val}\"" if name.nil?
 
-        mod.const_get(val)
+        mod.const_get(name)
       end
 
       # Read from stream until reach a null-byte.
