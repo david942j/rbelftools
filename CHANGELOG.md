@@ -14,6 +14,12 @@ entries here are collected from those announcements and from the commit history.
 
 ### Added
 
+- `Sections::Symbol#value` and `#size`, the last of what a symbol records that took
+  reaching into its header. What a symbol is worth is the address of what it names in a
+  file that is loaded, an offset into the section holding it in one that is not, and the
+  alignment it needs where the linker is still to place it
+  ([#116](https://github.com/david942j/rbelftools/pull/116))
+
 - `Sections::VersionSection`, `VersionNeedSection`, and `VersionDefinitionSection`, the
   `.gnu.version`, `.gnu.version_r`, and `.gnu.version_d` sections recording the very
   versions the tags point at, and `VersionTables`, which reads either view. A symbol read
