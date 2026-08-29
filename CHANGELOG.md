@@ -41,23 +41,6 @@ entries here are collected from those announcements and from the commit history.
 - `Constants::VER_FLG` and `VER_NDX`, and the `Structs::ELF_Verneed`, `ELF_Vernaux`,
   `ELF_Verdef`, and `ELF_Verdaux` structures behind them
   ([#114](https://github.com/david942j/rbelftools/pull/114))
-
-### Fixed
-
-- `sections_by_type` and the other lookups taking a symbol or a string could not name the
-  constants keeping the case an ABI wrote them in, so `sections_by_type(:gnu_verneed)`
-  raised where `SHT_GNU_verneed` is what defines it
-  ([#115](https://github.com/david942j/rbelftools/pull/115))
-- `Dynamic#relocations` used to pass over
- the relocations a file packs into a bitmap, the
-  ones `DT_RELR` points at, and answer with only the tables `DT_REL`, `DT_RELA`, and
-  `DT_JMPREL` record. Of the 3780 loaded files of a current system, 557 pack some of
-  theirs that way, and across those 46% of their relocations were missing from the answer,
-  `ldconfig` reporting 11 of its 1503
-  ([#113](https://github.com/david942j/rbelftools/pull/113))
-
-### Added
-
 - `Sections::RelativeRelocationSection`, the `SHT_RELR` section holding the same
   relocations, and `RelativeRelocations`, which unpacks either of them. An entry is an
   address, or a bitmap of the words following the last address, and records no type of its
@@ -78,6 +61,17 @@ entries here are collected from those announcements and from the commit history.
 
 ### Fixed
 
+- `sections_by_type` and the other lookups taking a symbol or a string could not name the
+  constants keeping the case an ABI wrote them in, so `sections_by_type(:gnu_verneed)`
+  raised where `SHT_GNU_verneed` is what defines it
+  ([#115](https://github.com/david942j/rbelftools/pull/115))
+- `Dynamic#relocations` used to pass over
+ the relocations a file packs into a bitmap, the
+  ones `DT_RELR` points at, and answer with only the tables `DT_REL`, `DT_RELA`, and
+  `DT_JMPREL` record. Of the 3780 loaded files of a current system, 557 pack some of
+  theirs that way, and across those 46% of their relocations were missing from the answer,
+  `ldconfig` reporting 11 of its 1503
+  ([#113](https://github.com/david942j/rbelftools/pull/113))
 - Assigning to a field of a structure a header records, `e_ident` and each of the seven
   fields it holds, used to be dropped without a word. The value read back as assigned and
   `save` wrote the file out unchanged, because only the fields of the outermost structure
