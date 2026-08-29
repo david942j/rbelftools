@@ -46,6 +46,37 @@ module ELFTools
         stream.read(header.sh_size)
       end
 
+      # Is this section written to while the file runs?
+      # @return [Boolean] True or false.
+      # @example
+      #   elf.section_by_name('.data').writable?
+      #   #=> true
+      def writable?
+        header.sh_flags.allbits?(Constants::SHF_WRITE)
+      end
+
+      # Is this section executed?
+      # @return [Boolean] True or false.
+      # @example
+      #   elf.section_by_name('.text').executable?
+      #   #=> true
+      def executable?
+        header.sh_flags.allbits?(Constants::SHF_EXECINSTR)
+      end
+
+      # Does this section take memory while the file runs?
+      #
+      # The ones that do are what a file is loaded by, the rest being what is
+      # recorded about it, its symbol names and its debugging information
+      # among them.
+      # @return [Boolean] True or false.
+      # @example
+      #   elf.section_by_name('.symtab').allocated?
+      #   #=> false
+      def allocated?
+        header.sh_flags.allbits?(Constants::SHF_ALLOC)
+      end
+
       # Is this a null section?
       # @return [Boolean] No it's not.
       def null?

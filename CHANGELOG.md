@@ -14,6 +14,11 @@ entries here are collected from those announcements and from the commit history.
 
 ### Added
 
+- `Sections::Section#writable?`, `#executable?`, and `#allocated?`, which read `sh_flags`
+  the way `Segments::Segment` already reads `p_flags`. A section is allocated when it takes
+  memory while the file runs, which is what tells the sections a file is loaded by from the
+  ones only recorded about it ([#117](https://github.com/david942j/rbelftools/pull/117))
+
 - `Sections::VersionSection`, `VersionNeedSection`, and `VersionDefinitionSection`, the
   `.gnu.version`, `.gnu.version_r`, and `.gnu.version_d` sections recording the very
   versions the tags point at, and `VersionTables`, which reads either view. A symbol read
