@@ -195,6 +195,19 @@ libc.dynamic.symbol_by_name('malloc').type_name
 #=> "STT_FUNC"
 ```
 
+What a section is for is recorded in `sh_flags`, as a segment records it in `p_flags`.
+```ruby
+[elf.section_by_name('.text').executable?, elf.section_by_name('.text').writable?]
+#=> [true, false]
+
+# Only some of the sections take memory while the file runs, the rest being what is
+# recorded about it.
+elf.sections.select(&:allocated?).map(&:name).first(5).join(' ')
+#=> ".interp .note.ABI-tag .note.gnu.build-id .gnu.hash .dynsym"
+elf.sections.reject(&:allocated?).map(&:name).reject(&:empty?).join(' ')
+#=> ".comment .shstrtab .symtab .strtab"
+```
+
 ## Segments
 
 ```ruby
