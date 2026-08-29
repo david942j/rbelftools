@@ -57,6 +57,31 @@ module ELFTools
         binding_version&.hidden? || false
       end
 
+      # What this symbol is worth, which for most of them is the address of
+      # what they name.
+      #
+      # A symbol of a file that is not loaded anywhere records an offset into
+      # the section holding it instead, and one the linker is still to place,
+      # which {ELFTools::Constants::SHN_COMMON} marks, records the alignment it
+      # needs. The ABI leaves the field to the kind of symbol for that reason,
+      # and this answers with what is recorded either way.
+      # @return [Integer] The value.
+      # @example
+      #   elf.section_by_name('.symtab').symbol_by_name('main').value
+      #   #=> 4196061 # 0x4006dd
+      def value
+        header.st_value.to_i
+      end
+
+      # How many bytes what this symbol names takes.
+      # @return [Integer] The number, zero where the file records none.
+      # @example
+      #   elf.section_by_name('.symtab').symbol_by_name('main').size
+      #   #=> 142
+      def size
+        header.st_size.to_i
+      end
+
       # What kind of entity this symbol refers to.
       #
       # The available types are listed in {ELFTools::Constants::STT}.

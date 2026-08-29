@@ -110,4 +110,22 @@ describe ELFTools::Sections::Symbol do
       .to eq %w[STT_OBJECT STB_WEAK STV_HIDDEN]
     out.close!
   end
+  it 'value' do
+    # What a symbol of a file that is loaded is worth is the address of what
+    # it names.
+    expect(@symtab.symbol_by_name('main').value).to be 0x4006dd
+    expect(@symtab.symbol_by_name('main').value).to eq @symtab.symbol_by_name('main').header.st_value
+    # A file that is not loaded anywhere records an offset into the section
+    # holding it instead.
+    relocatable = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', 'mips.o')))
+    helper = relocatable.section_by_name('.symtab').symbol_by_name('_ZL6helperi')
+    expect(helper.value).to be 132
+    expect(helper.section_index).to be 2
+  end
+
+  it 'size' do
+    expect(@symtab.symbol_by_name('main').size).to be 142
+    # A symbol the file records no size for, of which every file has some.
+    expect(@symtab.symbol_by_name('crtstuff.c').size).to be 0
+  end
 end
