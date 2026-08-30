@@ -24,6 +24,13 @@ module ELFTools
         @endian = endian
       end
 
+      # Whether {#num_symbols} is how many symbols there are rather than how
+      # far the table reaches, which only a table indexing every symbol knows.
+      # @return [Boolean] The answer.
+      def records_num_symbols?
+        false
+      end
+
       private
 
       # The header the table starts with.
@@ -64,6 +71,11 @@ module ELFTools
         # @return [Integer] The number.
         def num_symbols
           header.nchain.to_i
+        end
+
+        # (see ELFTools::Dynamic::HashTable#records_num_symbols?)
+        def records_num_symbols?
+          true
         end
 
         # The index a name sits at.
