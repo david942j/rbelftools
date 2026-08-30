@@ -93,9 +93,11 @@ module ELFTools
       # Get symbol by its name.
       #
       # The hash tables answer first, which is the lookup the loader itself
-      # performs and takes no scanning. They do not index every symbol, and a
-      # file need not record one at all, so a name they do not lead to is
-      # searched for among the symbols {#symbols} reaches.
+      # performs and takes no scanning. Where one of them is built over every
+      # symbol its answer is the whole answer, and a name it does not lead to
+      # is not one the file records. Otherwise the name is searched for among
+      # the symbols {#symbols} reaches, because a table need only index the
+      # names a file exports and a file need not record one at all.
       # @param [String] name The name of symbol.
       # @return [ELFTools::Sections::Symbol, nil] The desired symbol.
       # @example
@@ -106,6 +108,9 @@ module ELFTools
         # not led anywhere.
         index = hash_tables.lazy.filter_map { |table| table.index_of(name) { |i| symbol_at(i).name == name } }.first
         return symbol_at(index) if index
+        # A symbol with no name is the one thing such a table leaves out,
+        # having nothing to be indexed by, so it is still searched for.
+        return if !name.empty? && hash_tables.any?(&:covers_every_symbol?)
 
         each_symbol.find { |symbol| symbol.name == name }
       end
@@ -125,7 +130,7 @@ module ELFTools
       # How many symbols a table that counts them says there are.
       # @return [Integer, nil] The number, +nil+ if the file records no such table.
       def counted_num_symbols
-        hash_tables.find(&:records_num_symbols?)&.num_symbols
+        hash_tables.find(&:covers_every_symbol?)&.num_symbols
       end
 
       # How far what the file records reaches, for a file that counts its

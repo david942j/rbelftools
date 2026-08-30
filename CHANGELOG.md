@@ -104,6 +104,14 @@ entries here are collected from those announcements and from the commit history.
   them out. A stream that cannot be seeked is serialized as before, and what
   `Structs::ELFStruct#patches` reports is unchanged
   ([#120](https://github.com/david942j/rbelftools/pull/120))
+- `Dynamic#symbol_by_name` stops at a hash table built over every symbol instead of
+  searching the whole symbol table for a name the table has already answered for. Only
+  `DT_HASH` is built over every symbol, so a file recording nothing but `DT_GNU_HASH` is
+  searched as before, as is the symbol with no name, which such a table leaves out having
+  nothing to be indexed by. Asking a 1.9MB libc for a name it does not record is around
+  fifty times faster. The unreleased `Dynamic::HashTable#records_num_symbols?` is renamed
+  to `#covers_every_symbol?`, which is the one fact both it and this rest on
+  ([#123](https://github.com/david942j/rbelftools/pull/123))
 
 ## 2.0.0 - 2026-08-24
 

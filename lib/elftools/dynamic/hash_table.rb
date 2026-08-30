@@ -24,10 +24,14 @@ module ELFTools
         @endian = endian
       end
 
-      # Whether {#num_symbols} is how many symbols there are rather than how
-      # far the table reaches, which only a table indexing every symbol knows.
+      # Whether the table is built over every symbol rather than over a subset
+      # of them.
+      #
+      # Two things follow where it is. How many symbols it is built over is how
+      # many there are, rather than how far it reaches. And a name it does not
+      # lead to is not one the file records, so nothing is left to search.
       # @return [Boolean] The answer.
-      def records_num_symbols?
+      def covers_every_symbol?
         false
       end
 
@@ -73,8 +77,8 @@ module ELFTools
           header.nchain.to_i
         end
 
-        # (see ELFTools::Dynamic::HashTable#records_num_symbols?)
-        def records_num_symbols?
+        # (see ELFTools::Dynamic::HashTable#covers_every_symbol?)
+        def covers_every_symbol?
           true
         end
 
