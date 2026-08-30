@@ -19,10 +19,16 @@ module ELFTools
       attr_accessor :offset # @return [Integer] The file offset of this header.
 
       # Reads the structure, remembering the bytes it was read from.
+      #
+      # They are taken back off the stream rather than serialized again from
+      # what was just parsed, which costs a fraction of what serializing does
+      # and is paid by every structure that is read. A stream that cannot be
+      # seeked is serialized instead.
       # @param [#pos=, #read] io The streaming object.
       # @return [ELFTools::Structs::ELFStruct] Itself.
       def read(io)
-        super.tap { @source = to_binary_s }
+        start = io.pos if io.respond_to?(:pos)
+        super.tap { @source = start.nil? ? to_binary_s : bytes_read(io, start) }
       end
 
       # Which bytes of this structure have been changed since it was read.
@@ -48,6 +54,17 @@ module ELFTools
       alias to_h snapshot
 
       private
+
+      # The bytes a read has just taken from a stream, leaving it where the
+      # read left it.
+      # @param [#pos=, #read] io The streaming object.
+      # @param [Integer] start Where the read began.
+      # @return [String] The bytes.
+      def bytes_read(io, start)
+        here = io.pos
+        io.pos = start
+        io.read(here - start).tap { io.pos = here }
+      end
 
       # Where two strings of bytes differ, as the runs of bytes that differ.
       #

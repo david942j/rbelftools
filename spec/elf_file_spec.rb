@@ -239,6 +239,62 @@ describe ELFTools::ELFFile do
       out.close!
     end
 
+    it 'strips the section headers off a file of any width and order' do
+      # The fields recording where the sections are take a different width in
+      # each ELF class and are written in a different order by each file, and a
+      # file whose header is written wrongly no longer reads as an ELF at all.
+      { 'amd64.elf' => 0x28, 'i386.elf' => 0x20, 'ppc64.elf' => 0x28 }.each do |name, shoff_at|
+        path = File.join(__dir__, 'files', name)
+        elf = described_class.new(File.open(path))
+        width = elf.elf_class / 8
+        # e_flags, e_ehsize, e_phentsize, e_phnum, and e_shentsize sit between
+        # e_shoff and the two fields that follow it, e_shnum and e_shstrndx.
+        shnum_at = shoff_at + width + 4 + 2 + 2 + 2 + 2
+        elf.header.e_shoff = 0
+        elf.header.e_shnum = 0
+        elf.header.e_shstrndx = 0
+
+        out = Tempfile.new('elftools')
+        out.close
+        elf.save(out.path)
+        before = File.binread(path)
+        after = File.binread(out.path)
+
+        # Nothing outside the three fields moved, so what the segments record
+        # is left where it was.
+        expect(after.bytesize).to eq before.bytesize
+        untouched = (0...before.bytesize).reject do |i|
+          i.between?(shoff_at, shoff_at + width - 1) || i.between?(shnum_at, shnum_at + 3)
+        end
+        expect(untouched.all? { |i| after.getbyte(i) == before.getbyte(i) }).to be true
+
+        stripped = described_class.new(File.open(out.path))
+        expect(stripped.header.e_shoff).to eq 0
+        expect(stripped.header.e_shnum).to eq 0
+        expect(stripped.header.e_shstrndx).to eq 0
+        expect(stripped.sections).to eq []
+        # The symbols the tags point at are what a stripped file still records.
+        expect(stripped.segment_by_type(:dynamic).symbols.map(&:name))
+          .to eq described_class.new(File.open(path)).segment_by_type(:dynamic).symbols.map(&:name)
+        out.close!
+      end
+    end
+
+    it 'patches a field of every width the way the file orders it' do
+      # A value whose bytes all differ reads back only if every one of them is
+      # written where the file expects it.
+      { 'amd64.elf' => 0x1122334455667788, 'i386.elf' => 0x11223344, 'ppc64.elf' => 0x1122334455667788 }
+        .each do |name, value|
+        out = Tempfile.new('elftools')
+        out.close
+        elf = described_class.new(File.open(File.join(__dir__, 'files', name)))
+        elf.header.e_shoff = value
+        elf.save(out.path)
+        expect(described_class.new(File.open(out.path)).header.e_shoff).to eq value
+        out.close!
+      end
+    end
+
     it 'patches a file whichever way it is ordered' do
       # A field is written the way the file records it, which only a big
       # endian file disagrees with.

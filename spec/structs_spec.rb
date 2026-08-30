@@ -41,6 +41,15 @@ describe ELFTools::Structs::ELFStruct do
       expect(header('ppc64.elf').tap { |hdr| hdr.e_machine = 40 }.patches).to eq({ 19 => 40.chr })
     end
 
+    it 'reports a change to the last field of a structure' do
+      # Nothing is compared past where the bytes a structure was read from
+      # reach, so the last field is the one a source short of the structure
+      # would drop.
+      hdr = header
+      hdr.e_shstrndx = 0x0102
+      expect(hdr.patches).to eq({ 62 => "\x02\x01" })
+    end
+
     it 'reports nothing for a structure that was never read' do
       expect(ELFTools::Structs::ELF_Dyn.new(endian: :little).patches).to eq({})
     end
