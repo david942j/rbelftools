@@ -3,6 +3,11 @@
 module ELFTools
   # Define some util methods.
   module Util
+    # How many bytes {ClassMethods#cstring} takes from a stream at a time. Long
+    # enough that a name is usually read in one, short enough that reading one
+    # never reaches far past its end.
+    CSTRING_CHUNK = 64
+
     # Class methods.
     module ClassMethods
       # Round up the number to be multiple of
@@ -75,6 +80,8 @@ module ELFTools
       end
 
       # Read from stream until reach a null-byte.
+      #
+      # The stream is left just past the null-byte.
       # @param [#pos=, #read] stream Streaming object.
       # @param [Integer] offset Start from here.
       # @return [String] Result string will never contain null byte.
@@ -83,16 +90,19 @@ module ELFTools
       #   #=> "\x7FELF\x02\x01\x01"
       def cstring(stream, offset)
         stream.pos = offset
-        # read until "\x00"
-        ret = ''
+        ret = +''
         loop do
-          c = stream.read(1)
-          return nil if c.nil? # reach EOF
-          break if c == "\x00"
+          chunk = stream.read(CSTRING_CHUNK)
+          return nil if chunk.nil? # reach EOF
 
-          ret += c
+          stop = chunk.index("\x00")
+          if stop
+            stream.pos = offset + ret.bytesize + stop + 1
+            return ret << chunk.byteslice(0, stop)
+          end
+
+          ret << chunk
         end
-        ret
       end
 
       # Select objects from enumerator with +.type+ property
