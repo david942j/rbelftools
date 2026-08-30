@@ -89,6 +89,15 @@ entries here are collected from those announcements and from the commit history.
   is nested, and a field assigned the value it already held leaves nothing behind.
   `Structs::ELFStruct.pack` is no longer how a patch is made, and is deprecated
   ([#111](https://github.com/david942j/rbelftools/pull/111))
+- `Dynamic#num_symbols` answers with what `DT_HASH` counts where a file records that
+  table, instead of reading every relocation in the file to bound a number the table
+  already states. A chain of that table belongs to every symbol, so nothing a file records
+  reaches past it. A file recording no such table is counted as before. The size of an
+  entry is also measured once for the table rather than once per symbol, which used to
+  cost a structure of its own each time. Reading the symbols the tags point at is well
+  over twice as fast for it, and what is read is unchanged, name for name and index for
+  index
+  ([#119](https://github.com/david942j/rbelftools/pull/119))
 - A structure remembers the bytes it was read from by taking them back off the stream,
   instead of serializing itself again from what it has just parsed. Every structure
   elftools reads pays for that, and taking the bytes is a fraction of the cost of writing

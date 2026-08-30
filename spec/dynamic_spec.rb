@@ -142,6 +142,23 @@ describe ELFTools::Dynamic do
       expect(elf('libc.so.6').dynamic.num_symbols).to eq 2245
     end
 
+    it 'stops at the table that counts the symbols' do
+      # DT_HASH counts every symbol, so nothing else a file records reaches
+      # past it and reading every relocation to find that out would be work
+      # for nothing.
+      dynamic = elf('libc.so.6').dynamic
+      expect(dynamic.tag_by_type(:hash)).not_to be nil
+      expect(dynamic).not_to receive(:relocations)
+      expect(dynamic.num_symbols).to eq 2245
+    end
+
+    it 'reaches for the relocations only where nothing counts the symbols' do
+      dynamic = elf('ppc64.elf').dynamic
+      expect(dynamic.tag_by_type(:hash)).to be nil
+      expect(dynamic).to receive(:relocations).and_call_original
+      expect(dynamic.num_symbols).to eq 13
+    end
+
     it 'names the symbol a relocation points at' do
       dynamic = elf('amd64.elf').dynamic
       expect(dynamic.relocations.map { |rel| dynamic.symbol_at(rel.symbol_index).name }).to eq \
