@@ -104,6 +104,13 @@ entries here are collected from those announcements and from the commit history.
   them out. A stream that cannot be seeked is serialized as before, and what
   `Structs::ELFStruct#patches` reports is unchanged
   ([#120](https://github.com/david942j/rbelftools/pull/120))
+- `Util.cstring` takes a stream in chunks instead of a byte at a time, so reading a name
+  no longer costs the square of its length. Every name elftools reads is read through it,
+  and the longer the name the more it was paying: a name of 1024 bytes, which C++ mangles
+  past easily, reads around 45 times faster, and the short names of a C library around 8
+  times. The stream is left just where it was left before, and the bytes and the encoding
+  of what is read are unchanged
+  ([#121](https://github.com/david942j/rbelftools/pull/121))
 - `Dynamic#symbol_by_name` stops at a hash table built over every symbol instead of
   searching the whole symbol table for a name the table has already answered for. Only
   `DT_HASH` is built over every symbol, so a file recording nothing but `DT_GNU_HASH` is

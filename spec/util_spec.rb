@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'stringio'
+
 require 'elftools/util'
 
 describe ELFTools::Util do
@@ -12,6 +14,40 @@ describe ELFTools::Util do
     expect(ELFTools::Util.align(7, 0)).to be 7
     expect(ELFTools::Util.align(7, 1)).to be 8
     expect(ELFTools::Util.align(7, 2)).to be 8
+  end
+
+  describe 'cstring' do
+    def cstring(data, offset)
+      io = StringIO.new(data)
+      [ELFTools::Util.cstring(io, offset), io.pos]
+    end
+
+    it 'reads up to the null-byte and stops just past it' do
+      expect(cstring("abc\0def\0", 0)).to eq ['abc', 4]
+      expect(cstring("abc\0def\0", 4)).to eq ['def', 8]
+      expect(cstring("\0abc\0", 0)).to eq ['', 1]
+    end
+
+    it 'reads a name of any length, however the chunks fall' do
+      # A name is taken in chunks, so the bytes either side of a chunk's end
+      # are where a name would be cut short or run on.
+      (ELFTools::Util::CSTRING_CHUNK - 1..ELFTools::Util::CSTRING_CHUNK + 1).each do |len|
+        expect(cstring("#{'a' * len}\0", 0)).to eq ['a' * len, len + 1]
+      end
+      long = 'a' * (ELFTools::Util::CSTRING_CHUNK * 10)
+      expect(cstring("#{long}\0", 0)).to eq [long, long.bytesize + 1]
+    end
+
+    it 'reads the bytes a name is recorded as, whatever they mean' do
+      # Names are read as bytes, so one that is not text reads back as it was.
+      expect(cstring("\xff\xfe\0".b, 0).first).to eq "\xff\xfe".b
+    end
+
+    it 'answers with nothing where no null-byte follows' do
+      expect(cstring('abc', 0).first).to be nil
+      expect(cstring("abc\0", 4).first).to be nil
+      expect(cstring("abc\0", 99).first).to be nil
+    end
   end
 
   it 'fits!' do
