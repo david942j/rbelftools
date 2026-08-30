@@ -89,6 +89,12 @@ entries here are collected from those announcements and from the commit history.
   is nested, and a field assigned the value it already held leaves nothing behind.
   `Structs::ELFStruct.pack` is no longer how a patch is made, and is deprecated
   ([#111](https://github.com/david942j/rbelftools/pull/111))
+- A structure remembers the bytes it was read from by taking them back off the stream,
+  instead of serializing itself again from what it has just parsed. Every structure
+  elftools reads pays for that, and taking the bytes is a fraction of the cost of writing
+  them out. A stream that cannot be seeked is serialized as before, and what
+  `Structs::ELFStruct#patches` reports is unchanged
+  ([#120](https://github.com/david942j/rbelftools/pull/120))
 
 ## 2.0.0 - 2026-08-24
 
