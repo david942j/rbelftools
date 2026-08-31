@@ -63,20 +63,17 @@ module ELFTools
         module_name = mod.name.sub('ELFTools::', '')
         # if val is an integer, check if exists in mod
         if val.is_a?(Integer)
-          return val if mod.constants.any? { |c| mod.const_get(c) == val }
+          return val if values_of(mod).key?(val)
 
           raise ArgumentError, "No constants in #{module_name} is #{val}"
         end
         val = val.to_s.upcase
         prefix = module_name.split('::')[-1]
         val = "#{prefix}_#{val}" unless val.start_with?(prefix)
-        val = val.to_sym
-        # Whichever way the constant spells it, some of them keeping the case
-        # the ABI wrote them in, +SHT_GNU_verneed+ for one.
-        name = mod.constants.find { |constant| constant.to_s.upcase == val.to_s }
-        raise ArgumentError, "No constants in #{module_name} named \"#{val}\"" if name.nil?
+        value = constants_of(mod)[val]
+        raise ArgumentError, "No constants in #{module_name} named \"#{val}\"" if value.nil?
 
-        mod.const_get(name)
+        value
       end
 
       # Read from stream until reach a null-byte.
@@ -125,6 +122,33 @@ module ELFTools
             true
           end
         end
+      end
+
+      private
+
+      # What a module names each of its constants, and what each is worth.
+      #
+      # Names are compared upcased, which is how a constant keeping the case
+      # the ABI wrote it in, +SHT_GNU_verneed+ for one, is found by the name it
+      # is asked for. Read once per module, because reading them is more work
+      # than the lookup it is for.
+      # @param [Module] mod The module.
+      # @return [Hash{String => Integer}] The constants, by their upcased name.
+      def constants_of(mod)
+        (@constants_of ||= {})[mod] ||= mod.constants.each_with_object({}) do |constant, table|
+          # A constant still waiting to be autoloaded is left alone, so that
+          # asking after one never loads what nothing has asked for.
+          next if mod.autoload?(constant)
+
+          table[constant.to_s.upcase] ||= mod.const_get(constant)
+        end
+      end
+
+      # Which values a module names a constant for.
+      # @param [Module] mod The module.
+      # @return [Hash{Integer => Boolean}] The values, as the keys.
+      def values_of(mod)
+        (@values_of ||= {})[mod] ||= constants_of(mod).values.to_h { |value| [value, true] }
       end
     end
     extend ClassMethods
