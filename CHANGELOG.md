@@ -119,6 +119,13 @@ entries here are collected from those announcements and from the commit history.
   fifty times faster. The unreleased `Dynamic::HashTable#records_num_symbols?` is renamed
   to `#covers_every_symbol?`, which is the one fact both it and this rest on
   ([#123](https://github.com/david942j/rbelftools/pull/123))
+- `Util.to_constant` reads what a module names its constants once for that module,
+  instead of walking the list and upcasing every name on it again for each lookup. It is
+  what turns a symbol or a string into a number for `ELFFile#sections_by_type`,
+  `#segments_by_type`, and `Dynamic#tag_by_type`, and answers around nine times faster.
+  Asking it for a machine also no longer loads the table of machine names, which
+  `Constants::EM` keeps until something asks for a name
+  ([#124](https://github.com/david942j/rbelftools/pull/124))
 
 ## 2.0.0 - 2026-08-24
 
