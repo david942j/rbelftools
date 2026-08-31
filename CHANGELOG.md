@@ -28,7 +28,6 @@ entries here are collected from those announcements and from the commit history.
   versions the tags point at, and `VersionTables`, which reads either view. A symbol read
   from `.dynsym` answers with its version as one read from the tags does
   ([#115](https://github.com/david942j/rbelftools/pull/115))
-
 - `Sections::Symbol#version` and `#version_hidden?`, the version a symbol binds to, which
   tells `memcpy@GLIBC_2.14` from the `memcpy@GLIBC_2.2.5` of the same name. `#name` is
   left as the file records it, without the version appended
@@ -49,8 +48,7 @@ entries here are collected from those announcements and from the commit history.
 - `Constants::R.relative`, the type a machine calls a relocation that only adds the load
   bias, which every architecture defining one spells `R_<arch>_RELATIVE`
   ([#113](https://github.com/david942j/rbelftools/pull/113))
-- `Sections::Symbol#type=`
-, `#bind=`, and `#visibility=`, and `Relocation#type=` and
+- `Sections::Symbol#type=`, `#bind=`, and `#visibility=`, and `Relocation#type=` and
   `#symbol_index=`, which assign what a value means rather than the bits recording it. Each
   leaves the rest of the byte or field it shares alone, the 64-bit MIPS ABI layout and the
   machine's own half of `st_other` included, and reports a value too large for its bits
@@ -65,8 +63,7 @@ entries here are collected from those announcements and from the commit history.
   constants keeping the case an ABI wrote them in, so `sections_by_type(:gnu_verneed)`
   raised where `SHT_GNU_verneed` is what defines it
   ([#115](https://github.com/david942j/rbelftools/pull/115))
-- `Dynamic#relocations` used to pass over
- the relocations a file packs into a bitmap, the
+- `Dynamic#relocations` used to pass over the relocations a file packs into a bitmap, the
   ones `DT_RELR` points at, and answer with only the tables `DT_REL`, `DT_RELA`, and
   `DT_JMPREL` record. Of the 3780 loaded files of a current system, 557 pack some of
   theirs that way, and across those 46% of their relocations were missing from the answer,
@@ -116,8 +113,7 @@ entries here are collected from those announcements and from the commit history.
   `DT_HASH` is built over every symbol, so a file recording nothing but `DT_GNU_HASH` is
   searched as before, as is the symbol with no name, which such a table leaves out having
   nothing to be indexed by. Asking a 1.9MB libc for a name it does not record is around
-  fifty times faster. The unreleased `Dynamic::HashTable#records_num_symbols?` is renamed
-  to `#covers_every_symbol?`, which is the one fact both it and this rest on
+  fifty times faster
   ([#123](https://github.com/david942j/rbelftools/pull/123))
 - `Util.to_constant` reads what a module names its constants once for that module,
   instead of walking the list and upcasing every name on it again for each lookup. It is
