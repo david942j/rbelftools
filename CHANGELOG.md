@@ -10,7 +10,7 @@ Releases up to 1.3.1 were announced on the
 [releases page](https://github.com/david942j/rbelftools/releases) only, their
 entries here are collected from those announcements and from the commit history.
 
-## Unreleased
+## 2.1.0 - 2026-08-31
 
 ### Added
 
