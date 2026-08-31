@@ -20,10 +20,8 @@ module ELFTools
 
       # Reads the structure, remembering the bytes it was read from.
       #
-      # They are taken back off the stream rather than serialized again from
-      # what was just parsed, which costs a fraction of what serializing does
-      # and is paid by every structure that is read. A stream that cannot be
-      # seeked is serialized instead.
+      # They are taken back off the stream. A stream that cannot be seeked is
+      # serialized instead.
       # @param [#pos=, #read] io The streaming object.
       # @return [ELFTools::Structs::ELFStruct] Itself.
       def read(io)

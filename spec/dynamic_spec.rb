@@ -253,6 +253,34 @@ describe ELFTools::Dynamic do
       expect(elf('libc.so.6').dynamic.symbol_by_name('no such symbol')).to be nil
       expect(elf('amd64.elf').dynamic.symbol_by_name('no such symbol')).to be nil
     end
+
+    it 'stops at a table built over every symbol rather than searching' do
+      # DT_HASH is built over the whole symbol table, so a name it does not
+      # lead to is not one the file records and searching for it would read
+      # all 2245 symbols to answer what the table already has.
+      dynamic = elf('libc.so.6').dynamic
+      expect(dynamic.send(:hash_tables).any?(&:covers_every_symbol?)).to be true
+      expect(dynamic).not_to receive(:each_symbol)
+      expect(dynamic.symbol_by_name('no such symbol')).to be nil
+    end
+
+    it 'searches for the symbol that has no name' do
+      # It is the one symbol such a table leaves out, having nothing to be
+      # indexed by, so it is still searched for.
+      dynamic = elf('libc.so.6').dynamic
+      expect(dynamic.send(:hash_tables).any?(&:covers_every_symbol?)).to be true
+      expect(dynamic).to receive(:each_symbol).at_least(:once).and_call_original
+      expect(dynamic.symbol_by_name('').value).to eq 0
+    end
+
+    it 'still searches where no table is built over every symbol' do
+      # The GNU table only indexes the defined symbols a file exports, so a
+      # name it does not lead to may still be in the table.
+      dynamic = elf('amd64.elf').dynamic
+      expect(dynamic.send(:hash_tables).any?(&:covers_every_symbol?)).to be false
+      expect(dynamic).to receive(:each_symbol).at_least(:once).and_call_original
+      expect(dynamic.symbol_by_name('no such symbol')).to be nil
+    end
   end
 
   describe 'broken DT_STRTAB' do
