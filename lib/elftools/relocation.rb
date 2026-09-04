@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/structs'
 require 'elftools/util'
 
 module ELFTools
@@ -8,20 +9,31 @@ module ELFTools
   #
   # Can be either a REL or RELA relocation.
   class Relocation
-    attr_reader :header # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] Rel(a) header.
     attr_reader :stream # @return [#pos=, #read] Streaming object.
 
     # Instantiate a {Relocation} object.
-    # @param [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] header
-    #   The relocation header.
+    # @param [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela, ELFTools::Structs::Fields] header
+    #   The relocation header, or what the file records in one.
+    #   {ELFTools::Structs::Fields} answers what the relocation records until
+    #   something asks for {#header} itself, which builds the structure then.
     # @param [#pos=, #read] stream The streaming object.
     # @param [Integer] machine
     #   The machine of the ELF file, which decides what {#type} means and how
     #   {#header} records it.
     def initialize(header, stream, machine: nil)
-      @header = header
+      @fields = header.is_a?(Structs::Fields) ? header : Structs::Fields.of(header)
       @stream = stream
       @machine = machine
+    end
+
+    # The structure the file records this relocation in.
+    #
+    # One is built here for a relocation read without it, which is what
+    # assigning to a field of one needs and what {ELFTools::ELFFile#patches}
+    # reports the changes of.
+    # @return [ELFTools::Structs::ELF_Rel, ELFTools::Structs::ELF_Rela] The structure.
+    def header
+      @fields.struct
     end
 
     # Which symbol this relocation is against, as an index into the symbol
@@ -44,7 +56,7 @@ module ELFTools
     # @example
     #   relocation.symbol_index = 3
     def symbol_index=(index)
-      header.r_info = info_of(Util.fits!(index, index_bits, 'Symbol index'), type)
+      @fields[:r_info] = info_of(Util.fits!(index, index_bits, 'Symbol index'), type)
     end
 
     # Sets what this relocation does.
@@ -53,7 +65,7 @@ module ELFTools
     # @example
     #   relocation.type = ELFTools::Constants::R::X86_64::R_X86_64_JUMP_SLOT
     def type=(type)
-      header.r_info = info_of(symbol_index, Util.fits!(type, type_bits, 'Relocation type'))
+      @fields[:r_info] = info_of(symbol_index, Util.fits!(type, type_bits, 'Relocation type'))
     end
 
     # The name of {#type}.
@@ -83,8 +95,8 @@ module ELFTools
     # ABI keeps for itself as they were.
     # @return [Integer] The +r_info+.
     def mips64_info_of(index, type)
-      info = header.r_info.to_i
-      return (index << 32) | (info & 0xffff_ff00) | type if header.class.self_endian == :big
+      info = @fields[:r_info]
+      return (index << 32) | (info & 0xffff_ff00) | type if @fields.endian == :big
 
       (info & 0x00ff_ffff_0000_0000) | (type << 56) | index
     end
@@ -92,7 +104,7 @@ module ELFTools
     # How many bits record a symbol index.
     # @return [Integer] The number.
     def index_bits
-      mips64? ? 32 : (header.elf_class - mask_bit)
+      mips64? ? 32 : (@fields.elf_class - mask_bit)
     end
 
     # How many bits record a relocation type.
@@ -108,14 +120,15 @@ module ELFTools
     def sym_and_type
       return mips64_sym_and_type if mips64?
 
-      [header.r_info >> mask_bit, header.r_info & ((1 << mask_bit) - 1)]
+      info = @fields[:r_info]
+      [info >> mask_bit, info & ((1 << mask_bit) - 1)]
     end
 
     # Whether the file records relocations the way the 64-bit MIPS ABI does,
     # which is the one layout that departs from halving +r_info+.
     # @return [Boolean] The answer.
     def mips64?
-      @machine == Constants::EM_MIPS && header.elf_class == 64
+      @machine == Constants::EM_MIPS && @fields.elf_class == 64
     end
 
     # Reads +r_info+ as the 64-bit MIPS ABI records it, i.e. a symbol index of
@@ -131,14 +144,14 @@ module ELFTools
     #   0x0718050000000008 #=> [8, 7]
     # @return [Array(Integer, Integer)] The symbol index and the type.
     def mips64_sym_and_type
-      info = header.r_info.to_i
-      return [info >> 32, info & 0xff] if header.class.self_endian == :big
+      info = @fields[:r_info]
+      return [info >> 32, info & 0xff] if @fields.endian == :big
 
       [info & 0xffff_ffff, info >> 56]
     end
 
     def mask_bit
-      header.elf_class == 32 ? 8 : 32
+      @fields.elf_class == 32 ? 8 : 32
     end
   end
 end

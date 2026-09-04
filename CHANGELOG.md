@@ -16,13 +16,27 @@ entries here are collected from those announcements and from the commit history.
 
 - `Structs::ELFStruct.unpack_fields`, what the fields of a structure record read
   straight from the bytes recording them, and `.num_bytes`, how many bytes a structure
-  of a kind takes. `Structs::Fields` is what a structure the file records at an offset
+  of a kind takes. Both read a field of whichever width the class of the file makes it
+  and a field recording a sign, and say so rather than answer for a structure of
+  anything else. `Structs::Fields` is what a structure the file records at an offset
   holds, and builds the structure itself for whatever asks for one, which is what
-  assigning to a field takes
-  ([#127](https://github.com/david942j/rbelftools/pull/127))
+  assigning to a field takes; `Structs::Fields.from` holds what a file states some other
+  way than by recording a structure of it
+  ([#127](https://github.com/david942j/rbelftools/pull/127),
+  [#129](https://github.com/david942j/rbelftools/pull/129))
 
 ### Changed
 
+- Reading a relocation unpacks what the file records straight from the bytes recording
+  it, as reading a symbol does, and the relocations a file packs into a bitmap are made
+  without a structure each as well. One is built only for a caller that asks a relocation
+  for its `header`. The 1179 relocations of a libc cost 8 objects each rather than 179
+  and are read around 24 times faster, the tables the file records entry by entry and the
+  bitmap alike. `Dynamic#num_symbols` reads every relocation where no hash table counts
+  the symbols, which most files leave to `DT_GNU_HASH`, so reading the symbols of such a
+  file is four times faster again: 0.28s for a libc's 3103 symbols in 2.1.0, 0.08s once
+  the symbols alone were unpacked, 0.02s now. What is read is unchanged, relocation for
+  relocation ([#129](https://github.com/david942j/rbelftools/pull/129))
 - Reading a symbol unpacks what the file records straight from the bytes recording it,
   instead of building a structure for every symbol of a table. Setting up the fields of a
   structure is most of what one costs, and only a caller that asks a symbol for its

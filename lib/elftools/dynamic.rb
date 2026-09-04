@@ -176,30 +176,12 @@ module ELFTools
       # An entry takes what its structure takes. DT_RELAENT and DT_RELENT
       # record the same number, which a file has no way of disagreeing with
       # and every file here agrees with.
-      entsize = struct(klass).num_bytes
+      elf_class = header.elf_class
+      entsize = klass.num_bytes(elf_class: elf_class, endian: endian)
       Array.new(size.header.d_val.to_i / entsize) do |i|
-        Relocation.new(read_struct(klass, offset + (i * entsize)), stream, machine: @machine)
+        fields = Structs::Fields.new(klass, stream, offset + (i * entsize), elf_class: elf_class, endian: endian)
+        Relocation.new(fields, stream, machine: @machine)
       end
-    end
-
-    # A structure of the endianness and the class the file records it in.
-    # @param [Class] klass The structure class.
-    # @return [ELFTools::Structs::ELFStruct] The structure, before it is read.
-    def struct(klass)
-      struct = klass.new(endian:)
-      struct.elf_class = header.elf_class
-      struct
-    end
-
-    # Reads a structure the file records at a file offset.
-    # @param [Class] klass The structure class.
-    # @param [Integer] offset The file offset.
-    # @return [ELFTools::Structs::ELFStruct] The structure.
-    def read_struct(klass, offset)
-      struct = struct(klass)
-      struct.offset = offset
-      stream.pos = offset
-      struct.read(stream)
     end
 
     # The file offset the address a tag records points at.

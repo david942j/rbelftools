@@ -17,11 +17,22 @@ module ELFTools
         { selection: :elf_class, choices: { 32 => :"#{t}32", 64 => :"#{t}64" }, copy_on_change: true }
       end
 
-      # How an unsigned integer of each width is packed, for +String#unpack+.
+      # How an integer of each width is packed, for +String#unpack+, whether it
+      # records a sign or not.
       UNPACK_TEMPLATES = {
-        little: { 1 => 'C', 2 => 'v', 4 => 'V', 8 => 'Q<' },
-        big: { 1 => 'C', 2 => 'n', 4 => 'N', 8 => 'Q>' }
+        little: {
+          false => { 1 => 'C', 2 => 'v', 4 => 'V', 8 => 'Q<' },
+          true => { 1 => 'c', 2 => 's<', 4 => 'l<', 8 => 'q<' }
+        },
+        big: {
+          false => { 1 => 'C', 2 => 'n', 4 => 'N', 8 => 'Q>' },
+          true => { 1 => 'c', 2 => 's>', 4 => 'l>', 8 => 'q>' }
+        }
       }.freeze
+
+      # Bytes of set bits to read a prototype from, longer than any structure
+      # here, so that reading one never runs short of them.
+      SET_BITS = ("\xff" * 256).b.freeze
 
       attr_accessor :elf_class # @return [Integer] 32 or 64.
       attr_accessor :offset # @return [Integer] The file offset of this header.
@@ -126,30 +137,34 @@ module ELFTools
         # is remembered of the bytes, so a caller that means to assign to a
         # field wants a structure instead.
         # @param [String] bytes The bytes a structure is recorded in.
+        # @param [Integer] elf_class 32 or 64, which decides how wide the fields recording an address are.
         # @param [:little, :big] endian The endianness the file records it in.
         # @return [Hash{Symbol => Integer}] Each field, and what it records.
-        # @raise [ELFTools::ELFError] If this is not a structure of unsigned integers.
+        # @raise [ELFTools::ELFError] If this is not a structure of integers.
         # @example
-        #   ELF64_sym.unpack_fields(bytes, :little)
+        #   ELF64_sym.unpack_fields(bytes, elf_class: 64, endian: :little)
         #   #=> { st_name: 1, st_info: 18, st_other: 0, st_shndx: 15, st_value: 4198864, st_size: 101 }
-        def unpack_fields(bytes, endian)
-          values = bytes.unpack(unpack_template(endian))
+        def unpack_fields(bytes, elf_class:, endian:)
+          values = bytes.unpack(unpack_template(elf_class, endian))
           fields = {}
           # Paired by hand rather than zipped, which would make an array for
           # every field of every structure read.
-          field_names(endian).each_with_index { |name, i| fields[name] = values[i] }
+          field_names(elf_class, endian).each_with_index { |name, i| fields[name] = values[i] }
           fields
         end
 
         # How many bytes a structure of this kind takes.
+        # @param [Integer] elf_class 32 or 64, which decides how wide the fields recording an address are.
         # @param [:little, :big] endian The endianness the file records it in.
         # @return [Integer] The number.
         # @example
-        #   ELF64_sym.num_bytes(:little)
+        #   ELF64_sym.num_bytes(elf_class: 64, endian: :little)
         #   #=> 24
-        def num_bytes(endian)
+        def num_bytes(elf_class:, endian:)
           @num_bytes ||= {}
-          @num_bytes[endian] ||= prototype(endian).num_bytes
+          # Nested rather than keyed by the pair, which would make an array of
+          # it for every structure read.
+          (@num_bytes[elf_class] ||= {})[endian] ||= prototype(elf_class, endian).num_bytes
         end
 
         # Packs an integer to string.
@@ -175,45 +190,56 @@ module ELFTools
 
         private
 
-        # A structure of this kind, to read the layout off.
+        # A structure of this kind with every bit of it set, which the layout is
+        # read off: how wide each field is, and whether it records a sign.
         #
-        # Every structure of a kind is laid out alike, so one is built for the
-        # kind rather than for each question asked about it.
+        # Every structure of a kind and a class is laid out alike, so one is
+        # built for the kind rather than for each question asked about it.
+        # @param [Integer] elf_class 32 or 64, which decides how wide the fields recording an address are.
         # @param [:little, :big] endian The endianness the file records it in.
         # @return [ELFTools::Structs::ELFStruct] The structure.
-        def prototype(endian)
+        def prototype(elf_class, endian)
           @prototypes ||= {}
-          @prototypes[endian] ||= new(endian: endian)
+          (@prototypes[elf_class] ||= {})[endian] ||= begin
+            struct = new(endian: endian)
+            struct.elf_class = elf_class
+            struct.read(SET_BITS)
+          end
         end
 
         # What the fields of this structure are named, in the order they are
         # recorded.
+        # @param [Integer] elf_class 32 or 64, which decides how wide the fields recording an address are.
         # @param [:little, :big] endian The endianness the file records it in.
         # @return [Array<Symbol>] The names.
-        def field_names(endian)
+        def field_names(elf_class, endian)
           @field_names ||= {}
-          @field_names[endian] ||= prototype(endian).field_names
+          (@field_names[elf_class] ||= {})[endian] ||= prototype(elf_class, endian).field_names
         end
 
         # How the fields of this structure are packed, as a template for
         # +String#unpack+.
+        # @param [Integer] elf_class 32 or 64, which decides how wide the fields recording an address are.
         # @param [:little, :big] endian The endianness the file records it in.
         # @return [String] The template.
-        def unpack_template(endian)
+        def unpack_template(elf_class, endian)
           @unpack_templates ||= {}
-          @unpack_templates[endian] ||=
-            prototype(endian).each_pair.map { |_, field| field_template(field, endian) }.join
+          (@unpack_templates[elf_class] ||= {})[endian] ||=
+            prototype(elf_class, endian).each_pair.map { |_, field| field_template(field, endian) }.join
         end
 
-        # How one field is packed.
-        # @param [BinData::Base] field The field.
+        # How one field is packed, which is its width and whether what it read
+        # from a field of set bits came back negative.
+        # @param [BinData::Base] field The field, read from bits that are all set.
         # @param [:little, :big] endian The endianness the file records it in.
         # @return [String] The template.
-        # @raise [ELFTools::ELFError] If the field is not an unsigned integer of 1, 2, 4, or 8 bytes.
+        # @raise [ELFTools::ELFError] If the field is not an integer of 1, 2, 4, or 8 bytes.
         def field_template(field, endian)
-          width = field.num_bytes if field.is_a?(BinData::BasePrimitive)
-          UNPACK_TEMPLATES.fetch(endian)[width] ||
-            raise(ELFError, format('%s is not a structure of unsigned integers', name))
+          width = field.num_bytes
+          template = UNPACK_TEMPLATES.fetch(endian)
+          raise ELFError, format('%s is not a structure of integers', name) unless template[false].key?(width)
+
+          template.fetch(field.to_i.negative?)[width]
         end
       end
     end
@@ -223,9 +249,37 @@ module ELFTools
     #
     # Reading a table of structures costs a structure for every entry of it
     # otherwise, and setting up the fields of one is most of what it costs.
-    # {#to_struct} builds one for whatever wants the structure itself, which
-    # is what assigning to a field takes.
+    # {#struct} builds one for whatever wants the structure itself, which
+    # is what assigning to a field takes, and what is assigned is answered
+    # with from then on.
     class Fields
+      attr_reader :elf_class # @return [Integer] 32 or 64.
+      attr_reader :endian # @return [:little, :big] The endianness the file records it in.
+
+      # What a structure already built holds, for a caller that has one.
+      # @param [ELFTools::Structs::ELFStruct] struct The structure.
+      # @return [ELFTools::Structs::Fields] The fields.
+      def self.of(struct)
+        allocate.tap { |fields| fields.send(:built_from, struct) }
+      end
+
+      # Fields nothing in the file records, for what a file states some other
+      # way than by recording a structure of it.
+      #
+      # There is nothing to read and nothing to patch, so a structure is only
+      # built if something asks for one, and is built from these.
+      # @param [Class] klass The structure class.
+      # @param [Hash{Symbol => Integer}] fields What each field is to record.
+      # @param [Integer] elf_class 32 or 64.
+      # @param [:little, :big] endian The endianness the file records it in.
+      # @param [Integer] offset Where in the file this came from.
+      # @return [ELFTools::Structs::Fields] The fields.
+      # @example
+      #   Fields.from(ELF_Rel, { r_offset: 0x1000 }, elf_class: 64, endian: :little, offset: 0x40)
+      def self.from(klass, fields, elf_class:, endian:, offset:)
+        allocate.tap { |made| made.send(:made_of, klass, fields, elf_class, endian, offset) }
+      end
+
       # @param [Class] klass The structure class.
       # @param [#pos=, #read] stream The streaming object.
       # @param [Integer] offset The file offset the structure is recorded at.
@@ -242,36 +296,101 @@ module ELFTools
       end
 
       # What one field of the structure records.
+      #
+      # The structure answers once there is one, so that a field assigned to
+      # reads back as it was assigned.
       # @param [Symbol] name The name of the field.
       # @return [Integer] The value.
       # @example
       #   fields[:st_value]
       #   #=> 4198864
       def [](name)
+        return @struct[name].to_i if @struct
+
         @fields[name]
       end
 
-      # The structure itself, read again from where the file records it.
+      # Assigns to one field.
+      #
+      # The structure takes the assignment wherever the file records one, so
+      # that {ELFTools::ELFFile#patches} reports it. Fields the file records
+      # no structure of take it themselves, there being nothing to patch.
+      # @param [Symbol] name The name of the field.
+      # @param [Integer] value What it is to record.
+      # @return [void]
+      def []=(name, value)
+        if @struct.nil? && @stream.nil?
+          @fields[name] = value
+        else
+          struct[name] = value
+        end
+      end
+
+      # The structure itself, read from where the file records it, or built
+      # from these fields where it records none.
+      #
+      # The same one however often it is asked for, so that assigning to a
+      # field of it is not forgotten.
       # @return [ELFTools::Structs::ELFStruct] The structure.
-      def to_struct
-        struct = @klass.new(endian: @endian, offset: @offset)
-        struct.elf_class = @elf_class
+      def struct
+        @struct ||= @stream.nil? ? build : read
+      end
+
+      private
+
+      # Takes a structure that is already built as what these fields hold.
+      # @param [ELFTools::Structs::ELFStruct] struct The structure.
+      # @return [void]
+      def built_from(struct)
+        @struct = struct
+        @elf_class = struct.elf_class
+        @endian = struct.class.self_endian
+      end
+
+      # Takes fields nothing in the file records a structure of.
+      # @return [void]
+      def made_of(klass, fields, elf_class, endian, offset)
+        @klass = klass
+        @fields = fields
+        @elf_class = elf_class
+        @endian = endian
+        @offset = offset
+      end
+
+      # The structure the file records, read from where it records it.
+      # @return [ELFTools::Structs::ELFStruct] The structure.
+      def read
+        struct = new_struct
         @stream.pos = @offset
         struct.read(@stream)
       end
 
-      private
+      # A structure holding what these fields hold, for fields the file
+      # records no structure of.
+      # @return [ELFTools::Structs::ELFStruct] The structure.
+      def build
+        new_struct.tap { |struct| @fields.each { |name, value| struct[name] = value } }
+      end
+
+      # A structure of this kind, of the class and the order of the file, and
+      # of where in it this came from.
+      # @return [ELFTools::Structs::ELFStruct] The structure.
+      def new_struct
+        struct = @klass.new(endian: @endian, offset: @offset)
+        struct.elf_class = @elf_class
+        struct
+      end
 
       # What the fields record, read from the bytes recording them.
       # @return [Hash{Symbol => Integer}] Each field, and what it records.
       # @raise [EOFError] If the file does not reach that far, as reading the structure itself does.
       def unpack
-        num_bytes = @klass.num_bytes(@endian)
+        num_bytes = @klass.num_bytes(elf_class: @elf_class, endian: @endian)
         @stream.pos = @offset
         bytes = @stream.read(num_bytes)
         raise EOFError, 'End of file reached' if bytes.nil? || bytes.bytesize < num_bytes
 
-        @klass.unpack_fields(bytes, @endian)
+        @klass.unpack_fields(bytes, elf_class: @elf_class, endian: @endian)
       end
     end
 

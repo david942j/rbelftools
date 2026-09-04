@@ -58,34 +58,79 @@ describe ELFTools::Structs::ELFStruct do
   end
 
   describe '.unpack_fields' do
-    it 'reads what the structure reads, of either class and in either order' do
-      %w[amd64.elf i386.elf mips.o mips64.o].each do |name|
-        elf = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
-        symtab = elf.section_by_name('.symtab')
-        klass = ELFTools::Structs::ELF_sym[elf.elf_class]
-        expect(symtab.num_symbols).to be_positive
-        symtab.num_symbols.times do |n|
-          elf.stream.pos = symtab.header.sh_offset + (n * symtab.header.sh_entsize)
-          bytes = elf.stream.read(klass.num_bytes(elf.endian))
-          struct = klass.new(endian: elf.endian)
-          struct.read(StringIO.new(bytes))
-          expect(klass.unpack_fields(bytes, elf.endian)).to eq struct.snapshot
-        end
+    # Which structure a table records, for the tables elftools reads entry by
+    # entry.
+    def entry_class(section, elf)
+      case section.header.sh_type.to_i
+      when ELFTools::Constants::SHT_SYMTAB, ELFTools::Constants::SHT_DYNSYM
+        ELFTools::Structs::ELF_sym[elf.elf_class]
+      when ELFTools::Constants::SHT_REL then ELFTools::Structs::ELF_Rel
+      when ELFTools::Constants::SHT_RELA then ELFTools::Structs::ELF_Rela
+      when ELFTools::Constants::SHT_DYNAMIC then ELFTools::Structs::ELF_Dyn
       end
     end
 
-    it 'reports a structure that is not one of unsigned integers' do
-      # e_ident is a structure of its own and the fields recording addresses
-      # are of whichever width the class of the file makes them.
-      expect { ELFTools::Structs::ELF_Ehdr.unpack_fields('x' * 64, :little) }
-        .to raise_error(ELFTools::ELFError, 'ELFTools::Structs::ELF_Ehdr is not a structure of unsigned integers')
+    # What the structure reads from the same bytes, which is what the file
+    # says they hold.
+    def read_with_bindata(klass, bytes, elf)
+      struct = klass.new(endian: elf.endian)
+      struct.elf_class = elf.elf_class
+      struct.read(StringIO.new(bytes))
+      struct.snapshot
+    end
+
+    it 'reads what the structure reads, of either class and in either order' do
+      read = 0
+      %w[amd64.elf i386.elf arm.elf mips.o mips64.o ppc64.elf riscv64.elf aarch64.elf libc.so.6].each do |name|
+        elf = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
+        elf.sections.each do |section|
+          klass = entry_class(section, elf)
+          next if klass.nil?
+
+          entsize = section.header.sh_entsize.to_i
+          (section.header.sh_size.to_i / entsize).times do |n|
+            elf.stream.pos = section.header.sh_offset.to_i + (n * entsize)
+            bytes = elf.stream.read(klass.num_bytes(elf_class: elf.elf_class, endian: elf.endian))
+            expect(klass.unpack_fields(bytes, elf_class: elf.elf_class, endian: elf.endian))
+              .to eq read_with_bindata(klass, bytes, elf)
+            read += 1
+          end
+        end
+      end
+      # Symbols, relocations of both kinds, and tags, of both classes and both
+      # byte orders.
+      expect(read).to be > 1000
+    end
+
+    it 'reads a field recording a sign as one, and one recording none as none' do
+      # An addend is the one field of a relocation that records a sign, so
+      # every bit of it set is -1 where the same bits of an offset are not.
+      rela = ELFTools::Structs::ELF_Rela
+      expect(rela.unpack_fields("\xff" * 24, elf_class: 64, endian: :little))
+        .to eq({ r_offset: 0xffff_ffff_ffff_ffff, r_info: 0xffff_ffff_ffff_ffff, r_addend: -1 })
+      expect(rela.unpack_fields([8, 5, -16].pack('Q<Q<q<'), elf_class: 64, endian: :little))
+        .to eq({ r_offset: 8, r_info: 5, r_addend: -16 })
+      expect(rela.unpack_fields([8, 5, -16].pack('Q>Q>q>'), elf_class: 64, endian: :big))
+        .to eq({ r_offset: 8, r_info: 5, r_addend: -16 })
+      # A tag records one as well, of a width the class of the file decides.
+      expect(ELFTools::Structs::ELF_Dyn.unpack_fields([-3, 9].pack('l<L<'), elf_class: 32, endian: :little))
+        .to eq({ d_tag: -3, d_val: 9 })
+    end
+
+    it 'reports a structure that is not one of integers' do
+      # e_ident is a structure of its own, which nothing here unpacks.
+      expect { ELFTools::Structs::ELF_Ehdr.unpack_fields('x' * 64, elf_class: 64, endian: :little) }
+        .to raise_error(ELFTools::ELFError, 'ELFTools::Structs::ELF_Ehdr is not a structure of integers')
     end
   end
 
   describe '.num_bytes' do
     it 'is how many bytes a structure of the kind takes' do
-      expect(ELFTools::Structs::ELF32_sym.num_bytes(:little)).to be 16
-      expect(ELFTools::Structs::ELF64_sym.num_bytes(:big)).to be 24
+      expect(ELFTools::Structs::ELF32_sym.num_bytes(elf_class: 32, endian: :little)).to be 16
+      expect(ELFTools::Structs::ELF64_sym.num_bytes(elf_class: 64, endian: :big)).to be 24
+      # The fields recording an address are as wide as the class of the file.
+      expect(ELFTools::Structs::ELF_Rela.num_bytes(elf_class: 32, endian: :little)).to be 12
+      expect(ELFTools::Structs::ELF_Rela.num_bytes(elf_class: 64, endian: :little)).to be 24
     end
   end
 

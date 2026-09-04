@@ -52,6 +52,20 @@ describe ELFTools::Relocation do
     expect(little.header.r_info.to_i).to eq 0x0518_0500_0000_0009
   end
 
+  it 'takes a structure a caller has built itself' do
+    # What {Relocation.new} has always taken, kept working for whoever builds
+    # a relocation of their own rather than reading one out of a file.
+    struct = ELFTools::Structs::ELF_Rela.new(endian: :little)
+    struct.elf_class = 64
+    struct.r_info = (3 << 32) | 7
+    rel = ELFTools::Relocation.new(struct, nil, machine: ELFTools::Constants::EM_X86_64)
+    expect([rel.symbol_index, rel.type, rel.type_name]).to eq [3, 7, 'R_X86_64_JUMP_SLOT']
+    expect(rel.header).to equal struct
+    # Assigning reaches the very structure it was given.
+    rel.type = ELFTools::Constants::R::X86_64::R_X86_64_GLOB_DAT
+    expect(struct.r_info.to_i).to eq((3 << 32) | ELFTools::Constants::R::X86_64::R_X86_64_GLOB_DAT)
+  end
+
   it 'reports a value the bits recording it cannot hold' do
     # A 32-bit file leaves a type one byte and a symbol index the other three.
     rel = relocations('i386.elf').first
