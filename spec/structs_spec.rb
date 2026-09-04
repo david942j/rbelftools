@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'stringio'
+
 require 'elftools/elf_file'
 
 describe ELFTools::Structs::ELFStruct do
@@ -52,6 +54,38 @@ describe ELFTools::Structs::ELFStruct do
 
     it 'reports nothing for a structure that was never read' do
       expect(ELFTools::Structs::ELF_Dyn.new(endian: :little).patches).to eq({})
+    end
+  end
+
+  describe '.unpack_fields' do
+    it 'reads what the structure reads, of either class and in either order' do
+      %w[amd64.elf i386.elf mips.o mips64.o].each do |name|
+        elf = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
+        symtab = elf.section_by_name('.symtab')
+        klass = ELFTools::Structs::ELF_sym[elf.elf_class]
+        expect(symtab.num_symbols).to be_positive
+        symtab.num_symbols.times do |n|
+          elf.stream.pos = symtab.header.sh_offset + (n * symtab.header.sh_entsize)
+          bytes = elf.stream.read(klass.num_bytes(elf.endian))
+          struct = klass.new(endian: elf.endian)
+          struct.read(StringIO.new(bytes))
+          expect(klass.unpack_fields(bytes, elf.endian)).to eq struct.snapshot
+        end
+      end
+    end
+
+    it 'reports a structure that is not one of unsigned integers' do
+      # e_ident is a structure of its own and the fields recording addresses
+      # are of whichever width the class of the file makes them.
+      expect { ELFTools::Structs::ELF_Ehdr.unpack_fields('x' * 64, :little) }
+        .to raise_error(ELFTools::ELFError, 'ELFTools::Structs::ELF_Ehdr is not a structure of unsigned integers')
+    end
+  end
+
+  describe '.num_bytes' do
+    it 'is how many bytes a structure of the kind takes' do
+      expect(ELFTools::Structs::ELF32_sym.num_bytes(:little)).to be 16
+      expect(ELFTools::Structs::ELF64_sym.num_bytes(:big)).to be 24
     end
   end
 
