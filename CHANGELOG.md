@@ -12,6 +12,15 @@ entries here are collected from those announcements and from the commit history.
 
 ## Unreleased
 
+### Added
+
+- `Structs::ELFStruct.unpack_fields`, what the fields of a structure record read
+  straight from the bytes recording them, and `.num_bytes`, how many bytes a structure
+  of a kind takes. `Structs::Fields` is what a structure the file records at an offset
+  holds, and builds the structure itself for whatever asks for one, which is what
+  assigning to a field takes
+  ([#127](https://github.com/david942j/rbelftools/pull/127))
+
 ### Changed
 
 - Reading a symbol unpacks what the file records straight from the bytes recording it,
@@ -20,10 +29,8 @@ entries here are collected from those announcements and from the commit history.
   `header` needs one, which is built then and answers as it always did. Reading the 3103
   symbols of a libc costs 10 objects a symbol rather than 203 and is around 15 times
   faster, through the tags and through the sections alike, and what is read is unchanged,
-  name for name and value for value. `Structs::ELFStruct.unpack_fields` is what reads a
-  structure's fields that way, and `Structs::Fields` is what a symbol holds until it is
-  asked for a structure. A symbol read through the sections now records the class of the
-  file it was read from, as one read through the tags already did
+  name for name and value for value. A symbol read through the sections now records the
+  class of the file it was read from, as one read through the tags already did
   ([#127](https://github.com/david942j/rbelftools/pull/127))
 
 ## 2.1.0 - 2026-08-31
