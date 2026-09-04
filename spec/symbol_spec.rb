@@ -123,6 +123,42 @@ describe ELFTools::Sections::Symbol do
     expect(helper.section_index).to be 2
   end
 
+  it 'reads what a symbol records without building a structure for it' do
+    # A structure of its own for every symbol costs over a hundred objects
+    # each, which is what reading a table of them used to be spent on.
+    dynsym = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', 'libc.so.6'))).section_by_name('.dynsym')
+    expect(dynsym.num_symbols).to be > 100
+    before = GC.stat(:total_allocated_objects)
+    dynsym.symbols.each(&:value)
+    expect(GC.stat(:total_allocated_objects) - before).to be < (50 * dynsym.num_symbols)
+  end
+
+  it 'builds the structure whatever asks for one asks of it' do
+    symtab = own_symtab
+    index = symtab.symbols.index { |sym| sym.name == 'main' }
+    sym = symtab.symbol_at(index)
+    expect(sym.header).to be_a ELFTools::Structs::ELFStruct
+    # The same one however often it is asked for, so that assigning to a field
+    # of it is not forgotten.
+    expect(sym.header).to equal sym.header
+    expect([sym.header.st_value.to_i, sym.header.st_size.to_i]).to eq [sym.value, sym.size]
+    # Where the file records it, which is what a patch of it is measured from.
+    expect(sym.header.offset).to eq symtab.header.sh_offset + (index * symtab.header.sh_entsize)
+    expect(sym.header.elf_class).to be 64
+  end
+
+  it 'reads the same symbols through the tags as through the sections' do
+    # The two paths read the same table, of whichever class and order.
+    read = ->(sym) { [sym.name, sym.value, sym.type, sym.bind, sym.section_index] }
+    %w[amd64.elf i386.elf aarch64.elf ppc64.elf].each do |name|
+      elf = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', name)))
+      through_tags = elf.dynamic.symbols.map(&read)
+      through_sections = elf.section_by_name('.dynsym').symbols.map(&read)
+      expect(through_tags).not_to be_empty
+      expect(through_tags).to eq through_sections.first(through_tags.size)
+    end
+  end
+
   it 'size' do
     expect(@symtab.symbol_by_name('main').size).to be 142
     # A symbol the file records no size for, of which every file has some.

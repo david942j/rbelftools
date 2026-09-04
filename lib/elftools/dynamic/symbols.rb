@@ -29,11 +29,11 @@ module ELFTools
         return if n.negative?
 
         @symbol_at_map ||= {}
-        @symbol_at_map[n] ||= begin
-          sym = read_struct(Structs::ELF_sym[header.elf_class], sym_offset + (n * sym_entsize))
-          Sections::Symbol.new(sym, stream, symstr: method(:string_table), machine: @machine,
-                                            version: -> { version_at(n) })
-        end
+        @symbol_at_map[n] ||= Sections::Symbol.new(
+          Structs::Fields.new(Structs::ELF_sym[header.elf_class], stream, sym_offset + (n * sym_entsize),
+                              elf_class: header.elf_class, endian: endian),
+          stream, symstr: string_table_reader, machine: @machine, version: -> { version_at(n) }
+        )
       end
 
       # How many symbols the tags reach.
@@ -154,7 +154,14 @@ module ELFTools
       # has no way of disagreeing with.
       # @return [Integer] The number.
       def sym_entsize
-        @sym_entsize ||= struct(Structs::ELF_sym[header.elf_class]).num_bytes
+        @sym_entsize ||= Structs::ELF_sym[header.elf_class].num_bytes(endian)
+      end
+
+      # What reads the table these symbols are named in, kept so that reading
+      # a table of them does not make one for every symbol.
+      # @return [Method] The method.
+      def string_table_reader
+        @string_table_reader ||= method(:string_table)
       end
 
       # Get the +DT_SYMTAB+'s +d_val+ offset related to file.

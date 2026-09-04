@@ -1,18 +1,20 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/structs'
 require 'elftools/util'
 
 module ELFTools
   module Sections
     # Class of symbol.
     class Symbol
-      attr_reader :header # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] Section header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
 
       # Instantiate a {ELFTools::Sections::Symbol} object.
-      # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] header
-      #   The symbol header.
+      # @param [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym, ELFTools::Structs::Fields] header
+      #   The symbol header, or what the file records in one. {ELFTools::Structs::Fields}
+      #   answers what the symbol records until something asks for {#header}
+      #   itself, which builds the structure then.
       # @param [#pos=, #read] stream The streaming object.
       # @param [ELFTools::Sections::StrTabSection, Proc] symstr
       #   The symbol string section.
@@ -31,10 +33,21 @@ module ELFTools
         @version = version
       end
 
+      # The structure the file records this symbol in.
+      #
+      # One is built here for a symbol read without it, which is what assigning
+      # to a field of a symbol needs and what {ELFTools::ELFFile#patches}
+      # reports the changes of.
+      # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] The structure.
+      def header
+        @header = @header.to_struct if @header.is_a?(Structs::Fields)
+        @header
+      end
+
       # Return the symbol name.
       # @return [String] The name.
       def name
-        @name ||= @symstr.call.name_at(header.st_name)
+        @name ||= @symstr.call.name_at(field(:st_name))
       end
 
       # The version this symbol binds to.
@@ -70,7 +83,7 @@ module ELFTools
       #   elf.section_by_name('.symtab').symbol_by_name('main').value
       #   #=> 4196061 # 0x4006dd
       def value
-        header.st_value.to_i
+        field(:st_value)
       end
 
       # How many bytes what this symbol names takes.
@@ -79,7 +92,7 @@ module ELFTools
       #   elf.section_by_name('.symtab').symbol_by_name('main').size
       #   #=> 142
       def size
-        header.st_size.to_i
+        field(:st_size)
       end
 
       # What kind of entity this symbol refers to.
@@ -90,7 +103,7 @@ module ELFTools
       #   symbol.type == ELFTools::Constants::STT_FUNC
       #   #=> true
       def type
-        header.st_info & 0xf
+        field(:st_info) & 0xf
       end
 
       # Sets what kind of entity this symbol refers to.
@@ -122,7 +135,7 @@ module ELFTools
       #   symbol.bind == ELFTools::Constants::STB_GLOBAL
       #   #=> true
       def bind
-        header.st_info >> 4
+        field(:st_info) >> 4
       end
 
       # Sets how this symbol is linked against others with the same name.
@@ -152,7 +165,7 @@ module ELFTools
       #   symbol.visibility == ELFTools::Constants::STV_HIDDEN
       #   #=> true
       def visibility
-        header.st_other & 0x3
+        field(:st_other) & 0x3
       end
 
       # Sets how this symbol is accessed once it becomes part of an executable
@@ -177,6 +190,19 @@ module ELFTools
         Constants::STV.mapping(@machine, visibility)
       end
 
+      # What the file records in one of this symbol's fields.
+      #
+      # A structure answers wherever there is one, so that a field assigned to
+      # reads back as it was assigned.
+      # @param [Symbol] name The name of the field.
+      # @return [Integer] What it records.
+      def field(name)
+        return @header[name] if @header.is_a?(Structs::Fields)
+
+        header[name].to_i
+      end
+      private :field
+
       # The version this symbol binds to, whatever is asked of it.
       # @return [ELFTools::Dynamic::Versions::Version, nil] The version.
       def binding_version
@@ -195,7 +221,7 @@ module ELFTools
       #   symbol.section_index == ELFTools::Constants::SHN_UNDEF
       #   #=> true # the symbol is undefined and to be resolved at runtime
       def section_index
-        header.st_shndx.to_i
+        field(:st_shndx)
       end
     end
   end

@@ -376,6 +376,9 @@ module ELFTools
       explore = lambda do |obj|
         return obj if obj.is_a?(::ELFTools::Structs::ELFStruct)
         return obj.map(&explore) if obj.is_a?(Array)
+        # A class is not one of the things a file records, and what a class
+        # holds leads round in circles.
+        return [] if obj.is_a?(Module)
 
         obj.instance_variables.map do |s|
           explore.call(obj.instance_variable_get(s))

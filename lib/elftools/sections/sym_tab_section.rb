@@ -2,6 +2,7 @@
 
 require 'elftools/sections/section'
 require 'elftools/sections/symbol'
+require 'elftools/structs'
 require 'elftools/version_tables'
 
 module ELFTools
@@ -99,10 +100,31 @@ module ELFTools
       private
 
       def create_symbol(n)
-        stream.pos = header.sh_offset + n * header.sh_entsize
-        sym = Structs::ELF_sym[header.elf_class].new(endian: header.class.self_endian, offset: stream.pos)
-        sym.read(stream)
-        Symbol.new(sym, stream, symstr: method(:symstr), machine: @machine, version: -> { version_at(n) })
+        Symbol.new(
+          Structs::Fields.new(Structs::ELF_sym[header.elf_class], stream, table_offset + (n * entsize),
+                              elf_class: header.elf_class, endian: header.class.self_endian),
+          stream, symstr: symstr_reader, machine: @machine, version: -> { version_at(n) }
+        )
+      end
+
+      # Where this table starts in the file, asked of the header once rather
+      # than once for every symbol read.
+      # @return [Integer] The file offset.
+      def table_offset
+        @table_offset ||= header.sh_offset.to_i
+      end
+
+      # How many bytes this table spaces its entries by.
+      # @return [Integer] The number.
+      def entsize
+        @entsize ||= header.sh_entsize.to_i
+      end
+
+      # What reads the section these symbols are named in, kept so that
+      # reading the table does not make one for every symbol.
+      # @return [Method] The method.
+      def symstr_reader
+        @symstr_reader ||= method(:symstr)
       end
 
       # The version the +n+-th symbol binds to.
