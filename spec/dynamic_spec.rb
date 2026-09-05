@@ -71,6 +71,21 @@ describe ELFTools::Dynamic do
       expect(@segment.tag_by_type(:init).value).to be 0x400510
       expect(@segment.tag_by_type(:needed).value).to eq 'libc.so.6'
     end
+
+    it 'names what kind of tag it is' do
+      expect(@segment.tag_by_type(:needed).type).to be ELFTools::Constants::DT_NEEDED
+      expect(@segment.tag_at(0).type).to be ELFTools::Constants::DT_NEEDED
+      expect(@segment.tags.last.type).to be ELFTools::Constants::DT_NULL
+    end
+
+    it 'reads what a tag records without building a structure for it' do
+      # A structure of its own for every tag costs over two hundred objects
+      # each, which looking a tag up used to be spent on.
+      dynamic = ELFTools::ELFFile.new(File.open(File.join(__dir__, 'files', 'libc.so.6'))).dynamic
+      before = GC.stat(:total_allocated_objects)
+      dynamic.tags_by_type(:needed)
+      expect(GC.stat(:total_allocated_objects) - before).to be < (50 * dynamic.tags.size)
+    end
   end
 
   describe 'relocations' do
