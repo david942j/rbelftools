@@ -25,6 +25,9 @@ entries here are collected from those announcements and from the commit history.
 
 ### Fixed
 
+- `ELFFile#patches` and `#save` dropped a change made to a dynamic tag or to a symbol read
+  through the tags, which are remembered in a hash rather than an array and so were never
+  reached ([#132](https://github.com/david942j/rbelftools/pull/132))
 - A file with more sections or segments than the ELF header can count reported none of
   them. Such a file records a zero, or `SHN_XINDEX`, and states the number in its first
   section header, which `ELFFile#num_sections`, `#num_segments`, and `#section_name_table`

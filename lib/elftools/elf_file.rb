@@ -390,18 +390,35 @@ module ELFTools
 
     # bad idea..
     def loaded_headers
-      explore = lambda do |obj|
-        return obj if obj.is_a?(::ELFTools::Structs::ELFStruct)
-        return obj.map(&explore) if obj.is_a?(Array)
-        # A class is not one of the things a file records, and what a class
-        # holds leads round in circles.
-        return [] if obj.is_a?(Module)
+      # By identity, so that a graph that reaches the same thing by many paths,
+      # or leads round in circles, is walked once rather than over and over.
+      headers_in(self, {}.compare_by_identity).flatten
+    end
 
-        obj.instance_variables.map do |s|
-          explore.call(obj.instance_variable_get(s))
-        end
-      end
-      explore.call(self).flatten
+    # The structures reachable from an object, whatever holds them.
+    # @param [Object] obj The object.
+    # @param [Hash] seen What has been reached already.
+    # @return [Array] The structures, nested.
+    def headers_in(obj, seen)
+      # A class is not one of the things a file records.
+      return [] if seen[obj] || obj.is_a?(Module)
+
+      seen[obj] = true
+      return obj if obj.is_a?(::ELFTools::Structs::ELFStruct)
+
+      held_by(obj).map { |held| headers_in(held, seen) }
+    end
+
+    # What an object holds, which a walk of it goes on to.
+    # @param [Object] obj The object.
+    # @return [Enumerable] What it holds.
+    def held_by(obj)
+      return obj if obj.is_a?(Array)
+      # A hash is held by its values, which is where the tags and the symbols
+      # read through the tags are remembered.
+      return obj.each_value if obj.is_a?(Hash)
+
+      obj.instance_variables.map { |name| obj.instance_variable_get(name) }
     end
 
     def identify
