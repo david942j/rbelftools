@@ -14,6 +14,8 @@ entries here are collected from those announcements and from the commit history.
 
 ### Added
 
+- `Dynamic::Tag#type`, what kind of tag it is, which took reaching into its header
+  ([#131](https://github.com/david942j/rbelftools/pull/131))
 - `Structs::ELFStruct.unpack_fields` and `.num_bytes`, and `Structs::Fields`, which reads a
   structure's fields from its bytes and builds the structure only when something asks
   ([#127](https://github.com/david942j/rbelftools/pull/127),
@@ -21,6 +23,9 @@ entries here are collected from those announcements and from the commit history.
 
 ### Changed
 
+- Reading a dynamic tag unpacks its bytes rather than building a structure, so looking one
+  up reads no structure at all: 10 objects a tag rather than 208
+  ([#131](https://github.com/david942j/rbelftools/pull/131))
 - Reading a relocation unpacks its bytes rather than building a structure, packed ones
   included: 8 objects an entry rather than 179, and `Dynamic#num_symbols` four times faster
   where it reads them all ([#129](https://github.com/david942j/rbelftools/pull/129))

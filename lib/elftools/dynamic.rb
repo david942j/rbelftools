@@ -38,7 +38,7 @@ module ELFTools
       0.step do |i|
         tag = tag_at(i).tap(&block)
         arr << tag
-        break if tag.header.d_tag == ELFTools::Constants::DT_NULL
+        break if tag.type == ELFTools::Constants::DT_NULL
       end
       arr
     end
@@ -79,7 +79,7 @@ module ELFTools
     #   #=> #<ELFTools::Dynamic::Tag:0x0055d3d2d91b28 @header={:d_tag=>3, :d_val=>6295552}>
     def tag_by_type(type)
       type = Util.to_constant(Constants::DT, type)
-      each_tag.find { |tag| tag.header.d_tag == type }
+      each_tag.find { |tag| tag.type == type }
     end
 
     # Get tags of specific type.
@@ -91,7 +91,7 @@ module ELFTools
     # @see #tag_by_type
     def tags_by_type(type)
       type = Util.to_constant(Constants::DT, type)
-      each_tag.select { |tag| tag.header.d_tag == type }
+      each_tag.select { |tag| tag.type == type }
     end
 
     # Get the +n+-th tag.
@@ -112,11 +112,10 @@ module ELFTools
       @tag_at_map ||= {}
       return @tag_at_map[n] if @tag_at_map[n]
 
-      dyn = Structs::ELF_Dyn.new(endian:)
-      dyn.elf_class = header.elf_class
-      stream.pos = tag_start + n * dyn.num_bytes
-      dyn.offset = stream.pos
-      @tag_at_map[n] = Tag.new(dyn.read(stream), stream, string_table)
+      elf_class = header.elf_class
+      offset = tag_start + (n * Structs::ELF_Dyn.num_bytes(elf_class: elf_class, endian: endian))
+      fields = Structs::Fields.new(Structs::ELF_Dyn, stream, offset, elf_class: elf_class, endian: endian)
+      @tag_at_map[n] = Tag.new(fields, stream, string_table)
     end
 
     # The relocations the tags point at.
@@ -192,7 +191,7 @@ module ELFTools
     def offset_of(tag)
       vma = tag.header.d_val.to_i
       @offset_from_vma.call(vma) ||
-        raise(ELFError, format('Invalid %s address 0x%x', Constants::DT.mapping(@machine, tag.header.d_tag.to_i), vma))
+        raise(ELFError, format('Invalid %s address 0x%x', Constants::DT.mapping(@machine, tag.type), vma))
     end
 
     # The names the tags and the symbols point at.

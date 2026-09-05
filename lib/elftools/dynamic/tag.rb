@@ -1,23 +1,45 @@
 # frozen_string_literal: true
 
 require 'elftools/constants'
+require 'elftools/structs'
 
 module ELFTools
   module Dynamic
     # A tag class.
     class Tag
-      attr_reader :header # @return [ELFTools::Structs::ELF_Dyn] The dynamic tag header.
       attr_reader :stream # @return [#pos=, #read] Streaming object.
 
       # Instantiate a {ELFTools::Dynamic::Tag} object.
-      # @param [ELF_Dyn] header The dynamic tag header.
+      # @param [ELFTools::Structs::ELF_Dyn, ELFTools::Structs::Fields] header
+      #   The dynamic tag header, or what the file records in one.
+      #   {ELFTools::Structs::Fields} answers what the tag records until
+      #   something asks for {#header} itself, which builds the structure then.
       # @param [#pos=, #read] stream Streaming object.
       # @param [ELFTools::Dynamic::StringTable] strtab
       #   The string table the names of tags are recorded in.
       def initialize(header, stream, strtab)
-        @header = header
+        @fields = header.is_a?(Structs::Fields) ? header : Structs::Fields.of(header)
         @stream = stream
         @strtab = strtab
+      end
+
+      # The structure the file records this tag in.
+      #
+      # One is built here for a tag read without it, which is what assigning to
+      # a field of one needs and what {ELFTools::ELFFile#patches} reports the
+      # changes of.
+      # @return [ELFTools::Structs::ELF_Dyn] The structure.
+      def header
+        @fields.struct
+      end
+
+      # What kind of tag this is, which {ELFTools::Constants::DT} names.
+      # @return [Integer] The type.
+      # @example
+      #   dynamic.tag_by_type(:needed).type == ELFTools::Constants::DT_NEEDED
+      #   #=> true
+      def type
+        @fields[:d_tag]
       end
 
       # Some dynamic have name.
@@ -40,7 +62,7 @@ module ELFTools
       #   dynamic.tag_by_type(:needed).value
       #   #=> 'libc.so.6'
       def value
-        name || header.d_val.to_i
+        name || @fields[:d_val]
       end
 
       # Is this tag has a name?
@@ -48,7 +70,7 @@ module ELFTools
       # The criteria here is if this tag's type is in {TYPE_WITH_NAME}.
       # @return [Boolean] Is this tag has a name.
       def name?
-        TYPE_WITH_NAME.include?(header.d_tag)
+        TYPE_WITH_NAME.include?(type)
       end
 
       # Return the name of this tag.
@@ -59,7 +81,7 @@ module ELFTools
       def name
         return nil unless name?
 
-        @strtab.name_at(header.d_val.to_i)
+        @strtab.name_at(@fields[:d_val])
       end
     end
   end
