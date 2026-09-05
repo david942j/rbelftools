@@ -21,6 +21,12 @@ entries here are collected from those announcements and from the commit history.
   ([#127](https://github.com/david942j/rbelftools/pull/127),
   [#129](https://github.com/david942j/rbelftools/pull/129))
 
+### Fixed
+
+- `ELFFile#patches` and `#save` dropped a change made to a dynamic tag or to a symbol read
+  through the tags, which are remembered in a hash rather than an array and so were never
+  reached ([#132](https://github.com/david942j/rbelftools/pull/132))
+
 ### Changed
 
 - Reading a dynamic tag unpacks its bytes rather than building a structure, so looking one
