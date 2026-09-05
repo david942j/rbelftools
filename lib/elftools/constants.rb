@@ -466,6 +466,15 @@ module ELFTools
     end
     include SHN
 
+    # The escape value the ELF header records where it cannot hold a count of
+    # the program headers, which is then recorded in the first section header.
+    module PN
+      extend Naming
+
+      PN_XNUM = 0xffff # the number of program headers is too large for the header to hold
+    end
+    include PN
+
     # Section flag mask types, records in +sh_flag+.
     module SHF
       SHF_WRITE = (1 << 0) # Writable

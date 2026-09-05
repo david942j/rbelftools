@@ -105,12 +105,19 @@ module ELFTools
     #========= method about sections
 
     # Number of sections in this file.
+    #
+    # A file with more sections than the ELF header can count records a zero
+    # there and states the number in the first section header instead, which a
+    # file with no section headers at all records as well.
     # @return [Integer] The desired number.
     # @example
     #   elf.num_sections
     #   #=> 29
     def num_sections
-      header.e_shnum
+      count = header.e_shnum.to_i
+      return count unless count.zero? && !header.e_shoff.to_i.zero?
+
+      first_section_header.sh_size.to_i
     end
 
     # Acquire the section named as +name+.
@@ -197,15 +204,25 @@ module ELFTools
     #   elf.section_name_table.name
     #   #=> '.shstrtab'
     def section_name_table
-      section_at(header.e_shstrndx)
+      index = header.e_shstrndx.to_i
+      # An index too large for the ELF header is stated in the first section
+      # header instead.
+      index = first_section_header.sh_link.to_i if index == Constants::SHN_XINDEX
+      section_at(index)
     end
 
     #========= method about segments
 
     # Number of segments in this file.
+    #
+    # A file with more segments than the ELF header can count states the number
+    # in the first section header instead, as it does for the sections.
     # @return [Integer] The desited number.
     def num_segments
-      header.e_phnum
+      count = header.e_phnum.to_i
+      return count unless count == Constants::PN_XNUM
+
+      first_section_header.sh_info.to_i
     end
 
     # Iterate all segments.
@@ -422,6 +439,18 @@ module ELFTools
         2 => :big
       }[ei_data]
       raise ELFDataError, format('Invalid EI_DATA "\x%02x"', ei_data) if endian.nil?
+    end
+
+    # The first section header, which is where a file too large for the counts
+    # the ELF header records states them.
+    # @return [ELFTools::Structs::ELF_Shdr] The header.
+    def first_section_header
+      @first_section_header ||= begin
+        stream.pos = header.e_shoff.to_i
+        shdr = Structs::ELF_Shdr.new(endian:, offset: stream.pos)
+        shdr.elf_class = elf_class
+        shdr.read(stream)
+      end
     end
 
     def create_section(n)
