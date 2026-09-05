@@ -14,12 +14,21 @@ entries here are collected from those announcements and from the commit history.
 
 ### Added
 
+- `Constants::PN_XNUM`, the escape value the ELF header records where it cannot hold a
+  count of the program headers ([#133](https://github.com/david942j/rbelftools/pull/133))
 - `Dynamic::Tag#type`, what kind of tag it is, which took reaching into its header
   ([#131](https://github.com/david942j/rbelftools/pull/131))
 - `Structs::ELFStruct.unpack_fields` and `.num_bytes`, and `Structs::Fields`, which reads a
   structure's fields from its bytes and builds the structure only when something asks
   ([#127](https://github.com/david942j/rbelftools/pull/127),
   [#129](https://github.com/david942j/rbelftools/pull/129))
+
+### Fixed
+
+- A file with more sections or segments than the ELF header can count reported none of
+  them. Such a file records a zero, or `SHN_XINDEX`, and states the number in its first
+  section header, which `ELFFile#num_sections`, `#num_segments`, and `#section_name_table`
+  now read ([#133](https://github.com/david942j/rbelftools/pull/133))
 
 ### Changed
 

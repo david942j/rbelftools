@@ -200,6 +200,48 @@ describe ELFTools::ELFFile do
     end
   end
 
+  describe 'a file too large for the counts the ELF header records' do
+    # A real file with 65280 sections is enormous, so this is amd64.elf with
+    # its counts moved to where such a file states them.
+    def extended
+      data = File.binread(@filepath)
+      elf = described_class.new(StringIO.new(data))
+      counts = [elf.num_sections, elf.header.e_shstrndx.to_i, elf.num_segments]
+      zero = elf.section_at(0).header
+      zero.sh_size, zero.sh_link, zero.sh_info = counts
+      elf.header.e_shnum = 0
+      elf.header.e_shstrndx = ELFTools::Constants::SHN_XINDEX
+      elf.header.e_phnum = ELFTools::Constants::PN_XNUM
+      data[0, elf.header.num_bytes] = elf.header.to_binary_s
+      data[elf.header.e_shoff.to_i, zero.num_bytes] = zero.to_binary_s
+      [described_class.new(StringIO.new(data)), counts]
+    end
+
+    it 'counts what the first section header states' do
+      elf, counts = extended
+      expect([elf.num_sections, elf.num_segments]).to eq [counts[0], counts[2]]
+      expect(elf.sections.size).to be counts[0]
+      expect(elf.segments.size).to be counts[2]
+    end
+
+    it 'names its sections through the index the first section header states' do
+      elf, = extended
+      expect(elf.section_name_table.name).to eq '.shstrtab'
+      expect(elf.section_by_name('.text')).not_to be nil
+      expect(elf.sections.map(&:name)).to include '.dynsym', '.shstrtab'
+    end
+
+    it 'counts no sections where a file records no section headers' do
+      # The same zero, of a file that has none rather than too many.
+      data = File.binread(@filepath)
+      header = described_class.new(StringIO.new(data)).header
+      header.e_shoff = 0
+      header.e_shnum = 0
+      data[0, header.num_bytes] = header.to_binary_s
+      expect(described_class.new(StringIO.new(data)).num_sections).to be 0
+    end
+  end
+
   describe 'patches' do
     it 'dup' do
       out = Tempfile.new('elftools')
