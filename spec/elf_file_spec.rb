@@ -210,6 +210,25 @@ describe ELFTools::ELFFile do
       out.close!
     end
 
+    it 'reports what a tag and a symbol read through the tags were assigned' do
+      # Both are remembered in a hash rather than an array, which used to keep
+      # them out of the answer and out of what was written.
+      elf = described_class.new(File.open(@filepath))
+      tag = elf.dynamic.tag_by_type(:strtab)
+      tag.header.d_val = 0x4142
+      elf.dynamic.symbol_at(1).type = ELFTools::Constants::STT_OBJECT
+      expect(elf.patches.size).to be 2
+
+      out = Tempfile.new('elftools')
+      out.close
+      elf.save(out.path)
+      out.reopen(out.path, 'rb')
+      saved = described_class.new(out)
+      expect(saved.dynamic.tag_by_type(:strtab).header.d_val.to_i).to be 0x4142
+      expect(saved.dynamic.symbol_at(1).type).to be ELFTools::Constants::STT_OBJECT
+      out.close!
+    end
+
     it 'patch header' do
       out = Tempfile.new('elftools')
       out.close
