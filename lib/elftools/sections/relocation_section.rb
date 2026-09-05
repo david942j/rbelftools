@@ -78,12 +78,23 @@ module ELFTools
       private
 
       def create_relocation(n)
-        stream.pos = header.sh_offset + n * header.sh_entsize
         klass = rela? ? Structs::ELF_Rela : Structs::ELF_Rel
-        rel = klass.new(endian: header.class.self_endian, offset: stream.pos)
-        rel.elf_class = header.elf_class
-        rel.read(stream)
-        Relocation.new(rel, stream, machine: @machine)
+        fields = Structs::Fields.new(klass, stream, table_offset + (n * entsize),
+                                     elf_class: header.elf_class, endian: header.class.self_endian)
+        Relocation.new(fields, stream, machine: @machine)
+      end
+
+      # Where this table starts in the file, asked of the header once rather
+      # than once for every relocation read.
+      # @return [Integer] The file offset.
+      def table_offset
+        @table_offset ||= header.sh_offset.to_i
+      end
+
+      # How many bytes this table spaces its entries by.
+      # @return [Integer] The number.
+      def entsize
+        @entsize ||= header.sh_entsize.to_i
       end
     end
   end

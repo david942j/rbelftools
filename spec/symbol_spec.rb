@@ -159,6 +159,21 @@ describe ELFTools::Sections::Symbol do
     end
   end
 
+  it 'takes a structure a caller has built itself' do
+    # What {Symbol.new} has always taken, kept working for whoever builds a
+    # symbol of their own rather than reading one out of a file.
+    struct = ELFTools::Structs::ELF64_sym.new(endian: :little)
+    struct.elf_class = 64
+    struct.st_value = 0x1234
+    struct.st_info = 0x12
+    sym = ELFTools::Sections::Symbol.new(struct, nil, machine: ELFTools::Constants::EM_X86_64)
+    expect([sym.value, sym.type_name, sym.bind_name]).to eq [0x1234, 'STT_FUNC', 'STB_GLOBAL']
+    expect(sym.header).to equal struct
+    # Assigning reaches the very structure it was given.
+    sym.type = ELFTools::Constants::STT_OBJECT
+    expect(struct.st_info.to_i).to be 0x11
+  end
+
   it 'size' do
     expect(@symtab.symbol_by_name('main').size).to be 142
     # A symbol the file records no size for, of which every file has some.

@@ -26,7 +26,7 @@ module ELFTools
       #   Call this to get the version this symbol binds to, which only the
       #   symbols a file is loaded by have.
       def initialize(header, stream, symstr: nil, machine: nil, version: nil)
-        @header = header
+        @fields = header.is_a?(Structs::Fields) ? header : Structs::Fields.of(header)
         @stream = stream
         @symstr = symstr
         @machine = machine
@@ -40,14 +40,13 @@ module ELFTools
       # reports the changes of.
       # @return [ELFTools::Structs::ELF32_sym, ELFTools::Structs::ELF64_sym] The structure.
       def header
-        @header = @header.to_struct if @header.is_a?(Structs::Fields)
-        @header
+        @fields.struct
       end
 
       # Return the symbol name.
       # @return [String] The name.
       def name
-        @name ||= @symstr.call.name_at(field(:st_name))
+        @name ||= @symstr.call.name_at(@fields[:st_name])
       end
 
       # The version this symbol binds to.
@@ -83,7 +82,7 @@ module ELFTools
       #   elf.section_by_name('.symtab').symbol_by_name('main').value
       #   #=> 4196061 # 0x4006dd
       def value
-        field(:st_value)
+        @fields[:st_value]
       end
 
       # How many bytes what this symbol names takes.
@@ -92,7 +91,7 @@ module ELFTools
       #   elf.section_by_name('.symtab').symbol_by_name('main').size
       #   #=> 142
       def size
-        field(:st_size)
+        @fields[:st_size]
       end
 
       # What kind of entity this symbol refers to.
@@ -103,7 +102,7 @@ module ELFTools
       #   symbol.type == ELFTools::Constants::STT_FUNC
       #   #=> true
       def type
-        field(:st_info) & 0xf
+        @fields[:st_info] & 0xf
       end
 
       # Sets what kind of entity this symbol refers to.
@@ -135,7 +134,7 @@ module ELFTools
       #   symbol.bind == ELFTools::Constants::STB_GLOBAL
       #   #=> true
       def bind
-        field(:st_info) >> 4
+        @fields[:st_info] >> 4
       end
 
       # Sets how this symbol is linked against others with the same name.
@@ -165,7 +164,7 @@ module ELFTools
       #   symbol.visibility == ELFTools::Constants::STV_HIDDEN
       #   #=> true
       def visibility
-        field(:st_other) & 0x3
+        @fields[:st_other] & 0x3
       end
 
       # Sets how this symbol is accessed once it becomes part of an executable
@@ -190,19 +189,6 @@ module ELFTools
         Constants::STV.mapping(@machine, visibility)
       end
 
-      # What the file records in one of this symbol's fields.
-      #
-      # A structure answers wherever there is one, so that a field assigned to
-      # reads back as it was assigned.
-      # @param [Symbol] name The name of the field.
-      # @return [Integer] What it records.
-      def field(name)
-        return @header[name] if @header.is_a?(Structs::Fields)
-
-        header[name].to_i
-      end
-      private :field
-
       # The version this symbol binds to, whatever is asked of it.
       # @return [ELFTools::Dynamic::Versions::Version, nil] The version.
       def binding_version
@@ -221,7 +207,7 @@ module ELFTools
       #   symbol.section_index == ELFTools::Constants::SHN_UNDEF
       #   #=> true # the symbol is undefined and to be resolved at runtime
       def section_index
-        field(:st_shndx)
+        @fields[:st_shndx]
       end
     end
   end

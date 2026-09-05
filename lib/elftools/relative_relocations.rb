@@ -39,10 +39,9 @@ module ELFTools
     def to_a
       type = Constants::R.relative(@machine)
       addresses.map do |address, from|
-        rel = Structs::ELF_Rel.new(endian: @endian, offset: from)
-        rel.elf_class = @elf_class
-        rel.r_offset = address
-        relocation = Relocation.new(rel, @stream, machine: @machine)
+        fields = Structs::Fields.from(Structs::ELF_Rel, { r_offset: address, r_info: 0 },
+                                      elf_class: @elf_class, endian: @endian, offset: from)
+        relocation = Relocation.new(fields, @stream, machine: @machine)
         # Through the relocation, so that the type is laid out in +r_info+ the
         # way the machine lays it out.
         relocation.type = type if type

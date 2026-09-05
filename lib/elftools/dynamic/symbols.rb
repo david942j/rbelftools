@@ -154,7 +154,7 @@ module ELFTools
       # has no way of disagreeing with.
       # @return [Integer] The number.
       def sym_entsize
-        @sym_entsize ||= Structs::ELF_sym[header.elf_class].num_bytes(endian)
+        @sym_entsize ||= Structs::ELF_sym[header.elf_class].num_bytes(elf_class: header.elf_class, endian: endian)
       end
 
       # What reads the table these symbols are named in, kept so that reading
