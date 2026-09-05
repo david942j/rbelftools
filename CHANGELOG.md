@@ -14,150 +14,89 @@ entries here are collected from those announcements and from the commit history.
 
 ### Added
 
-- `Structs::ELFStruct.unpack_fields`, what the fields of a structure record read
-  straight from the bytes recording them, and `.num_bytes`, how many bytes a structure
-  of a kind takes. Both read a field of whichever width the class of the file makes it
-  and a field recording a sign, and say so rather than answer for a structure of
-  anything else. `Structs::Fields` is what a structure the file records at an offset
-  holds, and builds the structure itself for whatever asks for one, which is what
-  assigning to a field takes; `Structs::Fields.from` holds what a file states some other
-  way than by recording a structure of it
+- `Structs::ELFStruct.unpack_fields` and `.num_bytes`, and `Structs::Fields`, which reads a
+  structure's fields from its bytes and builds the structure only when something asks
   ([#127](https://github.com/david942j/rbelftools/pull/127),
   [#129](https://github.com/david942j/rbelftools/pull/129))
 
 ### Changed
 
-- Reading a relocation unpacks what the file records straight from the bytes recording
-  it, as reading a symbol does, and the relocations a file packs into a bitmap are made
-  without a structure each as well. One is built only for a caller that asks a relocation
-  for its `header`. The 1179 relocations of a libc cost 8 objects each rather than 179
-  and are read around 24 times faster, the tables the file records entry by entry and the
-  bitmap alike. `Dynamic#num_symbols` reads every relocation where no hash table counts
-  the symbols, which most files leave to `DT_GNU_HASH`, so reading the symbols of such a
-  file is four times faster again: 0.28s for a libc's 3103 symbols in 2.1.0, 0.08s once
-  the symbols alone were unpacked, 0.02s now. What is read is unchanged, relocation for
-  relocation ([#129](https://github.com/david942j/rbelftools/pull/129))
-- Reading a symbol unpacks what the file records straight from the bytes recording it,
-  instead of building a structure for every symbol of a table. Setting up the fields of a
-  structure is most of what one costs, and only a caller that asks a symbol for its
-  `header` needs one, which is built then and answers as it always did. Reading the 3103
-  symbols of a libc costs 10 objects a symbol rather than 203 and is around 15 times
-  faster, through the tags and through the sections alike, and what is read is unchanged,
-  name for name and value for value. A symbol read through the sections now records the
-  class of the file it was read from, as one read through the tags already did
-  ([#127](https://github.com/david942j/rbelftools/pull/127))
+- Reading a relocation unpacks its bytes rather than building a structure, packed ones
+  included: 8 objects an entry rather than 179, and `Dynamic#num_symbols` four times faster
+  where it reads them all ([#129](https://github.com/david942j/rbelftools/pull/129))
+- Reading a symbol unpacks its bytes rather than building a structure for every entry, one
+  being built only for a caller that asks for `header`: 10 objects a symbol rather than 203.
+  A symbol read through the sections now records the class of the file, as one read through
+  the tags did ([#127](https://github.com/david942j/rbelftools/pull/127))
 
 ## 2.1.0 - 2026-08-31
 
 ### Added
 
 - `Sections::Section#writable?`, `#executable?`, and `#allocated?`, which read `sh_flags`
-  the way `Segments::Segment` already reads `p_flags`. A section is allocated when it takes
-  memory while the file runs, which is what tells the sections a file is loaded by from the
-  ones only recorded about it ([#117](https://github.com/david942j/rbelftools/pull/117))
-- `Sections::Symbol#value` and `#size`, the last of what a symbol records that took
-  reaching into its header. What a symbol is worth is the address of what it names in a
-  file that is loaded, an offset into the section holding it in one that is not, and the
-  alignment it needs where the linker is still to place it
+  the way `Segments::Segment` already reads `p_flags`
+  ([#117](https://github.com/david942j/rbelftools/pull/117))
+- `Sections::Symbol#value` and `#size`, what a symbol is worth and how large what it names
+  is, the last of what it records that took reaching into its header
   ([#116](https://github.com/david942j/rbelftools/pull/116))
 - `Sections::VersionSection`, `VersionNeedSection`, and `VersionDefinitionSection`, the
-  `.gnu.version`, `.gnu.version_r`, and `.gnu.version_d` sections recording the very
-  versions the tags point at, and `VersionTables`, which reads either view. A symbol read
-  from `.dynsym` answers with its version as one read from the tags does
+  `.gnu.version` sections the tags point at, and `VersionTables`, which reads either view
   ([#115](https://github.com/david942j/rbelftools/pull/115))
 - `Sections::Symbol#version` and `#version_hidden?`, the version a symbol binds to, which
-  tells `memcpy@GLIBC_2.14` from the `memcpy@GLIBC_2.2.5` of the same name. `#name` is
-  left as the file records it, without the version appended
+  tells `memcpy@GLIBC_2.14` from the `memcpy@GLIBC_2.2.5` of the same name
   ([#114](https://github.com/david942j/rbelftools/pull/114))
-- `Dynamic#version_requirements` and `#version_definitions`, the versions a file needs of
-  the files it is loaded with and the versions it defines for what it exports, which
-  answer what a file needs without walking its symbols. Both are read from the tags, so a
-  file stripped of its sections still records them
+- `Dynamic#version_requirements` and `#version_definitions`, the versions a file needs and
+  the ones it defines, read from the tags so a file stripped of its sections still answers
   ([#114](https://github.com/david942j/rbelftools/pull/114))
 - `Constants::VER_FLG` and `VER_NDX`, and the `Structs::ELF_Verneed`, `ELF_Vernaux`,
   `ELF_Verdef`, and `ELF_Verdaux` structures behind them
   ([#114](https://github.com/david942j/rbelftools/pull/114))
-- `Sections::RelativeRelocationSection`, the `SHT_RELR` section holding the same
-  relocations, and `RelativeRelocations`, which unpacks either of them. An entry is an
-  address, or a bitmap of the words following the last address, and records no type of its
-  own, so the type reported is the one the machine calls relative
+- `Sections::RelativeRelocationSection` and `RelativeRelocations`, the `SHT_RELR`
+  relocations a file packs into a bitmap, of the type the machine calls relative
   ([#113](https://github.com/david942j/rbelftools/pull/113))
 - `Constants::R.relative`, the type a machine calls a relocation that only adds the load
-  bias, which every architecture defining one spells `R_<arch>_RELATIVE`
-  ([#113](https://github.com/david942j/rbelftools/pull/113))
+  bias ([#113](https://github.com/david942j/rbelftools/pull/113))
 - `Sections::Symbol#type=`, `#bind=`, and `#visibility=`, and `Relocation#type=` and
-  `#symbol_index=`, which assign what a value means rather than the bits recording it. Each
-  leaves the rest of the byte or field it shares alone, the 64-bit MIPS ABI layout and the
-  machine's own half of `st_other` included, and reports a value too large for its bits
-  instead of writing it over its neighbours
-  ([#112](https://github.com/david942j/rbelftools/pull/112))
-- `Util.fits!`, which is what reports it
+  `#symbol_index=`, which assign what a value means and leave the rest of the byte or field
+  it shares alone ([#112](https://github.com/david942j/rbelftools/pull/112))
+- `Util.fits!`, which reports a value too large for the bits recording it
   ([#112](https://github.com/david942j/rbelftools/pull/112))
 
 ### Fixed
 
-- `sections_by_type` and the other lookups taking a symbol or a string could not name the
-  constants keeping the case an ABI wrote them in, so `sections_by_type(:gnu_verneed)`
-  raised where `SHT_GNU_verneed` is what defines it
+- The lookups taking a symbol or a string could not name a constant keeping the case an ABI
+  wrote it in, so `sections_by_type(:gnu_verneed)` raised
   ([#115](https://github.com/david942j/rbelftools/pull/115))
-- `Dynamic#relocations` used to pass over the relocations a file packs into a bitmap, the
-  ones `DT_RELR` points at, and answer with only the tables `DT_REL`, `DT_RELA`, and
-  `DT_JMPREL` record. Of the 3780 loaded files of a current system, 557 pack some of
-  theirs that way, and across those 46% of their relocations were missing from the answer,
-  `ldconfig` reporting 11 of its 1503
+- `Dynamic#relocations` passed over the relocations `DT_RELR` packs into a bitmap. Of a
+  system's 3780 loaded files, 557 pack some of theirs that way
   ([#113](https://github.com/david942j/rbelftools/pull/113))
-- Assigning to a field of a structure a header records, `e_ident` and each of the seven
-  fields it holds, used to be dropped without a word. The value read back as assigned and
-  `save` wrote the file out unchanged, because only the fields of the outermost structure
-  were watched ([#111](https://github.com/david942j/rbelftools/pull/111))
-- Patching any field of a big endian file used to write the bytes of that field the wrong
-  way round, because the packing was asked of the base structure class, which is ordered
-  little endian whatever the file is
+- Assigning to a field of a structure a header records, `e_ident` and the seven fields it
+  holds, was dropped without a word
+  ([#111](https://github.com/david942j/rbelftools/pull/111))
+- Patching a field of a big endian file wrote the bytes of that field the wrong way round
   ([#111](https://github.com/david942j/rbelftools/pull/111))
 
 ### Changed
 
-- `Structs::ELFStruct#patches` answers with the difference between the bytes a structure
-  was read from and the bytes it holds now, as the runs of bytes that differ, instead of a
-  log of the assignments made to it. Every field is therefore patchable however deeply it
-  is nested, and a field assigned the value it already held leaves nothing behind.
-  `Structs::ELFStruct.pack` is no longer how a patch is made, and is deprecated
+- `Structs::ELFStruct#patches` answers with the bytes that differ from those a structure was
+  read from, not a log of the assignments made to it, so a field is patchable however deeply
+  it is nested. `Structs::ELFStruct.pack` is deprecated
   ([#111](https://github.com/david942j/rbelftools/pull/111))
-- `Dynamic#num_symbols` answers with what `DT_HASH` counts where a file records that
-  table, instead of reading every relocation in the file to bound a number the table
-  already states. A chain of that table belongs to every symbol, so nothing a file records
-  reaches past it. A file recording no such table is counted as before. The size of an
-  entry is also measured once for the table rather than once per symbol, which used to
-  cost a structure of its own each time. Reading the symbols the tags point at is well
-  over twice as fast for it, and what is read is unchanged, name for name and index for
-  index
-  ([#119](https://github.com/david942j/rbelftools/pull/119))
-- A structure remembers the bytes it was read from by taking them back off the stream,
-  instead of serializing itself again from what it has just parsed. Every structure
-  elftools reads pays for that, and taking the bytes is a fraction of the cost of writing
-  them out. A stream that cannot be seeked is serialized as before, and what
-  `Structs::ELFStruct#patches` reports is unchanged
+- `Dynamic#num_symbols` answers with what `DT_HASH` counts rather than reading every
+  relocation to bound a number the table already states. Reading the symbols the tags point
+  at is well over twice as fast ([#119](https://github.com/david942j/rbelftools/pull/119))
+- A structure remembers the bytes it was read from by taking them back off the stream rather
+  than serializing itself again. A stream that cannot be seeked is serialized as before
   ([#120](https://github.com/david942j/rbelftools/pull/120))
-- `Util.cstring` takes a stream in chunks instead of a byte at a time, so reading a name
-  no longer costs the square of its length. Every name elftools reads is read through it,
-  and the longer the name the more it was paying: a name of 1024 bytes, which C++ mangles
-  past easily, reads around 45 times faster, and the short names of a C library around 8
-  times. The stream is left just where it was left before, and the bytes and the encoding
-  of what is read are unchanged
+- `Util.cstring` takes a stream in chunks rather than a byte at a time, so reading a name no
+  longer costs the square of its length: a name of 1024 bytes reads around 45 times faster
   ([#121](https://github.com/david942j/rbelftools/pull/121))
 - `Dynamic#symbol_by_name` stops at a hash table built over every symbol instead of
-  searching the whole symbol table for a name the table has already answered for. Only
-  `DT_HASH` is built over every symbol, so a file recording nothing but `DT_GNU_HASH` is
-  searched as before, as is the symbol with no name, which such a table leaves out having
-  nothing to be indexed by. Asking a 1.9MB libc for a name it does not record is around
-  fifty times faster
+  searching the whole table for a name it has already answered for. Asking a libc for a name
+  it does not record is around fifty times faster
   ([#123](https://github.com/david942j/rbelftools/pull/123))
-- `Util.to_constant` reads what a module names its constants once for that module,
-  instead of walking the list and upcasing every name on it again for each lookup. It is
-  what turns a symbol or a string into a number for `ELFFile#sections_by_type`,
-  `#segments_by_type`, and `Dynamic#tag_by_type`, and answers around nine times faster.
-  Asking it for a machine also no longer loads the table of machine names, which
-  `Constants::EM` keeps until something asks for a name
+- `Util.to_constant` reads what a module names its constants once instead of walking the
+  list for every lookup, and answers around nine times faster
   ([#124](https://github.com/david942j/rbelftools/pull/124))
 
 ## 2.0.0 - 2026-08-24
@@ -165,34 +104,26 @@ entries here are collected from those announcements and from the commit history.
 ### Breaking
 
 - `Relocation#r_info_sym` and `#r_info_type` are gone. `#symbol_index` and `#type`, which
-  used to be aliases of them, are the names now. They name what the two values mean rather
-  than the field they are read out of, which since
-  [#97](https://github.com/david942j/rbelftools/pull/97) is not even how every file records
-  them: the 64-bit MIPS ABI packs three types and a second symbol index into `r_info`
-  instead of halving it ([#110](https://github.com/david942j/rbelftools/pull/110))
-- `ELFFile#strtab_section` is `ELFFile#section_name_table`. It answers with the section the
-  names of the sections are recorded in, `.shstrtab`, and not with `.strtab`, which records
-  the names of the symbols and which `Sections::SymTabSection#symstr` answers with. The
-  keyword `Sections::Section` takes for it is `section_name_table:` rather than `strtab:`
+  used to be aliases of them, are the names now, after what the values mean rather than the
+  field they are read out of ([#110](https://github.com/david942j/rbelftools/pull/110))
+- `ELFFile#strtab_section` is `ELFFile#section_name_table`, and answers with `.shstrtab`
+  rather than `.strtab`, which `Sections::SymTabSection#symstr` answers with. The keyword
+  `Sections::Section` takes for it is `section_name_table:`
   ([#109](https://github.com/david942j/rbelftools/pull/109))
 - Ruby 3.3 or later is required ([#85](https://github.com/david942j/rbelftools/pull/85))
-- Addresses that occupy memory but have no content in file, `.bss` for instance, are
-  not converted into a file offset anymore. This affects `ELFFile#offset_from_vma` and
-  `Segments::LoadSegment#vma_in?`, both of which used to return a file offset beyond
-  the content of the segment ([#83](https://github.com/david942j/rbelftools/pull/83))
-- A dynamic section or segment whose `DT_STRTAB` is missing, or points to an address
-  that is not loaded, raises `ELFError` instead of failing with `NoMethodError`
+- Addresses that occupy memory but have no content in the file, `.bss` for instance, are no
+  longer converted into a file offset by `ELFFile#offset_from_vma` or
+  `Segments::LoadSegment#vma_in?` ([#83](https://github.com/david942j/rbelftools/pull/83))
+- A dynamic section or segment whose `DT_STRTAB` is missing, or points to an address that is
+  not loaded, raises `ELFError` instead of failing with `NoMethodError`
   ([#82](https://github.com/david942j/rbelftools/pull/82))
-- `ELFFile#machine` returns the name binutils records for a machine, which reads
-  differently than the name returned before. `EM_X86_64` is
-  `'Advanced Micro Devices X86-64 processor'` rather than
-  `'Advanced Micro Devices X86-64'`, `EM_AARCH64` is `'ARM 64-bit architecture'`
-  rather than `'AArch64'`, and `EM_PPC64` is `'64-bit PowerPC'` rather than
-  `'PowerPC64'` ([#92](https://github.com/david942j/rbelftools/pull/92))
+- `ELFFile#machine` returns the name binutils records, so `EM_X86_64` is
+  `'Advanced Micro Devices X86-64 processor'` and `EM_AARCH64` is
+  `'ARM 64-bit architecture'` ([#92](https://github.com/david942j/rbelftools/pull/92))
 - Eight `Constants::EM` constants are gone. `EM_486`, `EM_FRV`, `EM_MIPS_RS4_BE`,
-  `EM_OPENRISC`, `EM_SHARC`, `EM_TI_ARP32`, and `EM_VPP500` name machines binutils
-  spells `EM_IAMCU`, `EM_CYGNUS_FRV`, `EM_MIPS_RS3_LE`, `EM_OR1K`, `EM_res133`,
-  `EM_res143`, and `EM_VPP550`. `EM_C116` was a misspelling of `EM_C166`
+  `EM_OPENRISC`, `EM_SHARC`, `EM_TI_ARP32`, and `EM_VPP500` are what binutils spells
+  `EM_IAMCU`, `EM_CYGNUS_FRV`, `EM_MIPS_RS3_LE`, `EM_OR1K`, `EM_res133`, `EM_res143`, and
+  `EM_VPP550`, and `EM_C116` was a misspelling of `EM_C166`
   ([#92](https://github.com/david942j/rbelftools/pull/92))
 
 ### Added
@@ -203,75 +134,55 @@ entries here are collected from those announcements and from the commit history.
   `st_info` and `st_other`, together with the `Constants::STV` visibilities
   ([#89](https://github.com/david942j/rbelftools/pull/89))
 - `Dynamic#symbol_by_name` looks a name up through `DT_HASH` or `DT_GNU_HASH`, which is what
-  the loader itself does, instead of reading every symbol until it finds the name. Neither
-  table indexes every symbol, and a file need not record either, so a name a table does not
-  lead to is still searched for
+  the loader itself does. A name no table leads to is still searched for
   ([#105](https://github.com/david942j/rbelftools/pull/105))
 - `Dynamic#symbols`, `#symbol_at`, `#symbol_by_name`, and `#num_symbols`, the symbols the
-  tags of a file point at, which is where a file that has been stripped of its sections
-  still records them. Nothing a file is loaded by records how large that table is, because
-  the loader looks a name up through a hash table and jumps straight to an index rather
-  than ever enumerating it, so the count is how far `DT_HASH`, `DT_GNU_HASH`, and the
-  relocations reach between them, and is a lower bound where only the latter two answer.
-  `#symbol_at` needs no count and is exact for any index
+  tags point at, which is where a file stripped of its sections still records them. Nothing
+  records how large that table is, so the count is how far the hash tables and the
+  relocations reach, and `#symbol_at` is exact for any index
   ([#104](https://github.com/david942j/rbelftools/pull/104))
-- `Dynamic#relocations`, the relocations the tags of a file point at, which is where a
-  file that has been stripped of its sections still records them. They are read from
-  `DT_REL` or `DT_RELA` and from `DT_JMPREL`, and are the same relocations the
-  `.rel(a).dyn` and `.rel(a).plt` sections record
-  ([#103](https://github.com/david942j/rbelftools/pull/103))
-- `ELFFile#dynamic`, the dynamic tags of a file read from the view its type makes
-  authoritative. An executable or a shared object is loaded by its segments, so the
-  segment answers and the section recording the same tags is metadata; a relocatable
-  file has no segments, so its sections do
+- `Dynamic#relocations`, the relocations the tags point at, read from `DT_REL` or `DT_RELA`
+  and from `DT_JMPREL` ([#103](https://github.com/david942j/rbelftools/pull/103))
+- `ELFFile#dynamic`, the tags read from the view the type of the file makes authoritative:
+  the segment for a file that is loaded, the section for a relocatable one
   ([#102](https://github.com/david942j/rbelftools/pull/102))
 - `Sections::Symbol#type_name`, `#bind_name`, and `#visibility_name`, and
-  `Constants::Naming` behind them, which names a value after the constants defining it.
-  Several may define one, a machine naming a value for itself and a name marking where a
-  range begins rather than naming anything, so `STT_ARM_TFUNC` and `STT_SPARC_REGISTER`
-  are told apart and `STT_GNU_IFUNC` is named over the `STT_LOOS` it shares a value with
+  `Constants::Naming` behind them, which names a value after the constants defining it,
+  telling `STT_GNU_IFUNC` from the `STT_LOOS` it shares a value with
   ([#101](https://github.com/david942j/rbelftools/pull/101))
-- 42 more `Constants::EM` constants, `EM_RISCV`, `EM_LOONGARCH`, and `EM_IAMCU` among
-  them ([#92](https://github.com/david942j/rbelftools/pull/92))
-- `ELFFile#machine` names 229 machines, where it used to name 11 and answer
-  `'<unknown>: 0x...'` for every other one, RISC-V included
+- 42 more `Constants::EM` constants, `EM_RISCV`, `EM_LOONGARCH`, and `EM_IAMCU` among them
   ([#92](https://github.com/david942j/rbelftools/pull/92))
-- `Constants::R`, the relocation types of 77 architectures, 3579 of them. A relocation
-  type only means something together with the architecture that recorded it, the same
-  number being `R_X86_64_JUMP_SLOT`, `R_386_JUMP_SLOT`, and `R_ARM_THM_ABS5`, so they
-  are grouped as `Constants::R::X86_64`, `Constants::R::I386`, and so on. Each group is
-  loaded once it is asked for ([#93](https://github.com/david942j/rbelftools/pull/93))
-- `Relocation#type_name`, which names a relocation type after the machine of the file
-  it was read from, and `Constants::R.mapping` behind it
+- `ELFFile#machine` names 229 machines, where it used to name 11 and answer
+  `'<unknown>: 0x...'` for the rest ([#92](https://github.com/david942j/rbelftools/pull/92))
+- `Constants::R`, the relocation types of 77 architectures, 3579 of them. The same number
+  means different things to different machines, so they are grouped as
+  `Constants::R::X86_64` and so on, each loaded once it is asked for
+  ([#93](https://github.com/david942j/rbelftools/pull/93))
+- `Relocation#type_name`, which names a relocation type after the machine of the file it was
+  read from, and `Constants::R.mapping` behind it
   ([#95](https://github.com/david942j/rbelftools/pull/95))
 
 ### Fixed
 
-- Every `LazyArray` method but `#[]` used to operate on elements that had not been
-  loaded, so `#to_a`, `#map`, and friends returned `nil`s
+- Every `LazyArray` method but `#[]` used to operate on elements that had not been loaded,
+  so `#to_a`, `#map`, and friends returned `nil`s
   ([#84](https://github.com/david942j/rbelftools/pull/84))
-- `Relocation#type` and `Relocation#symbol_index` of a 64-bit MIPS file. The ABI packs
-  three types and a second symbol index into `r_info` where every other machine leaves
-  the halves of it to a type and a symbol index, and orders them the way the file is
-  ordered, so both used to return a mix of those fields
+- `Relocation#type` and `#symbol_index` of a 64-bit MIPS file returned a mix of fields. The
+  ABI packs three types and a second symbol index into `r_info`, ordered as the file is
   ([#97](https://github.com/david942j/rbelftools/pull/97))
 
 ### Changed
 
-- Every iterator is named in the singular, `ELFFile#each_section` and `#each_segment`,
-  `Dynamic#each_tag`, `Note#each_note`, `Sections::RelocationSection#each_relocation`, and
-  `#each_symbol` of both `Sections::SymTabSection` and `Dynamic`, which is how Ruby names
-  the ones it defines itself and agrees with the one thing each of them yields. The plural
-  name each used to go by is an alias of it, so nothing that calls one has to change
+- Every iterator is named in the singular, `ELFFile#each_section`, `Dynamic#each_tag`,
+  `Note#each_note`, and the rest. The plural name each used to go by is an alias of it
   ([#108](https://github.com/david942j/rbelftools/pull/108))
 - `Dynamic#relocations` reads a table once instead of re-reading it on every call, so the
   relocations it returns are the same objects each time
   ([#106](https://github.com/david942j/rbelftools/pull/106))
 - The `bindata` requirement is relaxed to `>= 2, < 4`
   ([#81](https://github.com/david942j/rbelftools/pull/81))
-- `Constants::EM` and the names behind `ELFFile#machine` are generated from binutils
-  by `bundle exec rake gen:constants`, instead of being maintained by hand. The names
-  are only loaded once one is asked for
+- `Constants::EM` and the names behind `ELFFile#machine` are generated from binutils by
+  `bundle exec rake gen:constants` instead of being maintained by hand
   ([#92](https://github.com/david942j/rbelftools/pull/92))
 
 ## 1.3.1 - 2024-04-22
