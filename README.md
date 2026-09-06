@@ -318,6 +318,11 @@ interp_segment.interp_name
 # save the patched ELF
 elf.save('elf.patched')
 
+# in bash
+# $ file elf.patched
+# elf.patched: ELF 64-bit LSB executable, ARM, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86, for GNU...
+```
+
 Values that share a byte with others, which a symbol and a relocation both record, are
 assigned as what they mean rather than as the bits holding them. A value too large for
 its bits is reported instead of being written over its neighbours.
@@ -336,11 +341,6 @@ relocation.symbol_index = 3
 relocation.type = ELFTools::Constants::R::X86_64::R_X86_64_JUMP_SLOT
 [relocation.symbol_index, relocation.type_name]
 #=> [3, "R_X86_64_JUMP_SLOT"]
-```
-
-# in bash
-# $ file elf.patched
-# elf.patched: ELF 64-bit LSB executable, ARM, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86, for GNU...
 ```
 
 # Why rbelftools
