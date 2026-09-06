@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/david942j/rbelftools/workflows/build/badge.svg)](https://github.com/david942j/rbelftools/actions)
 [![Maintainability](https://qlty.sh/gh/david942j/projects/rbelftools/maintainability.svg)](https://qlty.sh/gh/david942j/projects/rbelftools)
 [![Code Coverage](https://qlty.sh/gh/david942j/projects/rbelftools/coverage.svg)](https://qlty.sh/gh/david942j/projects/rbelftools)
-[![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](https://www.rubydoc.info/github/david942j/rbelftools/master)
+[![API Docs](https://img.shields.io/badge/API-RubyDoc-blue.svg)](https://www.rubydoc.info/gems/elftools/)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 # rbelftools
@@ -346,7 +346,7 @@ relocation.type = ELFTools::Constants::R::X86_64::R_X86_64_JUMP_SLOT
 # Why rbelftools
 
 1. Fully documented   
-   Always important for an Open-Source project. Online document is [here](http://www.rubydoc.info/github/david942j/rbelftools/master/frames)
+   Always important for an Open-Source project. Online document is [here](https://www.rubydoc.info/gems/elftools/)
 2. Fully tested   
    Of course.
 3. Lazy loading on everything   

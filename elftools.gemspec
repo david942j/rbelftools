@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
 
   s.metadata['rubygems_mfa_required'] = 'true'
   s.metadata['changelog_uri'] = "#{s.homepage}/blob/v#{s.version}/CHANGELOG.md"
+  s.metadata['documentation_uri'] = "https://www.rubydoc.info/gems/#{s.name}/#{s.version}"
 
   s.required_ruby_version = '>= 3.3'
 
